@@ -1,0 +1,156 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
+
+export type StocktakeItemInput = {
+  sku: string;
+  shelfQty: number;
+  backStock: number;
+  expired: number;
+  damaged: number;
+  batchCode: string;
+  photoUrl: string | null;
+};
+
+export type StocktakeInput = {
+  storeId: number;
+  date: string;
+  merchandiser: string;
+  idNumber: string;
+  signatureUrl: string | null;
+  notes: string;
+  checksPlacement: string | null;
+  checksPrices: string | null;
+  checksMissing: string | null;
+  checksPromotion: string | null;
+  checksNotes: string;
+  placementPhotoUrl: string | null;
+  pricesPhotoUrl: string | null;
+  promotionType: string;
+  promotionPhotoUrl: string | null;
+  competitorBrands: string;
+  competitorPhotoUrl: string | null;
+  embedded: boolean;
+  items: StocktakeItemInput[];
+};
+
+export type SubmitResult = { ok: true } | { ok: false; error: string };
+
+/**
+ * Server-side mirror of the stocktake form validation. The client blocks these first
+ * with the original's alert() copy; this is the authoritative check.
+ *
+ * NOTE: batch code is deliberately NOT required when expired/damaged > 0. The original
+ * app flags the field red in that case but never blocks submission — reproduced here
+ * on purpose so behaviour matches the tool people already use.
+ */
+function validate(input: StocktakeInput): string | null {
+  if (!input.merchandiser.trim()) return "Enter your name before submitting.";
+  if (!input.embedded && !input.idNumber.trim()) return "Enter your ID number before submitting.";
+  if (!input.date) return "Select the date before submitting.";
+
+  if (!input.embedded) {
+    if (
+      input.checksPlacement === null ||
+      input.checksPrices === null ||
+      input.checksMissing === null ||
+      input.checksPromotion === null
+    ) {
+      return "Please answer all four store display questions before submitting.";
+    }
+    if (
+      (input.checksPlacement === "No" || input.checksPrices === "No" || input.checksMissing === "Yes") &&
+      !input.checksNotes.trim()
+    ) {
+      return "You flagged an issue above — please explain the reason before submitting.";
+    }
+    if (input.checksPlacement !== null && !input.placementPhotoUrl) {
+      return "Please take a photo of the shelf for question 1 before submitting.";
+    }
+    if (input.checksPrices === "No" && !input.pricesPhotoUrl) {
+      return "Price tags/prices are incorrect — please take a photo before submitting.";
+    }
+    if (input.checksPromotion === "Yes" && !input.promotionType.trim()) {
+      return "Please describe the type of promotion before submitting.";
+    }
+    if (input.checksPromotion === "Yes" && !input.promotionPhotoUrl) {
+      return "Please take a photo of the promotion display before submitting.";
+    }
+    if (!input.competitorBrands.trim()) {
+      return 'Please list the competitor brands carried in this outlet (write "None" if there are none) before submitting.';
+    }
+    if (!input.competitorPhotoUrl) {
+      return "Please take a photo of the competitor section/shelf before submitting.";
+    }
+  }
+  if (!input.signatureUrl) return "Please sign before submitting.";
+  return null;
+}
+
+export async function submitStocktake(input: StocktakeInput): Promise<SubmitResult> {
+  const session = await getSession();
+  if (!session) return { ok: false, error: "Your session expired — sign in again." };
+
+  // A branch manager can only ever submit an embedded stocktake for their own store.
+  if (session.role === "branch") {
+    if (!input.embedded || session.storeId !== input.storeId) {
+      return { ok: false, error: "You can only submit a stocktake for your own branch." };
+    }
+  } else if (session.role !== "merchandiser") {
+    return { ok: false, error: "Only merchandisers and branch managers can submit a stocktake." };
+  } else if (input.embedded) {
+    return { ok: false, error: "Merchandiser stocktakes must include the full store display check." };
+  }
+
+  const problem = validate(input);
+  if (problem) return { ok: false, error: problem };
+
+  const store = await prisma.store.findUnique({ where: { id: input.storeId }, select: { id: true } });
+  if (!store) return { ok: false, error: "That branch no longer exists." };
+
+  const products = await prisma.product.findMany({ select: { sku: true } });
+  const known = new Set(products.map((p) => p.sku));
+  const items = input.items.filter((i) => known.has(i.sku));
+
+  await prisma.stocktake.create({
+    data: {
+      storeId: input.storeId,
+      date: input.date,
+      merchandiser: input.merchandiser.trim(),
+      idNumber: input.embedded ? "" : input.idNumber.trim(),
+      signatureUrl: input.signatureUrl!,
+      notes: input.notes.trim(),
+      checksPlacement: input.embedded ? null : input.checksPlacement,
+      checksPrices: input.embedded ? null : input.checksPrices,
+      checksMissing: input.embedded ? null : input.checksMissing,
+      checksPromotion: input.embedded ? null : input.checksPromotion,
+      checksNotes: input.embedded ? "" : input.checksNotes.trim(),
+      placementPhotoUrl: input.embedded ? null : input.placementPhotoUrl,
+      pricesPhotoUrl: input.embedded ? null : input.pricesPhotoUrl,
+      promotionType: !input.embedded && input.checksPromotion === "Yes" ? input.promotionType.trim() : "",
+      promotionPhotoUrl: !input.embedded && input.checksPromotion === "Yes" ? input.promotionPhotoUrl : null,
+      competitorBrands: input.embedded ? "" : input.competitorBrands.trim(),
+      competitorPhotoUrl: input.embedded ? null : input.competitorPhotoUrl,
+      photoTaken: items.some((i) => !!i.photoUrl),
+      embedded: input.embedded,
+      items: {
+        create: items.map((i) => ({
+          sku: i.sku,
+          shelfQty: Math.max(0, Math.trunc(Number(i.shelfQty) || 0)),
+          backStock: Math.max(0, Math.trunc(Number(i.backStock) || 0)),
+          expired: Math.max(0, Math.trunc(Number(i.expired) || 0)),
+          damaged: Math.max(0, Math.trunc(Number(i.damaged) || 0)),
+          batchCode: (i.batchCode || "").trim(),
+          photoUrl: i.photoUrl,
+        })),
+      },
+    },
+  });
+
+  revalidatePath("/branch");
+  revalidatePath("/manager");
+  revalidatePath("/merchandiser");
+  return { ok: true };
+}

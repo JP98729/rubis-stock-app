@@ -1,0 +1,193 @@
+// Rubis Enjoy — Stock & Reorder
+// Production target: PostgreSQL (Neon / Supabase).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MovementType {
+  DELIVERY
+  SALE
+  RETURN
+  EXPIRED_DAMAGED
+}
+
+enum Audience {
+  ALL
+  COUNTY
+  TYPE
+  STORE
+}
+
+enum RoleCodeType {
+  MERCHANDISER
+  MANAGER
+  HQ
+}
+
+model Store {
+  /// Matches the original seeded ids 1-75; new branches autoincrement from there.
+  id     Int    @id @default(autoincrement())
+  name   String
+  type   String // "CODO" | "COCO"
+  county String
+
+  /// Contact info as it arrived in the original seed data.
+  seedPhone String @default("")
+  seedEmail String @default("")
+
+  /// bcrypt hash of the derived branch code ("RB" + zero-padded 3-digit id).
+  codeHash String
+
+  /// Branch-manager self-service overrides (shown with a green * in the admin table).
+  contactPhone String?
+  contactEmail String?
+
+  managerPhotoUrl String?
+  managerName     String?
+
+  approvalStatus String    @default("pending") // "pending" | "approved"
+  approvalAt     DateTime?
+
+  createdAt DateTime @default(now())
+
+  stocktakes Stocktake[]
+  movements  Movement[]
+  messages   Message[]
+
+  @@index([county])
+}
+
+model Product {
+  sku      String  @id
+  barcode  String  @default("")
+  range    String // "Classic Range" | "Indulge Range" | "Gourmet Range"
+  flavour  String
+  price    Int // KES
+  /// Editable by the Pure Nutrition manager; floored to MIN_STOCK in the reorder calc only.
+  target   Int
+  unavailable Boolean @default(false)
+
+  stocktakeItems StocktakeItem[]
+  movements      Movement[]
+}
+
+model Merchandiser {
+  id       String   @id @default(cuid())
+  name     String
+  codeHash String   @unique
+  active   Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model RoleCode {
+  type      RoleCodeType @id
+  codeHash  String
+  updatedAt DateTime     @updatedAt
+}
+
+model Stocktake {
+  id      String @id @default(cuid())
+  storeId Int
+  store   Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  /// Visit date the merchandiser picked — "YYYY-MM-DD", not necessarily today.
+  date         String
+  merchandiser String
+  idNumber     String @default("")
+  /// Required for every stocktake.
+  signatureUrl String
+  notes        String @default("")
+
+  checksPlacement String? // "Yes" | "No"
+  checksPrices    String?
+  checksMissing   String?
+  checksPromotion String?
+  checksNotes     String  @default("")
+
+  placementPhotoUrl String?
+  pricesPhotoUrl    String?
+
+  promotionType     String  @default("")
+  promotionPhotoUrl String?
+
+  competitorBrands   String  @default("")
+  competitorPhotoUrl String?
+
+  /// True when any product row carried a photo.
+  photoTaken Boolean @default(false)
+  /// True when submitted from the Branch Manager's own self-service Stocktake tab.
+  embedded   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  items StocktakeItem[]
+
+  @@index([storeId, date])
+}
+
+model StocktakeItem {
+  id          String    @id @default(cuid())
+  stocktakeId String
+  stocktake   Stocktake @relation(fields: [stocktakeId], references: [id], onDelete: Cascade)
+
+  sku     String
+  product Product @relation(fields: [sku], references: [sku])
+
+  shelfQty  Int     @default(0)
+  backStock Int     @default(0)
+  expired   Int     @default(0)
+  damaged   Int     @default(0)
+  batchCode String  @default("")
+  photoUrl  String?
+
+  @@index([stocktakeId])
+}
+
+model Movement {
+  id      String @id @default(cuid())
+  storeId Int
+  store   Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  sku     String
+  product Product @relation(fields: [sku], references: [sku])
+
+  type      MovementType
+  qty       Int
+  date      String // "YYYY-MM-DD"
+  batchCode String       @default("")
+  notes     String       @default("")
+  createdAt DateTime     @default(now())
+
+  @@index([storeId, date])
+  @@index([type, date])
+}
+
+model Message {
+  id       String   @id @default(cuid())
+  subject  String
+  body     String
+  audience Audience
+  county   String?
+  storeType String?
+  storeId  Int?
+  store    Store?   @relation(fields: [storeId], references: [id], onDelete: SetNull)
+
+  from          String   @default("Rubis Head Office")
+  autoReminder  Boolean  @default(false)
+  reminderMonth String? // "YYYY-MM", used to dedupe the automated month-end reminder
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model MonthlyReward {
+  monthKey String  @id // "YYYY-MM"
+  note     String  @default("")
+  sent     Boolean @default(false)
+}

@@ -1,0 +1,164 @@
+"use client";
+
+import { useId, useState } from "react";
+import { Camera } from "lucide-react";
+import { GREEN_DARK } from "@/lib/brand";
+import { ProductThumb } from "./ui";
+
+/** Compress a captured/selected image client-side before uploading (keeps uploads small). */
+export function compressImage(file: File, maxDim = 220, quality = 0.55): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => {
+      img.src = reader.result as string;
+    };
+    reader.onerror = reject;
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > height && width > maxDim) {
+        height = Math.round(height * (maxDim / width));
+        width = maxDim;
+      } else if (height > maxDim) {
+        width = Math.round(width * (maxDim / height));
+        height = maxDim;
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Pushes a compressed data URL through the server's uploadFile helper and returns
+ * the stored URL (Vercel Blob in production, ./.local-uploads in local dev).
+ */
+export async function uploadDataUrl(dataUrl: string): Promise<string> {
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dataUrl }),
+  });
+  if (!res.ok) throw new Error("upload failed");
+  const json = (await res.json()) as { url: string };
+  return json.url;
+}
+
+export async function compressAndUpload(file: File, maxDim?: number, quality?: number): Promise<string> {
+  const dataUrl = await compressImage(file, maxDim, quality);
+  return uploadDataUrl(dataUrl);
+}
+
+export function ProductPhotoPicker({
+  product,
+  value,
+  onChange,
+}: {
+  product: { sku: string; range: string; flavour: string };
+  value: string | null;
+  onChange: (url: string | null) => void;
+}) {
+  const inputId = useId();
+  const [busy, setBusy] = useState(false);
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    try {
+      onChange(await compressAndUpload(file));
+    } catch {
+      /* ignore capture errors */
+    }
+    setBusy(false);
+    e.target.value = "";
+  }
+  return (
+    <label htmlFor={inputId} className="relative shrink-0 cursor-pointer">
+      {value ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={value} alt={product.flavour} className="w-9 h-9 rounded-lg object-cover border border-gray-200" />
+      ) : (
+        <ProductThumb product={product} size={36} />
+      )}
+      <span className="absolute -bottom-1 -right-1 bg-white rounded-full border border-gray-200 w-4 h-4 flex items-center justify-center">
+        <Camera size={9} className={busy ? "text-gray-300 animate-pulse" : "text-gray-500"} />
+      </span>
+      <input id={inputId} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
+    </label>
+  );
+}
+
+export function PlacementPhotoCapture({
+  photo,
+  onChange,
+  tone,
+}: {
+  photo: string | null;
+  onChange: (url: string | null) => void;
+  tone?: "good" | "neutral" | "bad";
+}) {
+  const inputId = useId();
+  const [busy, setBusy] = useState(false);
+  const isGood = tone === "good";
+  const isNeutral = tone === "neutral";
+  const color = isGood ? GREEN_DARK : isNeutral ? "#1D4ED8" : "#C0392B";
+  const borderClass = isGood ? "border-green-300" : isNeutral ? "border-blue-300" : "border-red-300";
+  const bgClass = isGood ? "bg-green-50" : isNeutral ? "bg-blue-50" : "bg-red-50";
+  const imgBorderClass = isGood ? "border-green-200" : isNeutral ? "border-blue-200" : "border-red-200";
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    try {
+      onChange(await compressAndUpload(file, 260, 0.6));
+    } catch {
+      /* ignore capture errors */
+    }
+    setBusy(false);
+    e.target.value = "";
+  }
+
+  return (
+    <div className="mt-1">
+      {photo ? (
+        <div className="flex items-center gap-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={photo} alt="Shelf evidence" className={`w-16 h-16 rounded-lg object-cover border ${imgBorderClass}`} />
+          <label htmlFor={inputId} className="text-xs font-semibold cursor-pointer" style={{ color }}>
+            Retake photo
+            <input
+              id={inputId}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleFile}
+            />
+          </label>
+        </div>
+      ) : (
+        <label
+          htmlFor={inputId}
+          className={`flex items-center justify-center gap-2 border-2 border-dashed ${borderClass} ${bgClass} rounded-lg py-3 text-sm font-semibold cursor-pointer`}
+          style={{ color }}
+        >
+          <Camera size={16} /> {busy ? "Uploading…" : "Take photo"}
+          <input
+            id={inputId}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleFile}
+          />
+        </label>
+      )}
+    </div>
+  );
+}
