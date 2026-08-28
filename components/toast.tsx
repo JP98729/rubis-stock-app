@@ -20,8 +20,12 @@ export function useToast() {
 export function ToastView({ toast }: { toast: string | null }) {
   if (!toast) return null;
   return (
-    <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-      <CheckCircle2 size={16} style={{ color: GREEN }} /> {toast}
+    <div
+      className="fixed left-1/2 -translate-x-1/2 z-50 max-w-[92vw] bg-gray-900 text-white text-sm px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2"
+      style={{ top: "calc(env(safe-area-inset-top, 0px) + 16px)" }}
+    >
+      <CheckCircle2 size={16} className="shrink-0" style={{ color: GREEN }} />
+      <span className="text-center">{toast}</span>
     </div>
   );
 }
