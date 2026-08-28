@@ -27,7 +27,10 @@ export function LpoUploader({
     try {
       const url = await uploadLpoFile(file);
       await addLpoDocument(url, file.name);
-      setDocs((prev) => [{ id: url, url, filename: file.name, uploadedAt: "just now" }, ...prev]);
+      setDocs((prev) => [
+        { id: url, url, filename: file.name, uploadedAt: "just now", odooSaleOrderName: null },
+        ...prev,
+      ]);
       onSaved("LPO uploaded");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
@@ -63,6 +66,14 @@ export function LpoUploader({
                 <FileText size={15} className="shrink-0" />
                 <span className="truncate">{d.filename}</span>
               </a>
+              {d.odooSaleOrderName && (
+                <span
+                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0"
+                  style={{ background: "#EEF7DE", color: GREEN_DARK }}
+                >
+                  {d.odooSaleOrderName}
+                </span>
+              )}
               <span className="text-[11px] text-gray-400 shrink-0">{d.uploadedAt}</span>
               <button onClick={() => handleRemove(d.id)} className="text-gray-300 hover:text-red-500 shrink-0">
                 <X size={14} />

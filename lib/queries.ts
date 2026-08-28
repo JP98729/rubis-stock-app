@@ -61,12 +61,34 @@ export async function getStore(id: number): Promise<StoreDTO | null> {
   return row ? toStoreDTO(row) : null;
 }
 
-export type LpoDocumentDTO = { id: string; url: string; filename: string; uploadedAt: string };
+export type LpoDocumentDTO = {
+  id: string;
+  url: string;
+  filename: string;
+  uploadedAt: string;
+  odooSaleOrderName: string | null;
+};
+
+function toLpoDocumentDTO(r: {
+  id: string;
+  url: string;
+  filename: string;
+  uploadedAt: Date;
+  odooSaleOrderName: string | null;
+}): LpoDocumentDTO {
+  return {
+    id: r.id,
+    url: r.url,
+    filename: r.filename,
+    uploadedAt: timeAgo(r.uploadedAt),
+    odooSaleOrderName: r.odooSaleOrderName,
+  };
+}
 
 /** A branch's own uploaded LPOs, newest first. */
 export async function getLpoDocuments(storeId: number): Promise<LpoDocumentDTO[]> {
   const rows = await prisma.lpoDocument.findMany({ where: { storeId }, orderBy: { uploadedAt: "desc" } });
-  return rows.map((r) => ({ id: r.id, url: r.url, filename: r.filename, uploadedAt: timeAgo(r.uploadedAt) }));
+  return rows.map(toLpoDocumentDTO);
 }
 
 /** LPOs for every store in one query, grouped by storeId — used by the manager's Order Summary. */
@@ -74,7 +96,7 @@ export async function getLpoDocumentsByStore(): Promise<Record<number, LpoDocume
   const rows = await prisma.lpoDocument.findMany({ orderBy: { uploadedAt: "desc" } });
   const byStore: Record<number, LpoDocumentDTO[]> = {};
   for (const r of rows) {
-    (byStore[r.storeId] ??= []).push({ id: r.id, url: r.url, filename: r.filename, uploadedAt: timeAgo(r.uploadedAt) });
+    (byStore[r.storeId] ??= []).push(toLpoDocumentDTO(r));
   }
   return byStore;
 }

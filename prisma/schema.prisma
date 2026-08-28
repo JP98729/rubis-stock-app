@@ -54,6 +54,10 @@ model Store {
   approvalStatus String    @default("pending") // "pending" | "approved"
   approvalAt     DateTime?
 
+  /// Matching Odoo res.partner id (mapped once, manually reviewed — Odoo customer
+  /// names don't always match the app's branch names 1:1).
+  odooPartnerId Int?
+
   createdAt DateTime @default(now())
 
   /// Bumped on every authenticated page load, so the manager can see which branches are active.
@@ -107,6 +111,12 @@ model LpoDocument {
   url        String
   filename   String
   uploadedAt DateTime @default(now())
+
+  /// Set once a matching draft Sales Order is created in Odoo (id and human-readable
+  /// name, e.g. "S00042"). Null if Odoo sync isn't configured or the branch has no
+  /// mapped Odoo customer yet.
+  odooSaleOrderId   Int?
+  odooSaleOrderName String?
 
   store Store @relation(fields: [storeId], references: [id])
 

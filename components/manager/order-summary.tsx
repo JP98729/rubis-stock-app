@@ -110,7 +110,17 @@ export function OrderSummary({ orders }: { orders: StoreOrder[] }) {
                                 <FileText size={13} className="shrink-0" />
                                 <span className="truncate">{d.filename}</span>
                               </span>
-                              <span className="text-gray-400 shrink-0">{d.uploadedAt}</span>
+                              <span className="flex items-center gap-2 shrink-0">
+                                {d.odooSaleOrderName && (
+                                  <span
+                                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                                    style={{ background: "#EEF7DE", color: GREEN_DARK }}
+                                  >
+                                    {d.odooSaleOrderName}
+                                  </span>
+                                )}
+                                <span className="text-gray-400">{d.uploadedAt}</span>
+                              </span>
                             </a>
                           ))}
                         </div>
