@@ -1,17 +1,45 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { GREEN } from "@/lib/brand";
 
+/**
+ * Toast state lives at module scope, outside React, so it survives a parent
+ * component remounting mid-display — which happens here because uploading an
+ * LPO (or saving a stocktake, etc.) triggers a server-side revalidatePath,
+ * and the resulting background refresh can remount the view that owns the
+ * toast, wiping plain useState before the 4s timer ever gets to run.
+ */
+let currentMessage: string | null = null;
+let dismissTimer: ReturnType<typeof setTimeout> | null = null;
+const listeners = new Set<() => void>();
+
+function setMessage(msg: string | null) {
+  currentMessage = msg;
+  listeners.forEach((l) => l());
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function getSnapshot() {
+  return currentMessage;
+}
+
+function getServerSnapshot() {
+  return null;
+}
+
 export function useToast() {
-  const [toast, setToast] = useState<string | null>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toast = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const showToast = useCallback((msg: string) => {
-    setToast(msg);
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setToast(null), 4000);
+    if (dismissTimer) clearTimeout(dismissTimer);
+    setMessage(msg);
+    dismissTimer = setTimeout(() => setMessage(null), 4000);
   }, []);
 
   return { toast, showToast };
