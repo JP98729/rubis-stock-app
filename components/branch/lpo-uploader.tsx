@@ -1,7 +1,7 @@
 "use client";
 
-import { useId, useState } from "react";
-import { FileText, Upload, X } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
+import { CheckCircle2, FileText, Upload, X } from "lucide-react";
 import { GREEN, GREEN_DARK } from "@/lib/brand";
 import { uploadLpoFile } from "../photo";
 import { addLpoDocument, removeLpoDocument } from "@/app/actions/branch";
@@ -18,6 +18,14 @@ export function LpoUploader({
   const [docs, setDocs] = useState(documents);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+  const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (confirmTimer.current) clearTimeout(confirmTimer.current);
+    };
+  }, []);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -31,6 +39,9 @@ export function LpoUploader({
         { id: url, url, filename: file.name, uploadedAt: "just now", odooSaleOrderName: null },
         ...prev,
       ]);
+      setConfirmed(true);
+      if (confirmTimer.current) clearTimeout(confirmTimer.current);
+      confirmTimer.current = setTimeout(() => setConfirmed(false), 5000);
       onSaved("Thanks for uploading — done successfully!");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
@@ -98,6 +109,15 @@ export function LpoUploader({
           disabled={busy}
         />
       </label>
+      {confirmed && (
+        <div
+          className="mt-2.5 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold"
+          style={{ background: "#EEF7DE", color: GREEN_DARK }}
+        >
+          <CheckCircle2 size={16} className="shrink-0" />
+          Thanks for uploading — done successfully!
+        </div>
+      )}
     </div>
   );
 }
