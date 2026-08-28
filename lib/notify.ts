@@ -1,4 +1,4 @@
-const NOTIFY_EMAIL = "info@je-jo-nutbar.com";
+const NOTIFY_EMAIL = "info@pure-nutritions.com";
 
 /**
  * Opens the person's own email app with a pre-filled draft summarizing a just-submitted
