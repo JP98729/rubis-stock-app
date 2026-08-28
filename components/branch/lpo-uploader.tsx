@@ -31,7 +31,7 @@ export function LpoUploader({
         { id: url, url, filename: file.name, uploadedAt: "just now", odooSaleOrderName: null },
         ...prev,
       ]);
-      onSaved("LPO uploaded");
+      onSaved("Thanks for uploading — done successfully!");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
     }
