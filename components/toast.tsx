@@ -11,7 +11,7 @@ export function useToast() {
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setToast(null), 2500);
+    timer.current = setTimeout(() => setToast(null), 4000);
   }, []);
 
   return { toast, showToast };
