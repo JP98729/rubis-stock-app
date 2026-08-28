@@ -1,4 +1,4 @@
-import type { StoreDTO } from "@/lib/queries";
+import type { LpoDocumentDTO, StoreDTO } from "@/lib/queries";
 import type { StockRow } from "@/lib/stock";
 
 export type StoreOrder = {
@@ -6,6 +6,7 @@ export type StoreOrder = {
   rows: StockRow[]; // only the rows with reorder > 0
   totalUnits: number;
   totalValue: number;
+  lpoDocuments: LpoDocumentDTO[];
 };
 
 export type StoreTableRow = {

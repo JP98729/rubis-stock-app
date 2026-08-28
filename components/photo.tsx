@@ -54,6 +54,32 @@ export async function compressAndUpload(file: File, maxDim?: number, quality?: n
   return uploadDataUrl(dataUrl);
 }
 
+/** Reads a file (PDF or image) as a data URL without any compression, for document uploads. */
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/** Uploads an LPO document (PDF or photo of a paper LPO) as-is, via the LPO-specific route. */
+export async function uploadLpoFile(file: File): Promise<string> {
+  const dataUrl = await readFileAsDataUrl(file);
+  const res = await fetch("/api/upload-lpo", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dataUrl }),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error || "upload failed");
+  }
+  const json = (await res.json()) as { url: string };
+  return json.url;
+}
+
 export function ProductPhotoPicker({
   product,
   value,

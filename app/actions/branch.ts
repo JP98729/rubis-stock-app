@@ -38,3 +38,25 @@ export async function saveManagerName(name: string): Promise<SimpleResult> {
   revalidatePath("/manager");
   return { ok: true };
 }
+
+export async function addLpoDocument(url: string, filename: string): Promise<SimpleResult> {
+  const session = await requireRole("branch");
+  if (!session?.storeId) return { ok: false, error: "Your session expired — log in again." };
+  await prisma.lpoDocument.create({
+    data: { storeId: session.storeId, url, filename: filename.trim() || "LPO document" },
+  });
+  revalidatePath("/branch");
+  revalidatePath("/manager");
+  return { ok: true };
+}
+
+export async function removeLpoDocument(id: string): Promise<SimpleResult> {
+  const session = await requireRole("branch");
+  if (!session?.storeId) return { ok: false, error: "Your session expired — log in again." };
+  const doc = await prisma.lpoDocument.findUnique({ where: { id }, select: { storeId: true } });
+  if (!doc || doc.storeId !== session.storeId) return { ok: false, error: "That document isn't on your branch." };
+  await prisma.lpoDocument.delete({ where: { id } });
+  revalidatePath("/branch");
+  revalidatePath("/manager");
+  return { ok: true };
+}

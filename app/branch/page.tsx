@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/session";
 import {
   ensureMonthEndReminder,
   getLeaderboard,
+  getLpoDocuments,
   getMessagesForStore,
   getMonthlyReward,
   getProducts,
@@ -34,10 +35,11 @@ export default async function BranchPage() {
   const [products, stores] = await Promise.all([getProducts(), getStores()]);
   const stock = await getStoreStock(store.id, products);
   const monthKey = currentMonthKey();
-  const [leaderboard, reward, msgs] = await Promise.all([
+  const [leaderboard, reward, msgs, lpoDocuments] = await Promise.all([
     getLeaderboard(monthKey, stores, products),
     getMonthlyReward(monthKey),
     getMessagesForStore(store),
+    getLpoDocuments(store.id),
   ]);
 
   const myRank = leaderboard.findIndex((r) => r.store.id === store.id);
@@ -65,6 +67,7 @@ export default async function BranchPage() {
         messages={msgs.messages}
         recentCount={msgs.recentCount}
         audienceLabels={audienceLabels}
+        lpoDocuments={lpoDocuments}
       />
     </>
   );

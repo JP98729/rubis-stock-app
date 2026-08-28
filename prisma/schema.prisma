@@ -59,8 +59,9 @@ model Store {
   /// Bumped on every authenticated page load, so the manager can see which branches are active.
   lastActiveAt DateTime?
 
-  stocktakes Stocktake[]
-  movements  Movement[]
+  stocktakes    Stocktake[]
+  movements     Movement[]
+  lpoDocuments  LpoDocument[]
   messages   Message[]
 
   @@index([county])
@@ -95,6 +96,21 @@ model RoleCode {
   type      RoleCodeType @id
   codeHash  String
   updatedAt DateTime     @updatedAt
+}
+
+/// A branch manager's uploaded LPO (Local Purchase Order) document — a PDF or a
+/// photo of a paper LPO. Not tied to a specific computed reorder, since "an order"
+/// has no stable row of its own in this system; just a dated file per branch.
+model LpoDocument {
+  id         String   @id @default(cuid())
+  storeId    Int
+  url        String
+  filename   String
+  uploadedAt DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
 }
 
 model Stocktake {

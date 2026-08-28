@@ -11,8 +11,9 @@ import { TopBranchSpotlight, type SpotlightRow } from "../spotlight";
 import { StocktakeForm } from "../stocktake-form";
 import { MovementForm } from "../movement-form";
 import { BranchContactEditor, ManagerPhotoUploader } from "./contact-editor";
+import { LpoUploader } from "./lpo-uploader";
 import { logout } from "@/app/actions/auth";
-import type { MessageDTO, ProductDTO, StoreDTO } from "@/lib/queries";
+import type { LpoDocumentDTO, MessageDTO, ProductDTO, StoreDTO } from "@/lib/queries";
 import type { StockRow } from "@/lib/stock";
 
 type Tab = "overview" | "stocktake" | "movement" | "messages" | "delivery";
@@ -33,6 +34,7 @@ export function BranchManagerView({
   messages,
   recentCount,
   audienceLabels,
+  lpoDocuments,
 }: {
   store: StoreDTO;
   products: ProductDTO[];
@@ -49,6 +51,7 @@ export function BranchManagerView({
   messages: MessageDTO[];
   recentCount: number;
   audienceLabels: Record<string, string>;
+  lpoDocuments: LpoDocumentDTO[];
 }) {
   const [tab, setTab] = useState<Tab>("overview");
   const { toast, showToast } = useToast();
@@ -195,6 +198,7 @@ export function BranchManagerView({
                 </div>
               )}
             </div>
+            <LpoUploader documents={lpoDocuments} onSaved={showToast} />
           </div>
         )}
         {tab === "stocktake" && (

@@ -17,6 +17,7 @@ import {
   getCounts,
   getLatestChecksByStore,
   getLeaderboard,
+  getLpoDocumentsByStore,
   getMerchandisers,
   getMonthlyReward,
   getProducts,
@@ -43,13 +44,14 @@ export default async function ManagerPage() {
   const [products, stores] = await Promise.all([getProducts(), getStores()]);
   const stock = await getAllStoreStock(products);
   const monthKey = currentMonthKey();
-  const [leaderboard, reward, recentStocktakes, counts, latestChecks, merchandisers] = await Promise.all([
+  const [leaderboard, reward, recentStocktakes, counts, latestChecks, merchandisers, lpoByStore] = await Promise.all([
     getLeaderboard(monthKey, stores, products),
     getMonthlyReward(monthKey),
     getRecentStocktakes(8),
     getCounts(),
     getLatestChecksByStore(),
     getMerchandisers(),
+    getLpoDocumentsByStore(),
   ]);
 
   const withStock = stores.map((store) => ({ store, stock: stock[store.id] }));
@@ -89,6 +91,7 @@ export default async function ManagerPage() {
         rows,
         totalUnits: rows.reduce((a, r) => a + r.reorder, 0),
         totalValue: rows.reduce((a, r) => a + r.reorder * r.price, 0),
+        lpoDocuments: lpoByStore[store.id] ?? [],
       };
     })
     .sort((a, b) => b.totalValue - a.totalValue);
