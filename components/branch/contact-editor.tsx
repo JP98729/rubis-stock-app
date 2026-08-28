@@ -175,9 +175,18 @@ export function ManagerPhotoUploader({
             onChange={(e) => setNameDraft(e.target.value)}
             onBlur={handleNameBlur}
             placeholder="e.g. Joan Wanjiru"
-            className={`border rounded-lg px-3 py-1.5 text-sm ${!savedName ? "border-red-300 bg-red-50" : "border-gray-300"}`}
+            className={`border rounded-lg px-3 py-1.5 text-sm ${!nameDraft.trim() ? "border-red-300 bg-red-50" : "border-gray-300"}`}
           />
         </label>
+        {nameDraft.trim() && !photo && (
+          <label
+            htmlFor={inputId}
+            className="mt-1 mb-2 w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold cursor-pointer text-white"
+            style={{ background: GREEN }}
+          >
+            <Camera size={16} /> Take Selfie
+          </label>
+        )}
         <div className="text-xs text-gray-500">
           {photo ? (
             <>
