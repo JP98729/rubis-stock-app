@@ -91,7 +91,7 @@ export function BranchManagerView({
             </button>
           </form>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3">
+        <div className="mb-3">
           <ManagerPhotoUploader photoUrl={store.managerPhotoUrl} name={store.managerName} onSaved={showToast} />
         </div>
         <DeliveryBanner today={today} />
