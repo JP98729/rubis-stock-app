@@ -67,4 +67,4 @@ export type DashboardData = {
   countyData: Array<{ county: string; value: number }>;
 };
 
-export type MerchandiserRow = { id: string; name: string; active: boolean };
+export type MerchandiserRow = { id: string; name: string; active: boolean; lastActive: string };

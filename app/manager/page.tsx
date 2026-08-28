@@ -23,7 +23,7 @@ import {
   getRecentStocktakes,
   getStores,
 } from "@/lib/queries";
-import { currentMonthKey, monthLabel, todayStr } from "@/lib/utils";
+import { currentMonthKey, monthLabel, timeAgo, todayStr } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -196,7 +196,12 @@ export default async function ManagerPage() {
         storeRows={storeRows}
         products={products}
         stores={stores}
-        merchandisers={merchandisers.map((m) => ({ id: m.id, name: m.name, active: m.active }))}
+        merchandisers={merchandisers.map((m) => ({
+          id: m.id,
+          name: m.name,
+          active: m.active,
+          lastActive: m.lastActiveAt ? timeAgo(m.lastActiveAt) : "Never",
+        }))}
       />
     </>
   );

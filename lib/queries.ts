@@ -27,6 +27,7 @@ export type StoreDTO = {
   managerName: string | null;
   approvalStatus: string;
   code: string;
+  lastActive: string;
 };
 
 /** Catalogue order matching the original PRODUCTS array: range order, then SKU. */
@@ -72,6 +73,7 @@ type StoreRow = {
   managerPhotoUrl: string | null;
   managerName: string | null;
   approvalStatus: string;
+  lastActiveAt: Date | null;
 };
 
 function toStoreDTO(s: StoreRow): StoreDTO {
@@ -88,6 +90,7 @@ function toStoreDTO(s: StoreRow): StoreDTO {
     managerName: s.managerName,
     approvalStatus: s.approvalStatus,
     code: storeCodeFor(s.id),
+    lastActive: s.lastActiveAt ? timeAgo(s.lastActiveAt) : "Never",
   };
 }
 

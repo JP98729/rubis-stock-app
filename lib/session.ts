@@ -1,6 +1,8 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { after } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
+import { prisma } from "./prisma";
 
 export type Role = "merchandiser" | "branch" | "manager" | "hq";
 
@@ -64,7 +66,27 @@ export async function getSession(): Promise<Session | null> {
 export async function requireRole(role: Role): Promise<Session | null> {
   const session = await getSession();
   if (!session || session.role !== role) return null;
+  touchLastActive(session);
   return session;
+}
+
+/**
+ * Bumps lastActiveAt for the signed-in branch or merchandiser so the manager
+ * can see who's currently using the app. Runs via `after()` so it completes
+ * even on serverless (a bare fire-and-forget promise can be frozen mid-flight
+ * once the response is sent) without ever blocking or breaking the page render.
+ */
+function touchLastActive(session: Session): void {
+  const now = new Date();
+  if (session.role === "branch" && typeof session.storeId === "number") {
+    const storeId = session.storeId;
+    after(() => prisma.store.update({ where: { id: storeId }, data: { lastActiveAt: now } }).catch(() => {}));
+  } else if (session.role === "merchandiser" && session.merchandiserId) {
+    const merchandiserId = session.merchandiserId;
+    after(() =>
+      prisma.merchandiser.update({ where: { id: merchandiserId }, data: { lastActiveAt: now } }).catch(() => {})
+    );
+  }
 }
 
 export async function destroySession(): Promise<void> {

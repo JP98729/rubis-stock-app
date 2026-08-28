@@ -340,6 +340,7 @@ export function TeamAccess({
                   {!m.active && <span className="ml-2 text-[11px] text-gray-400">(disabled)</span>}
                 </span>
                 <div className="flex items-center gap-3">
+                  <span className="text-[11px] text-gray-400">{m.lastActive}</span>
                   <span className="font-mono text-xs tracking-widest text-gray-300">••••••</span>
                   <button
                     onClick={() => handleToggleActive(m.id, !m.active)}
@@ -408,6 +409,7 @@ export function TeamAccess({
                 <th className="font-medium py-2 px-4">Branch</th>
                 <th className="font-medium py-2 px-4">Code</th>
                 <th className="font-medium py-2 px-4">Phone on file</th>
+                <th className="font-medium py-2 px-4">Last active</th>
               </tr>
             </thead>
             <tbody>
@@ -418,6 +420,7 @@ export function TeamAccess({
                     {s.code}
                   </td>
                   <td className="py-2 px-4 text-gray-400 text-xs">{s.phone || "—"}</td>
+                  <td className="py-2 px-4 text-gray-400 text-xs">{s.lastActive}</td>
                 </tr>
               ))}
             </tbody>
