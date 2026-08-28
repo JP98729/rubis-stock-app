@@ -18,7 +18,7 @@ export async function sendStocktakeSummaryEmail(
     checksPlacement: string | null;
     checksPrices: string | null;
     checksMissing: string | null;
-    items: Array<{ shelfQty: number; backStock: number }>;
+    items: Array<{ name: string; shelfQty: number; backStock: number; expired: number; damaged: number }>;
   },
   minStock: number
 ) {
@@ -27,6 +27,15 @@ export async function sendStocktakeSummaryEmail(
   const flagged = entry.checksPlacement === "No" || entry.checksPrices === "No" || entry.checksMissing === "Yes";
   const lowStockCount = entry.items.filter((it) => it.shelfQty + it.backStock < minStock).length;
   const subject = `Stocktake submitted — ${store.name.trim()} — ${entry.date}`;
+  const itemLines = entry.items.map((it) => {
+    const onHand = it.shelfQty + it.backStock;
+    const extras = [
+      it.expired ? `expired ${it.expired}` : "",
+      it.damaged ? `damaged ${it.damaged}` : "",
+    ].filter(Boolean);
+    const flag = onHand < minStock ? " — LOW" : "";
+    return `  ${it.name}: shelf ${it.shelfQty}, back ${it.backStock}, total ${onHand}${extras.length ? ` (${extras.join(", ")})` : ""}${flag}`;
+  });
   const bodyLines = [
     `Branch: ${store.name.trim()} (${store.county} · ${store.type})`,
     `Date: ${entry.date}`,
@@ -35,6 +44,9 @@ export async function sendStocktakeSummaryEmail(
     `Products below minimum stock (${minStock} units): ${lowStockCount}`,
     entry.checksPlacement !== null ? `Store display check flagged an issue: ${flagged ? "Yes — see app for details" : "No"}` : "",
     entry.notes ? `Notes: ${entry.notes}` : "",
+    "",
+    "Stock counts:",
+    ...itemLines,
     "",
     "Full details, photos, and signature are in the Rubis Enjoy Stock & Reorder app.",
   ].filter(Boolean);

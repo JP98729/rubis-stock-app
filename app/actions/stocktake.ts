@@ -115,8 +115,9 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
   });
   if (!store) return { ok: false, error: "That branch no longer exists." };
 
-  const products = await prisma.product.findMany({ select: { sku: true } });
+  const products = await prisma.product.findMany({ select: { sku: true, flavour: true } });
   const known = new Set(products.map((p) => p.sku));
+  const productNames = new Map(products.map((p) => [p.sku, p.flavour]));
   const items = input.items.filter((i) => known.has(i.sku));
 
   await prisma.stocktake.create({
@@ -168,7 +169,13 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
       checksPlacement: input.checksPlacement,
       checksPrices: input.checksPrices,
       checksMissing: input.checksMissing,
-      items,
+      items: items.map((i) => ({
+        name: productNames.get(i.sku) || i.sku,
+        shelfQty: i.shelfQty,
+        backStock: i.backStock,
+        expired: i.expired,
+        damaged: i.damaged,
+      })),
     },
     MIN_STOCK
   );
