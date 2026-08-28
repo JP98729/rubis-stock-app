@@ -1,11 +1,14 @@
+import "server-only";
+
 const NOTIFY_EMAIL = "info@pure-nutritions.com";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Rubis Enjoy <onboarding@resend.dev>";
 
 /**
- * Opens the person's own email app with a pre-filled draft summarizing a just-submitted
- * stocktake. This is a client-only convenience (no backend email sending) — it just gets
- * the merchandiser to "tap Send" on something already drafted for them.
+ * Sends a stocktake summary email from the server the moment a stocktake is saved —
+ * no dependence on the submitter's own device/mail app. Silently no-ops when
+ * RESEND_API_KEY isn't set (e.g. local dev) so it never blocks a submission.
  */
-export function emailStocktakeSummary(
+export async function sendStocktakeSummaryEmail(
   store: { name: string; county: string; type: string },
   entry: {
     date: string;
@@ -19,6 +22,8 @@ export function emailStocktakeSummary(
   },
   minStock: number
 ) {
+  if (!process.env.RESEND_API_KEY) return;
+
   const flagged = entry.checksPlacement === "No" || entry.checksPrices === "No" || entry.checksMissing === "Yes";
   const lowStockCount = entry.items.filter((it) => it.shelfQty + it.backStock < minStock).length;
   const subject = `Stocktake submitted — ${store.name.trim()} — ${entry.date}`;
@@ -33,10 +38,17 @@ export function emailStocktakeSummary(
     "",
     "Full details, photos, and signature are in the Rubis Enjoy Stock & Reorder app.",
   ].filter(Boolean);
-  const href = `mailto:${NOTIFY_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyLines.join("\n"))}`;
+
   try {
-    window.open(href, "_blank");
+    const { Resend } = await import("resend");
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: NOTIFY_EMAIL,
+      subject,
+      text: bodyLines.join("\n"),
+    });
   } catch {
-    /* if popup is blocked, the person can still submit fine — email is a bonus, not required */
+    // Email is a bonus notification, not part of the submission contract — never throw.
   }
 }

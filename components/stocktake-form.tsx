@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import { ArrowLeft, ChevronDown, CreditCard, PenTool, Store as StoreIcon } from "lucide-react";
-import { AMBER, GREEN, GREEN_DARK, MIN_STOCK, RANGES, RANGE_COLORS, RANGE_TINT } from "@/lib/brand";
+import { AMBER, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT } from "@/lib/brand";
 import { Badge, NumField, YesNoQuestion } from "./ui";
 import { PlacementPhotoCapture, ProductPhotoPicker } from "./photo";
 import { SignaturePad } from "./signature-pad";
 import { submitStocktake, type StocktakeItemInput } from "@/app/actions/stocktake";
-import { emailStocktakeSummary } from "@/lib/notify";
 import type { ProductDTO } from "@/lib/queries";
 
 type ItemState = {
@@ -131,20 +130,6 @@ export function StocktakeForm({
       setError(res.error);
       return;
     }
-    emailStocktakeSummary(
-      store,
-      {
-        date: visitDate,
-        merchandiser: merchandiser.trim(),
-        idNumber: idNumber.trim(),
-        notes: notes.trim(),
-        checksPlacement: checks.placement,
-        checksPrices: checks.prices,
-        checksMissing: checks.missing,
-        items: payload,
-      },
-      MIN_STOCK
-    );
     onSaved("Stocktake saved");
     onBack();
   }

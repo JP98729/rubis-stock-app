@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { sendStocktakeSummaryEmail } from "@/lib/email";
+import { MIN_STOCK } from "@/lib/brand";
 
 export type StocktakeItemInput = {
   sku: string;
@@ -107,7 +109,10 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
   const problem = validate(input);
   if (problem) return { ok: false, error: problem };
 
-  const store = await prisma.store.findUnique({ where: { id: input.storeId }, select: { id: true } });
+  const store = await prisma.store.findUnique({
+    where: { id: input.storeId },
+    select: { id: true, name: true, county: true, type: true },
+  });
   if (!store) return { ok: false, error: "That branch no longer exists." };
 
   const products = await prisma.product.findMany({ select: { sku: true } });
@@ -152,5 +157,21 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
   revalidatePath("/branch");
   revalidatePath("/manager");
   revalidatePath("/merchandiser");
+
+  await sendStocktakeSummaryEmail(
+    store,
+    {
+      date: input.date,
+      merchandiser: input.merchandiser.trim(),
+      idNumber: input.idNumber.trim(),
+      notes: input.notes.trim(),
+      checksPlacement: input.checksPlacement,
+      checksPrices: input.checksPrices,
+      checksMissing: input.checksMissing,
+      items,
+    },
+    MIN_STOCK
+  );
+
   return { ok: true };
 }
