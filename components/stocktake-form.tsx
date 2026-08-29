@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, ChevronDown, CreditCard, PenTool, Store as StoreIcon } from "lucide-react";
+import { ArrowLeft, ChevronDown, CreditCard, MapPin, PenTool, Store as StoreIcon } from "lucide-react";
 import { AMBER, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT } from "@/lib/brand";
 import { Badge, NumField, YesNoQuestion } from "./ui";
 import { PlacementPhotoCapture, ProductPhotoPicker } from "./photo";
@@ -282,6 +282,14 @@ export function StocktakeForm({
                           className="border border-red-200 bg-red-50 rounded-lg px-3 py-2 text-sm"
                         />
                       </label>
+                    )}
+                    {(items[p.sku].expired > 0 || items[p.sku].damaged > 0) && (
+                      <div className="flex items-start gap-1.5 mt-2 text-[11px] text-red-500">
+                        <MapPin size={13} className="shrink-0 mt-0.5" />
+                        <span>
+                          Send expired/damaged returns to: Upper Kabete, Ndumbuini, Kwa Daggy, Kiambu, Nairobi
+                        </span>
+                      </div>
                     )}
                   </div>
                 ))}
