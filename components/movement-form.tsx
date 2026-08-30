@@ -5,6 +5,7 @@ import { AlertTriangle, ArrowLeft, RotateCcw, ShoppingCart, Truck } from "lucide
 import type { MovementType } from "@prisma/client";
 import { GREEN, RANGES } from "@/lib/brand";
 import { ProductThumb } from "./ui";
+import { PlacementPhotoCapture } from "./photo";
 import { submitMovement } from "@/app/actions/movement";
 import type { ProductDTO } from "@/lib/queries";
 
@@ -35,8 +36,13 @@ export function MovementForm({
   const [sku, setSku] = useState(availableProducts[0]?.sku ?? "");
   const [qty, setQty] = useState("1");
   const [date, setDate] = useState(today);
+  const [time, setTime] = useState(() => {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  });
   const [batchCode, setBatchCode] = useState("");
   const [deliveryNote, setDeliveryNote] = useState("");
+  const [deliveryNotePhotoUrl, setDeliveryNotePhotoUrl] = useState<string | null>(null);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -54,8 +60,10 @@ export function MovementForm({
       type,
       qty: Number(qty),
       date,
+      time,
       batchCode,
       deliveryNote: type === "DELIVERY" ? deliveryNote : "",
+      deliveryNotePhotoUrl: type === "DELIVERY" ? deliveryNotePhotoUrl : null,
       invoiceNumber: type === "DELIVERY" ? invoiceNumber : "",
       notes,
     });
@@ -148,6 +156,15 @@ export function MovementForm({
             />
           </label>
         </div>
+        <label className="flex flex-col gap-1">
+          <span className="text-[11px] text-gray-500 font-medium">Time</span>
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          />
+        </label>
         {type === "EXPIRED_DAMAGED" && (
           <label className="flex flex-col gap-1">
             <span className="text-[11px] text-red-500 font-medium">Batch code</span>
@@ -179,6 +196,12 @@ export function MovementForm({
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
               />
             </label>
+          </div>
+        )}
+        {type === "DELIVERY" && (
+          <div>
+            <span className="text-[11px] text-gray-500 font-medium">Photo of the delivery note (optional)</span>
+            <PlacementPhotoCapture photo={deliveryNotePhotoUrl} onChange={setDeliveryNotePhotoUrl} tone="neutral" />
           </div>
         )}
         <label className="flex flex-col gap-1">

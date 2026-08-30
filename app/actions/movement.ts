@@ -11,8 +11,10 @@ export type MovementInput = {
   type: MovementType;
   qty: number;
   date: string;
+  time: string;
   batchCode: string;
   deliveryNote: string;
+  deliveryNotePhotoUrl: string | null;
   invoiceNumber: string;
   notes: string;
 };
@@ -50,8 +52,10 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
       type: input.type,
       qty,
       date: input.date,
+      time: (input.time || "").trim(),
       batchCode: (input.batchCode || "").trim(),
       deliveryNote: input.type === "DELIVERY" ? (input.deliveryNote || "").trim() : "",
+      deliveryNotePhotoUrl: input.type === "DELIVERY" ? input.deliveryNotePhotoUrl : null,
       invoiceNumber: input.type === "DELIVERY" ? (input.invoiceNumber || "").trim() : "",
       notes: (input.notes || "").trim(),
     },

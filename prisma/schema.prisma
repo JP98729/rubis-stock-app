@@ -220,10 +220,13 @@ model Movement {
   type      MovementType
   qty       Int
   date      String // "YYYY-MM-DD"
+  /// Time the movement was logged — "HH:MM", 24h. Optional.
+  time      String @default("")
   batchCode String       @default("")
   /// Only relevant for type DELIVERY, optional.
-  deliveryNote  String @default("")
-  invoiceNumber String @default("")
+  deliveryNote         String  @default("")
+  deliveryNotePhotoUrl String?
+  invoiceNumber        String  @default("")
   notes     String       @default("")
   createdAt DateTime     @default(now())
 
