@@ -227,6 +227,8 @@ model Movement {
   deliveryNote         String  @default("")
   deliveryNotePhotoUrl String?
   invoiceNumber        String  @default("")
+  /// Name of the person at the branch who received the order.
+  receivedBy           String  @default("")
   notes     String       @default("")
   /// Required before submitting — enforced in the app, not the DB, matching
   /// idNumber/kraPin so existing rows don't need a value.

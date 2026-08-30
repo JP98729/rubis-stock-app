@@ -16,6 +16,7 @@ export type MovementInput = {
   deliveryNote: string;
   deliveryNotePhotoUrl: string | null;
   invoiceNumber: string;
+  receivedBy: string;
   notes: string;
   signatureUrl: string | null;
 };
@@ -62,6 +63,7 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
       deliveryNote: input.type === "DELIVERY" ? (input.deliveryNote || "").trim() : "",
       deliveryNotePhotoUrl: input.type === "DELIVERY" ? input.deliveryNotePhotoUrl : null,
       invoiceNumber: input.type === "DELIVERY" ? (input.invoiceNumber || "").trim() : "",
+      receivedBy: input.type === "DELIVERY" ? (input.receivedBy || "").trim() : "",
       notes: (input.notes || "").trim(),
       signatureUrl: input.signatureUrl || "",
     },

@@ -211,6 +211,7 @@ export async function restoreBackup(json: string): Promise<RestoreResult> {
             deliveryNote: m.deliveryNote ?? "",
             deliveryNotePhotoUrl: m.deliveryNotePhotoUrl ?? null,
             invoiceNumber: m.invoiceNumber ?? "",
+            receivedBy: m.receivedBy ?? "",
             notes: m.notes ?? "",
             signatureUrl: m.signatureUrl ?? "",
             createdAt: m.createdAt ? new Date(m.createdAt) : undefined,

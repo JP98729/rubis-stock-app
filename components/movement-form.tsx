@@ -45,6 +45,7 @@ export function MovementForm({
   const [deliveryNote, setDeliveryNote] = useState("");
   const [deliveryNotePhotoUrl, setDeliveryNotePhotoUrl] = useState<string | null>(null);
   const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [receivedBy, setReceivedBy] = useState("");
   const [notes, setNotes] = useState("");
   const [signature, setSignature] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -68,6 +69,7 @@ export function MovementForm({
       deliveryNote: type === "DELIVERY" ? deliveryNote : "",
       deliveryNotePhotoUrl: type === "DELIVERY" ? deliveryNotePhotoUrl : null,
       invoiceNumber: type === "DELIVERY" ? invoiceNumber : "",
+      receivedBy: type === "DELIVERY" ? receivedBy : "",
       notes,
       signatureUrl: embedded ? null : signature,
     });
@@ -201,6 +203,17 @@ export function MovementForm({
               />
             </label>
           </div>
+        )}
+        {type === "DELIVERY" && (
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] text-gray-500 font-medium">Received by (optional)</span>
+            <input
+              value={receivedBy}
+              onChange={(e) => setReceivedBy(e.target.value)}
+              placeholder="Name of the person at the store who received it"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            />
+          </label>
         )}
         {type === "DELIVERY" && (
           <div>
