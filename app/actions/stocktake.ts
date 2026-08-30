@@ -198,6 +198,7 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
     store,
     {
       date: input.date,
+      visitTime: input.embedded ? "" : input.visitTime.trim(),
       merchandiser: input.merchandiser.trim(),
       idNumber: input.idNumber.trim(),
       notes: input.notes.trim(),
@@ -211,6 +212,7 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
         expired: i.expired,
         damaged: i.damaged,
       })),
+      competitors: competitors.map((c) => ({ brand: c.brand, gram: c.gram, description: c.description, price: c.price })),
     },
     MIN_STOCK
   );
