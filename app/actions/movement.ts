@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { sendMovementSummaryEmail } from "@/lib/email";
-import { attachFileToSaleOrder } from "@/lib/odoo";
+import { attachFileToSaleOrder, setSaleOrderReference } from "@/lib/odoo";
 import type { MovementType } from "@prisma/client";
 
 export type MovementInput = {
@@ -111,21 +111,31 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
   });
 
   // Best-effort: attach the delivery note straight onto the branch's most recent
-  // Odoo Sales Order, so proof of delivery lives on the order it fulfils. No-ops
-  // silently if Odoo sync isn't configured or this branch has no order on file yet.
-  if (input.type === "DELIVERY" && input.deliveryNotePhotoUrl) {
+  // Odoo Sales Order, so proof of delivery lives on the order it fulfils, and stamp
+  // the order's Customer Reference with the same delivery note/invoice nr so the
+  // order visibly matches the physical paperwork. No-ops silently if Odoo sync isn't
+  // configured or this branch has no order on file yet.
+  if (input.type === "DELIVERY") {
     const latestOrder = await prisma.lpoDocument.findFirst({
       where: { storeId: input.storeId, odooSaleOrderId: { not: null } },
       orderBy: { uploadedAt: "desc" },
       select: { odooSaleOrderId: true },
     });
     if (latestOrder?.odooSaleOrderId) {
-      const ext = input.deliveryNotePhotoUrl.toLowerCase().endsWith(".pdf") ? "pdf" : "jpg";
-      await attachFileToSaleOrder(
-        latestOrder.odooSaleOrderId,
-        input.deliveryNotePhotoUrl,
-        `Delivery note - ${store.name.trim()} - ${input.date}.${ext}`
-      );
+      if (input.deliveryNotePhotoUrl) {
+        const ext = input.deliveryNotePhotoUrl.toLowerCase().endsWith(".pdf") ? "pdf" : "jpg";
+        await attachFileToSaleOrder(
+          latestOrder.odooSaleOrderId,
+          input.deliveryNotePhotoUrl,
+          `Delivery note - ${store.name.trim()} - ${input.date}.${ext}`
+        );
+      }
+      const deliveryNote = (input.deliveryNote || "").trim();
+      const invoiceNumber = (input.invoiceNumber || "").trim();
+      if (deliveryNote || invoiceNumber) {
+        const parts = [deliveryNote && `DN ${deliveryNote}`, invoiceNumber && `Inv ${invoiceNumber}`].filter(Boolean);
+        await setSaleOrderReference(latestOrder.odooSaleOrderId, parts.join(" / "));
+      }
     }
   }
 

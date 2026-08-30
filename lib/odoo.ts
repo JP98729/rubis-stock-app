@@ -254,3 +254,28 @@ export async function attachFileToSaleOrder(saleOrderId: number, fileUrl: string
 export async function attachPdfToExpense(expenseId: number, pdfBuffer: Buffer, filename: string): Promise<boolean> {
   return attachBufferToOdoo("hr.expense", expenseId, pdfBuffer, filename, "application/pdf");
 }
+
+/**
+ * Writes the delivery note nr / invoice nr onto a Sales Order's Customer Reference
+ * field, so the order carries the same numbers as the physical paperwork attached to
+ * it. Returns false (never throws) whenever Odoo sync isn't configured or fails.
+ */
+export async function setSaleOrderReference(saleOrderId: number, reference: string): Promise<boolean> {
+  try {
+    const auth = await authenticate();
+    if (!auth) return false;
+
+    await jsonRpc<boolean>(auth.url, "object", "execute_kw", [
+      auth.db,
+      auth.uid,
+      auth.apiKey,
+      "sale.order",
+      "write",
+      [[saleOrderId], { client_order_ref: reference }],
+    ]);
+
+    return true;
+  } catch {
+    return false;
+  }
+}
