@@ -130,6 +130,9 @@ model Stocktake {
 
   /// Visit date the merchandiser picked — "YYYY-MM-DD", not necessarily today.
   date         String
+  /// Time the merchandiser started the visit — "HH:MM", 24h. Blank for branch
+  /// managers' own embedded self-service stocktake (not required there).
+  visitTime    String @default("")
   merchandiser String
   idNumber     String @default("")
   /// Required for every stocktake.

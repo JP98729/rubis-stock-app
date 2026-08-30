@@ -143,6 +143,7 @@ export async function restoreBackup(json: string): Promise<RestoreResult> {
               id: st.id,
               storeId: st.storeId,
               date: st.date,
+              visitTime: st.visitTime ?? "",
               merchandiser: st.merchandiser ?? "",
               idNumber: st.idNumber ?? "",
               signatureUrl: st.signatureUrl ?? "",

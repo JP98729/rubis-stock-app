@@ -27,6 +27,7 @@ export type CompetitorInput = {
 export type StocktakeInput = {
   storeId: number;
   date: string;
+  visitTime: string;
   merchandiser: string;
   idNumber: string;
   signatureUrl: string | null;
@@ -59,6 +60,7 @@ function validate(input: StocktakeInput): string | null {
   if (!input.merchandiser.trim()) return "Enter your name before submitting.";
   if (!input.embedded && !input.idNumber.trim()) return "Enter your ID number before submitting.";
   if (!input.date) return "Select the date before submitting.";
+  if (!input.embedded && !input.visitTime.trim()) return "Select the visit time before submitting.";
 
   if (!input.embedded) {
     if (
@@ -141,6 +143,7 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
     data: {
       storeId: input.storeId,
       date: input.date,
+      visitTime: input.embedded ? "" : input.visitTime.trim(),
       merchandiser: input.merchandiser.trim(),
       idNumber: input.embedded ? "" : input.idNumber.trim(),
       signatureUrl: input.signatureUrl!,

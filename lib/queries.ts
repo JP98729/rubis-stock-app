@@ -436,6 +436,7 @@ export type RecentStocktakeDTO = {
   merchandiser: string;
   idNumber: string;
   date: string;
+  visitTime: string;
   signatureUrl: string;
   hasIssue: boolean;
 };
@@ -450,6 +451,7 @@ export async function getRecentStocktakes(limit = 8): Promise<RecentStocktakeDTO
       merchandiser: true,
       idNumber: true,
       date: true,
+      visitTime: true,
       signatureUrl: true,
       checksPlacement: true,
       checksPrices: true,
@@ -464,6 +466,7 @@ export async function getRecentStocktakes(limit = 8): Promise<RecentStocktakeDTO
     merchandiser: r.merchandiser,
     idNumber: r.idNumber,
     date: r.date,
+    visitTime: r.visitTime,
     signatureUrl: r.signatureUrl,
     hasIssue: r.checksPlacement === "No" || r.checksPrices === "No" || r.checksMissing === "Yes",
   }));

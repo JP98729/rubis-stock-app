@@ -44,6 +44,10 @@ export function StocktakeForm({
   const [merchandiser, setMerchandiser] = useState(defaultName || "");
   const [idNumber, setIdNumber] = useState("");
   const [visitDate, setVisitDate] = useState(today);
+  const [visitTime, setVisitTime] = useState(() => {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  });
   const [signature, setSignature] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [checks, setChecks] = useState<{
@@ -95,6 +99,7 @@ export function StocktakeForm({
     if (!merchandiser.trim()) return setError("Enter your name before submitting.");
     if (!embedded && !idNumber.trim()) return setError("Enter your ID number before submitting.");
     if (!visitDate) return setError("Select the date before submitting.");
+    if (!embedded && !visitTime) return setError("Select the visit time before submitting.");
     if (!embedded) {
       if (checks.placement === null || checks.prices === null || checks.missing === null || checks.promotion === null)
         return setError("Please answer all four store display questions before submitting.");
@@ -128,6 +133,7 @@ export function StocktakeForm({
     const res = await submitStocktake({
       storeId: store.id,
       date: visitDate,
+      visitTime: embedded ? "" : visitTime,
       merchandiser: merchandiser.trim(),
       idNumber: idNumber.trim(),
       signatureUrl: signature,
@@ -234,6 +240,17 @@ export function StocktakeForm({
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
               />
             </label>
+            {!embedded && (
+              <label className="flex flex-col gap-1 flex-1">
+                <span className="text-[11px] text-gray-500 font-medium">Time</span>
+                <input
+                  type="time"
+                  value={visitTime}
+                  onChange={(e) => setVisitTime(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                />
+              </label>
+            )}
           </div>
         </div>
       </div>

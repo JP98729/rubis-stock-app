@@ -89,6 +89,7 @@ export function Dashboard({
                   <div className="text-gray-400 text-xs truncate">
                     {st.merchandiser}
                     {st.idNumber ? ` · ID ${st.idNumber}` : ""} · {st.date}
+                    {st.visitTime ? ` ${st.visitTime}` : ""}
                   </div>
                 </div>
                 {st.signatureUrl ? (

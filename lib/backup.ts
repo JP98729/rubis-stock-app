@@ -40,6 +40,7 @@ export type Backup = {
     id: string;
     storeId: number;
     date: string;
+    visitTime: string;
     merchandiser: string;
     idNumber: string;
     signatureUrl: string;
@@ -156,6 +157,7 @@ export async function buildBackup(): Promise<Backup> {
       id: st.id,
       storeId: st.storeId,
       date: st.date,
+      visitTime: st.visitTime,
       merchandiser: st.merchandiser,
       idNumber: st.idNumber,
       signatureUrl: st.signatureUrl,
