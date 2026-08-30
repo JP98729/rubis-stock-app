@@ -56,6 +56,8 @@ export function MovementForm({
 
   async function handleSubmit() {
     setError("");
+    if (type === "DELIVERY" && !deliveryNote.trim()) return setError("Enter the delivery note nr before submitting.");
+    if (type === "DELIVERY" && !invoiceNumber.trim()) return setError("Enter the invoice nr before submitting.");
     if (!embedded && !signature) return setError("Please sign before submitting.");
     setSubmitting(true);
     const res = await submitMovement({
@@ -185,21 +187,25 @@ export function MovementForm({
         {type === "DELIVERY" && (
           <div className="flex gap-2">
             <label className="flex flex-col gap-1 flex-1">
-              <span className="text-[11px] text-gray-500 font-medium">Delivery note nr (optional)</span>
+              <span className="text-[11px] font-medium" style={{ color: "#1D4ED8" }}>
+                Delivery note nr — required
+              </span>
               <input
                 value={deliveryNote}
                 onChange={(e) => setDeliveryNote(e.target.value)}
                 placeholder="e.g. DN-2026-0813"
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                className="border border-blue-200 bg-blue-50 rounded-lg px-3 py-2 text-sm"
               />
             </label>
             <label className="flex flex-col gap-1 flex-1">
-              <span className="text-[11px] text-gray-500 font-medium">Invoice nr (optional)</span>
+              <span className="text-[11px] font-medium" style={{ color: "#1D4ED8" }}>
+                Invoice nr — required
+              </span>
               <input
                 value={invoiceNumber}
                 onChange={(e) => setInvoiceNumber(e.target.value)}
                 placeholder="e.g. INV-2026-0813"
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                className="border border-blue-200 bg-blue-50 rounded-lg px-3 py-2 text-sm"
               />
             </label>
           </div>

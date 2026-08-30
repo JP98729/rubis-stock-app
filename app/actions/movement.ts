@@ -44,6 +44,12 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
   const qty = Math.trunc(Number(input.qty) || 0);
   if (qty < 1) return { ok: false, error: "Quantity must be at least 1." };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) return { ok: false, error: "Select a valid date." };
+  if (input.type === "DELIVERY" && !input.deliveryNote.trim()) {
+    return { ok: false, error: "Enter the delivery note nr before submitting." };
+  }
+  if (input.type === "DELIVERY" && !input.invoiceNumber.trim()) {
+    return { ok: false, error: "Enter the invoice nr before submitting." };
+  }
 
   const product = await prisma.product.findUnique({ where: { sku: input.sku }, select: { sku: true, unavailable: true } });
   if (!product) return { ok: false, error: "Unknown product." };
