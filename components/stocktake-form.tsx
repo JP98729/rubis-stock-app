@@ -179,27 +179,27 @@ export function StocktakeForm({
           {store.county} · {store.type}
         </div>
         {(managerPhotoUrl || managerName || managerPhone) && (
-          <div className="flex items-center gap-2.5 mt-3 p-2.5 rounded-lg" style={{ background: "#EEF7DE" }}>
+          <div className="flex items-center gap-3 mt-3 p-2.5 rounded-lg" style={{ background: "#EEF7DE" }}>
             {managerPhotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={managerPhotoUrl}
                 alt="Branch manager"
-                className="w-11 h-11 rounded-full object-cover border-2 border-white shadow-sm"
+                className="w-24 h-24 rounded-full object-cover border-2 border-white shadow-sm shrink-0"
               />
             ) : (
-              <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0 border-2 border-white shadow-sm">
-                <StoreIcon size={16} style={{ color: GREEN_DARK }} />
+              <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center shrink-0 border-2 border-white shadow-sm">
+                <StoreIcon size={32} style={{ color: GREEN_DARK }} />
               </div>
             )}
-            <div className="text-xs" style={{ color: GREEN_DARK }}>
+            <div className="text-sm" style={{ color: GREEN_DARK }}>
               <div className="font-semibold">{managerName || "Branch manager on file"}</div>
               {managerPhone && (
                 <a href={`tel:${managerPhone}`} className="underline">
                   {managerPhone}
                 </a>
               )}
-              <div>
+              <div className="text-xs">
                 {managerPhotoUrl
                   ? "Confirm you're speaking with this person before starting."
                   : "No photo on file yet — confirm their name in person."}
