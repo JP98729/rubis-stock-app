@@ -148,6 +148,7 @@ export function MerchandiserView({
           defaultName={merchName}
           managerPhotoUrl={selected.managerPhotoUrl}
           managerName={selected.managerName}
+          managerPhone={selected.phone}
           onBack={() => setSelected(null)}
           onSaved={showToast}
         />

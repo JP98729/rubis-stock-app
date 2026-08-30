@@ -26,6 +26,7 @@ export function StocktakeForm({
   defaultName,
   managerPhotoUrl,
   managerName,
+  managerPhone,
   onBack,
   onSaved,
 }: {
@@ -36,6 +37,7 @@ export function StocktakeForm({
   defaultName?: string;
   managerPhotoUrl?: string | null;
   managerName?: string | null;
+  managerPhone?: string | null;
   onBack: () => void;
   onSaved: (msg: string) => void;
 }) {
@@ -186,6 +188,11 @@ export function StocktakeForm({
             )}
             <div className="text-xs" style={{ color: GREEN_DARK }}>
               <div className="font-semibold">{managerName || "Branch manager on file"}</div>
+              {managerPhone && (
+                <a href={`tel:${managerPhone}`} className="underline">
+                  {managerPhone}
+                </a>
+              )}
               <div>
                 {managerPhotoUrl
                   ? "Confirm you're speaking with this person before starting."
