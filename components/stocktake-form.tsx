@@ -249,23 +249,31 @@ export function StocktakeForm({
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <NumField label="Shelf" value={items[p.sku].shelfQty} onChange={(v) => upd(p.sku, "shelfQty", v)} />
+                      <NumField
+                        label="Shelf"
+                        value={items[p.sku].shelfQty}
+                        onChange={(v) => upd(p.sku, "shelfQty", v)}
+                        disabled={p.unavailable}
+                      />
                       <NumField
                         label="Back stock"
                         value={items[p.sku].backStock}
                         onChange={(v) => upd(p.sku, "backStock", v)}
+                        disabled={p.unavailable}
                       />
                       <NumField
                         label="Expired"
                         value={items[p.sku].expired}
                         onChange={(v) => upd(p.sku, "expired", v)}
                         danger={items[p.sku].expired > 0}
+                        disabled={p.unavailable}
                       />
                       <NumField
                         label="Damaged"
                         value={items[p.sku].damaged}
                         onChange={(v) => upd(p.sku, "damaged", v)}
                         danger={items[p.sku].damaged > 0}
+                        disabled={p.unavailable}
                       />
                     </div>
                     {(items[p.sku].expired > 0 || items[p.sku].damaged > 0) && (

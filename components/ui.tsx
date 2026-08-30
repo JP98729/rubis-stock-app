@@ -41,11 +41,13 @@ export function NumField({
   value,
   onChange,
   danger,
+  disabled,
 }: {
   label: string;
   value: number;
   onChange: (v: number) => void;
   danger?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <label className="flex flex-col gap-1 flex-1 min-w-[70px]">
@@ -56,8 +58,13 @@ export function NumField({
         inputMode="numeric"
         value={value}
         onChange={(e) => onChange(e.target.value === "" ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
+        disabled={disabled}
         className={`border rounded-lg px-2 py-2 text-sm w-full text-center ${
-          danger ? "border-red-300 bg-red-50" : "border-gray-300"
+          disabled
+            ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+            : danger
+              ? "border-red-300 bg-red-50"
+              : "border-gray-300"
         }`}
       />
     </label>

@@ -35,8 +35,9 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
   if (qty < 1) return { ok: false, error: "Quantity must be at least 1." };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) return { ok: false, error: "Select a valid date." };
 
-  const product = await prisma.product.findUnique({ where: { sku: input.sku }, select: { sku: true } });
+  const product = await prisma.product.findUnique({ where: { sku: input.sku }, select: { sku: true, unavailable: true } });
   if (!product) return { ok: false, error: "Unknown product." };
+  if (product.unavailable) return { ok: false, error: "This product is not currently made — it can't be logged." };
   const store = await prisma.store.findUnique({ where: { id: input.storeId }, select: { id: true } });
   if (!store) return { ok: false, error: "That branch no longer exists." };
 

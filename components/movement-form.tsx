@@ -30,8 +30,9 @@ export function MovementForm({
   onBack: () => void;
   onSaved: (msg: string) => void;
 }) {
+  const availableProducts = products.filter((p) => !p.unavailable);
   const [type, setType] = useState<MovementType>("DELIVERY");
-  const [sku, setSku] = useState(products[0]?.sku ?? "");
+  const [sku, setSku] = useState(availableProducts[0]?.sku ?? "");
   const [qty, setQty] = useState("1");
   const [date, setDate] = useState(today);
   const [batchCode, setBatchCode] = useState("");
@@ -39,7 +40,7 @@ export function MovementForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const selectedProduct = products.find((p) => p.sku === sku);
+  const selectedProduct = availableProducts.find((p) => p.sku === sku);
   const typeLabel = TYPES.find((t) => t.key === type)?.label ?? "";
 
   async function handleSubmit() {
@@ -102,12 +103,11 @@ export function MovementForm({
           >
             {RANGES.map((r) => (
               <optgroup key={r} label={r}>
-                {products
+                {availableProducts
                   .filter((p) => p.range === r)
                   .map((p) => (
                     <option key={p.sku} value={p.sku}>
                       {p.flavour}
-                      {p.unavailable ? " (not currently made)" : ""}
                     </option>
                   ))}
               </optgroup>
@@ -120,12 +120,6 @@ export function MovementForm({
                 SKU {selectedProduct.sku}
                 {selectedProduct.barcode ? ` · Barcode ${selectedProduct.barcode}` : ""}
               </span>
-            </div>
-          )}
-          {selectedProduct?.unavailable && (
-            <div className="text-[11px] font-semibold mt-1" style={{ color: "#B45309" }}>
-              ⚠ Not currently made — don&apos;t expect a Delivery of this item. Only log Sale/Return/Expired-Damaged for
-              stock already in the store.
             </div>
           )}
         </label>
