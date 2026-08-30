@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { sendStocktakeSummaryEmail } from "@/lib/email";
-import { createMerchandiserVisitExpense } from "@/lib/odoo";
+import { createMerchandiserVisitExpense, attachPdfToExpense } from "@/lib/odoo";
 import { MIN_STOCK } from "@/lib/brand";
 
 export type StocktakeItemInput = {
@@ -190,15 +190,16 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
   revalidatePath("/manager");
   revalidatePath("/merchandiser");
 
+  let expense: { id: number; name: string } | null = null;
   if (!input.embedded) {
-    await createMerchandiserVisitExpense({
+    expense = await createMerchandiserVisitExpense({
       branchName: store.name,
       merchandiser: input.merchandiser.trim(),
       date: input.date,
     });
   }
 
-  await sendStocktakeSummaryEmail(
+  const pdfBuffer = await sendStocktakeSummaryEmail(
     store,
     {
       date: input.date,
@@ -224,6 +225,12 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
     },
     MIN_STOCK
   );
+
+  // Best-effort: put the stocktake PDF right on the expense record it's the receipt
+  // for, so the KES 300 fee and the visit it paid for live in the same place in Odoo.
+  if (expense && pdfBuffer) {
+    await attachPdfToExpense(expense.id, pdfBuffer, `Stocktake ${store.name.trim()} ${input.date}.pdf`);
+  }
 
   return { ok: true };
 }

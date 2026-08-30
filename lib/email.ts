@@ -21,7 +21,8 @@ function esc(s: string): string {
 /**
  * Sends a stocktake summary email from the server the moment a stocktake is saved —
  * no dependence on the submitter's own device/mail app. Silently no-ops when
- * RESEND_API_KEY isn't set (e.g. local dev) so it never blocks a submission.
+ * RESEND_API_KEY isn't set (e.g. local dev) so it never blocks a submission. Returns
+ * the generated PDF buffer (or null) so the caller can also push it to Odoo.
  */
 export async function sendStocktakeSummaryEmail(
   store: { name: string; county: string; type: string },
@@ -41,8 +42,8 @@ export async function sendStocktakeSummaryEmail(
     competitors: Array<{ brand: string; gram: string; description: string; price: number }>;
   },
   minStock: number
-) {
-  if (!process.env.RESEND_API_KEY) return;
+): Promise<Buffer | null> {
+  if (!process.env.RESEND_API_KEY) return null;
 
   const flagged = entry.checksPlacement === "No" || entry.checksPrices === "No" || entry.checksMissing === "Yes";
   const lowStockCount = entry.items.filter((it) => it.shelfQty + it.backStock < minStock).length;
@@ -221,15 +222,16 @@ export async function sendStocktakeSummaryEmail(
   </div>
 </div>`;
 
+  let pdfBuffer: Buffer | null = null;
+  try {
+    pdfBuffer = await renderStocktakeSummaryPdf(store, entry, minStock);
+  } catch {
+    // The PDF is a bonus attachment — never let a rendering failure block the email.
+  }
+
   try {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
-    let pdfBuffer: Buffer | null = null;
-    try {
-      pdfBuffer = await renderStocktakeSummaryPdf(store, entry, minStock);
-    } catch {
-      // The PDF is a bonus attachment — never let a rendering failure block the email.
-    }
     await resend.emails.send({
       from: FROM_EMAIL,
       to: NOTIFY_EMAIL,
@@ -249,6 +251,8 @@ export async function sendStocktakeSummaryEmail(
   } catch {
     // Email is a bonus notification, not part of the submission contract — never throw.
   }
+
+  return pdfBuffer;
 }
 
 const MOVEMENT_TYPE_LABELS: Record<string, string> = {

@@ -190,21 +190,20 @@ function mimetypeFor(filename: string): string {
 }
 
 /**
- * Attaches a file (e.g. a delivery note) to an existing Sales Order in Odoo, so proof
- * of delivery lives right on the order it fulfils. Fetches the file from its own
- * public URL (Vercel Blob) and uploads it as an ir.attachment. Returns false (never
- * throws) whenever Odoo sync isn't configured, the URL isn't publicly fetchable
- * (local dev), or anything else goes wrong — this must never block a movement log.
+ * Low-level: uploads a file buffer as an ir.attachment on any Odoo record. Returns
+ * false (never throws) whenever Odoo sync isn't configured or anything goes wrong —
+ * an attachment is always a bonus, never part of the calling action's contract.
  */
-export async function attachFileToSaleOrder(saleOrderId: number, fileUrl: string, filename: string): Promise<boolean> {
+async function attachBufferToOdoo(
+  model: string,
+  resId: number,
+  buffer: Buffer,
+  filename: string,
+  mimetype: string
+): Promise<boolean> {
   try {
     const auth = await authenticate();
     if (!auth) return false;
-    if (!/^https?:\/\//i.test(fileUrl)) return false;
-
-    const res = await fetch(fileUrl);
-    if (!res.ok) return false;
-    const buffer = Buffer.from(await res.arrayBuffer());
 
     await jsonRpc<number>(auth.url, "object", "execute_kw", [
       auth.db,
@@ -216,9 +215,9 @@ export async function attachFileToSaleOrder(saleOrderId: number, fileUrl: string
         {
           name: filename,
           datas: buffer.toString("base64"),
-          res_model: "sale.order",
-          res_id: saleOrderId,
-          mimetype: mimetypeFor(filename),
+          res_model: model,
+          res_id: resId,
+          mimetype,
         },
       ],
     ]);
@@ -227,4 +226,31 @@ export async function attachFileToSaleOrder(saleOrderId: number, fileUrl: string
   } catch {
     return false;
   }
+}
+
+/**
+ * Attaches a file (e.g. a delivery note) to an existing Sales Order in Odoo, so proof
+ * of delivery lives right on the order it fulfils. Fetches the file from its own
+ * public URL (Vercel Blob) and uploads it as an ir.attachment. Returns false whenever
+ * the URL isn't publicly fetchable (local dev) or anything else goes wrong.
+ */
+export async function attachFileToSaleOrder(saleOrderId: number, fileUrl: string, filename: string): Promise<boolean> {
+  try {
+    if (!/^https?:\/\//i.test(fileUrl)) return false;
+    const res = await fetch(fileUrl);
+    if (!res.ok) return false;
+    const buffer = Buffer.from(await res.arrayBuffer());
+    return attachBufferToOdoo("sale.order", saleOrderId, buffer, filename, mimetypeFor(filename));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Attaches the stocktake summary PDF to the merchandiser visit expense created for
+ * it, so the receipt for the KES 300 fee sits right alongside the visit record it's
+ * for — no manual upload needed.
+ */
+export async function attachPdfToExpense(expenseId: number, pdfBuffer: Buffer, filename: string): Promise<boolean> {
+  return attachBufferToOdoo("hr.expense", expenseId, pdfBuffer, filename, "application/pdf");
 }
