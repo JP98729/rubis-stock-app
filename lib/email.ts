@@ -1,4 +1,5 @@
 import "server-only";
+import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO } from "@/lib/brand";
 
 const NOTIFY_EMAIL = "info@pure-nutritions.com";
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Rubis Enjoy <onboarding@resend.dev>";
@@ -29,12 +30,13 @@ export async function sendStocktakeSummaryEmail(
     merchandiser: string;
     idNumber: string;
     merchandiserPhone: string;
+    kraPin: string;
     embedded: boolean;
     notes: string;
     checksPlacement: string | null;
     checksPrices: string | null;
     checksMissing: string | null;
-    items: Array<{ name: string; shelfQty: number; backStock: number; expired: number; damaged: number }>;
+    items: Array<{ name: string; range: string; shelfQty: number; backStock: number; expired: number; damaged: number }>;
     competitors: Array<{ brand: string; gram: string; description: string; price: number }>;
   },
   minStock: number
@@ -46,7 +48,7 @@ export async function sendStocktakeSummaryEmail(
   const subject = `Stocktake submitted — ${store.name.trim()} — ${entry.date}`;
 
   // Plain-text fallback for clients that don't render HTML.
-  const itemLines = entry.items.map((it) => {
+  const itemLine = (it: (typeof entry.items)[number]) => {
     const onHand = it.shelfQty + it.backStock;
     const extras = [
       it.expired ? `expired ${it.expired}` : "",
@@ -54,6 +56,11 @@ export async function sendStocktakeSummaryEmail(
     ].filter(Boolean);
     const flag = onHand < minStock ? " — LOW" : "";
     return `  ${it.name}: shelf ${it.shelfQty}, back ${it.backStock}, total ${onHand}${extras.length ? ` (${extras.join(", ")})` : ""}${flag}`;
+  };
+  const itemLines = RANGES.flatMap((range) => {
+    const rangeItems = entry.items.filter((it) => it.range === range);
+    if (rangeItems.length === 0) return [];
+    return [`  ${range}:`, ...rangeItems.map(itemLine)];
   });
   const competitorLines = entry.competitors.map(
     (c, i) => `  ${i + 1}. ${c.brand} (${c.gram}) — ${c.description} — KES ${c.price}`
@@ -61,8 +68,8 @@ export async function sendStocktakeSummaryEmail(
   const text = [
     `Branch: ${store.name.trim()} (${store.county} · ${store.type})`,
     `Date: ${entry.date}${entry.visitTime ? ` at ${entry.visitTime}` : ""}`,
-    `Submitted by: ${entry.merchandiser}${entry.idNumber ? ` (ID ${entry.idNumber})` : ""}${entry.merchandiserPhone ? ` — ${entry.merchandiserPhone}` : ""}`,
-    !entry.embedded ? `Service fee for this visit: KES ${MERCHANDISER_VISIT_FEE_KES}` : "",
+    `Submitted by: ${entry.merchandiser}${entry.idNumber ? ` (ID ${entry.idNumber})` : ""}${entry.merchandiserPhone ? ` — ${entry.merchandiserPhone}` : ""}${entry.kraPin ? ` — KRA PIN ${entry.kraPin}` : ""}`,
+    !entry.embedded ? `*** Service fee for this visit: KES ${MERCHANDISER_VISIT_FEE_KES} — logged as a draft expense in Odoo ***` : "",
     "",
     `Products below minimum stock (${minStock} units): ${lowStockCount}`,
     entry.checksPlacement !== null ? `Store display check flagged an issue: ${flagged ? "Yes — see app for details" : "No"}` : "",
@@ -78,17 +85,13 @@ export async function sendStocktakeSummaryEmail(
     .join("\n");
 
   // HTML version — table-based layout for email-client compatibility.
-  const stockRows = entry.items
-    .map((it) => {
-      const onHand = it.shelfQty + it.backStock;
-      const low = onHand < minStock;
-      const extras = [
-        it.expired ? `${it.expired} expired` : "",
-        it.damaged ? `${it.damaged} damaged` : "",
-      ]
-        .filter(Boolean)
-        .join(", ");
-      return `
+  const stockRow = (it: (typeof entry.items)[number]) => {
+    const onHand = it.shelfQty + it.backStock;
+    const low = onHand < minStock;
+    const extras = [it.expired ? `${it.expired} expired` : "", it.damaged ? `${it.damaged} damaged` : ""]
+      .filter(Boolean)
+      .join(", ");
+    return `
         <tr>
           <td style="padding:8px 10px;border-bottom:1px solid ${BORDER};font-size:13px;color:${INK};">${esc(it.name)}</td>
           <td style="padding:8px 10px;border-bottom:1px solid ${BORDER};font-size:13px;color:${INK};text-align:center;">${it.shelfQty}</td>
@@ -96,8 +99,17 @@ export async function sendStocktakeSummaryEmail(
           <td style="padding:8px 10px;border-bottom:1px solid ${BORDER};font-size:13px;text-align:center;font-weight:600;color:${low ? RED : INK};">${onHand}${low ? " ⚠" : ""}</td>
           <td style="padding:8px 10px;border-bottom:1px solid ${BORDER};font-size:12px;color:${RED};">${extras ? esc(extras) : ""}</td>
         </tr>`;
-    })
-    .join("");
+  };
+  const stockRows = RANGES.map((range) => {
+    const rangeItems = entry.items.filter((it) => it.range === range);
+    if (rangeItems.length === 0) return "";
+    const color = RANGE_COLORS[range] || MUTED;
+    return `
+        <tr>
+          <td colspan="5" style="padding:10px 10px 6px;font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.03em;">${esc(range)}</td>
+        </tr>
+        ${rangeItems.map(stockRow).join("")}`;
+  }).join("");
 
   const competitorRows = entry.competitors
     .map(
@@ -114,6 +126,16 @@ export async function sendStocktakeSummaryEmail(
   const html = `
 <div style="background:${BG};padding:24px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid ${BORDER};">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border-bottom:1px solid ${BORDER};">
+      <tr>
+        <td style="padding:12px 24px;">
+          <img src="${PURE_LOGO}" alt="Pure Nutrition" height="48" style="height:48px;width:auto;vertical-align:middle;" />
+        </td>
+        <td style="padding:12px 24px;text-align:right;">
+          <img src="${ENJOY_LOGO}" alt="Rubis Enjoy" height="28" style="height:28px;width:auto;vertical-align:middle;" />
+        </td>
+      </tr>
+    </table>
     <div style="background:${GREEN};padding:20px 24px;">
       <div style="color:#ffffff;font-size:18px;font-weight:700;">${esc(store.name.trim())}</div>
       <div style="color:#EFFBDD;font-size:13px;margin-top:2px;">${esc(store.county)} · ${esc(store.type)}</div>
@@ -127,17 +149,27 @@ export async function sendStocktakeSummaryEmail(
         </tr>
         <tr>
           <td style="padding:3px 0;color:${MUTED};">Submitted by</td>
-          <td style="padding:3px 0;font-weight:600;">${esc(entry.merchandiser)}${entry.idNumber ? ` (ID ${esc(entry.idNumber)})` : ""}${entry.merchandiserPhone ? ` — ${esc(entry.merchandiserPhone)}` : ""}</td>
+          <td style="padding:3px 0;font-weight:600;">${esc(entry.merchandiser)}${entry.idNumber ? ` (ID ${esc(entry.idNumber)})` : ""}${entry.merchandiserPhone ? ` — ${esc(entry.merchandiserPhone)}` : ""}${entry.kraPin ? ` — KRA ${esc(entry.kraPin)}` : ""}</td>
         </tr>
-        ${
-          !entry.embedded
-            ? `<tr>
-                <td style="padding:3px 0;color:${MUTED};">Service fee</td>
-                <td style="padding:3px 0;font-weight:600;">KES ${MERCHANDISER_VISIT_FEE_KES} (this visit)</td>
-              </tr>`
-            : ""
-        }
       </table>
+
+      ${
+        !entry.embedded
+          ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+              <tr>
+                <td style="background:#FFF8EC;border:1px solid #F5DFAF;border-radius:8px;padding:12px 14px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="font-size:13px;color:#8A5A00;font-weight:600;">🧾 Merchandiser service fee</td>
+                      <td style="font-size:16px;color:#8A5A00;font-weight:700;text-align:right;">KES ${MERCHANDISER_VISIT_FEE_KES}</td>
+                    </tr>
+                  </table>
+                  <div style="font-size:11px;color:#A07A2E;margin-top:2px;">Logged automatically as a draft expense in Odoo</div>
+                </td>
+              </tr>
+            </table>`
+          : ""
+      }
 
       ${
         lowStockCount > 0 || flagged

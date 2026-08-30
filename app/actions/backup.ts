@@ -147,6 +147,7 @@ export async function restoreBackup(json: string): Promise<RestoreResult> {
               merchandiser: st.merchandiser ?? "",
               idNumber: st.idNumber ?? "",
               merchandiserPhone: st.merchandiserPhone ?? "",
+              kraPin: st.kraPin ?? "",
               signatureUrl: st.signatureUrl ?? "",
               notes: st.notes ?? "",
               checksPlacement: st.checksPlacement ?? null,

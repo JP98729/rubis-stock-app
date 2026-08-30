@@ -32,6 +32,7 @@ export type StocktakeInput = {
   merchandiser: string;
   idNumber: string;
   merchandiserPhone: string;
+  kraPin: string;
   signatureUrl: string | null;
   notes: string;
   checksPlacement: string | null;
@@ -61,6 +62,7 @@ export type SubmitResult = { ok: true } | { ok: false; error: string };
 function validate(input: StocktakeInput): string | null {
   if (!input.merchandiser.trim()) return "Enter your name before submitting.";
   if (!input.embedded && !input.idNumber.trim()) return "Enter your ID number before submitting.";
+  if (!input.embedded && !input.kraPin.trim()) return "Enter your KRA PIN before submitting.";
   if (!input.date) return "Select the date before submitting.";
   if (!input.embedded && !input.visitTime.trim()) return "Select the visit time before submitting.";
 
@@ -120,9 +122,10 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
   });
   if (!store) return { ok: false, error: "That branch no longer exists." };
 
-  const products = await prisma.product.findMany({ select: { sku: true, flavour: true } });
+  const products = await prisma.product.findMany({ select: { sku: true, flavour: true, range: true } });
   const known = new Set(products.map((p) => p.sku));
   const productNames = new Map(products.map((p) => [p.sku, p.flavour]));
+  const productRanges = new Map(products.map((p) => [p.sku, p.range]));
   const items = input.items.filter((i) => known.has(i.sku));
 
   // Legacy scalar fields kept in sync for older reporting code that still reads them.
@@ -138,6 +141,7 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
       merchandiser: input.merchandiser.trim(),
       idNumber: input.embedded ? "" : input.idNumber.trim(),
       merchandiserPhone: input.embedded ? "" : input.merchandiserPhone.trim(),
+      kraPin: input.embedded ? "" : input.kraPin.trim(),
       signatureUrl: input.signatureUrl!,
       notes: input.notes.trim(),
       checksPlacement: input.embedded ? null : input.checksPlacement,
@@ -202,6 +206,7 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
       merchandiser: input.merchandiser.trim(),
       idNumber: input.idNumber.trim(),
       merchandiserPhone: input.embedded ? "" : input.merchandiserPhone.trim(),
+      kraPin: input.embedded ? "" : input.kraPin.trim(),
       embedded: input.embedded,
       notes: input.notes.trim(),
       checksPlacement: input.checksPlacement,
@@ -209,6 +214,7 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
       checksMissing: input.checksMissing,
       items: items.map((i) => ({
         name: productNames.get(i.sku) || i.sku,
+        range: productRanges.get(i.sku) || "Other",
         shelfQty: i.shelfQty,
         backStock: i.backStock,
         expired: i.expired,

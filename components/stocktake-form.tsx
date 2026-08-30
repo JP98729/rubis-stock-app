@@ -44,6 +44,7 @@ export function StocktakeForm({
   const [merchandiser, setMerchandiser] = useState(defaultName || "");
   const [idNumber, setIdNumber] = useState("");
   const [merchandiserPhone, setMerchandiserPhone] = useState("");
+  const [kraPin, setKraPin] = useState("");
   const [visitDate, setVisitDate] = useState(today);
   const [visitTime, setVisitTime] = useState(() => {
     const now = new Date();
@@ -99,6 +100,7 @@ export function StocktakeForm({
     // re-runs the same rules in app/actions/stocktake.ts.
     if (!merchandiser.trim()) return setError("Enter your name before submitting.");
     if (!embedded && !idNumber.trim()) return setError("Enter your ID number before submitting.");
+    if (!embedded && !kraPin.trim()) return setError("Enter your KRA PIN before submitting.");
     if (!visitDate) return setError("Select the date before submitting.");
     if (!embedded && !visitTime) return setError("Select the visit time before submitting.");
     if (!embedded) {
@@ -126,6 +128,7 @@ export function StocktakeForm({
       merchandiser: merchandiser.trim(),
       idNumber: idNumber.trim(),
       merchandiserPhone: merchandiserPhone.trim(),
+      kraPin: kraPin.trim(),
       signatureUrl: signature,
       notes: notes.trim(),
       checksPlacement: checks.placement,
@@ -233,6 +236,19 @@ export function StocktakeForm({
                   />
                 </label>
               </div>
+            )}
+            {!embedded && (
+              <label className="flex flex-col gap-1">
+                <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1">
+                  <CreditCard size={12} /> KRA PIN
+                </span>
+                <input
+                  value={kraPin}
+                  onChange={(e) => setKraPin(e.target.value)}
+                  placeholder="e.g. A012345678Z"
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                />
+              </label>
             )}
             <div className={embedded ? "grid grid-cols-1 gap-2" : "flex gap-2"}>
               <label className="flex flex-col gap-1 flex-1">

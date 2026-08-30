@@ -137,6 +137,9 @@ model Stocktake {
   idNumber     String @default("")
   /// Merchandiser's own phone — optional, not required, for payment purposes.
   merchandiserPhone String @default("")
+  /// Merchandiser's KRA PIN — required for every merchandiser visit (not the
+  /// branch manager's own embedded stocktake).
+  kraPin       String @default("")
   /// Required for every stocktake.
   signatureUrl String
   notes        String @default("")
