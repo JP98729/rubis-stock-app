@@ -61,6 +61,82 @@ async function authenticate(): Promise<{ url: string; db: string; uid: number; a
   return { url: cfg.url, db: cfg.db, uid: cachedUid, apiKey: cfg.apiKey };
 }
 
+const MERCHANDISER_VISIT_FEE_KES = 300;
+
+/**
+ * Fixed values copied from a real hr.expense record the user created by hand in
+ * Odoo as a template (id 738, "Visiting Rubis Stores Merchandiser") — same
+ * employee/account/vendor/payment method on every visit; only name/date change.
+ */
+const MERCHANDISER_EXPENSE_TEMPLATE = {
+  employeeId: 1, // Joan Gracious Omondi
+  productId: 77, // [EXP_GEN] EXPENSES
+  accountId: 112, // 510100 Marketing
+  vendorId: 288, // Innocent Morara
+  journalId: 27, // MPESA SAFARICOM  4116561
+  paymentMethodLineId: 55, // Manual Payment (MPESA SAFARICOM  4116561)
+};
+
+/**
+ * Creates a draft expense in Odoo for a merchandiser's visit (fixed KES 300 fee),
+ * mirroring the hand-made template expense. Returns null (never throws) whenever
+ * Odoo sync isn't configured — a stocktake submission must never fail because of
+ * this, it's a bonus record for accounting.
+ */
+export async function createMerchandiserVisitExpense(input: {
+  branchName: string;
+  merchandiser: string;
+  date: string;
+}): Promise<{ id: number; name: string } | null> {
+  try {
+    const auth = await authenticate();
+    if (!auth) return null;
+
+    const name = `Visiting ${input.branchName.trim()} — ${input.merchandiser}`;
+
+    const id = await jsonRpc<number>(auth.url, "object", "execute_kw", [
+      auth.db,
+      auth.uid,
+      auth.apiKey,
+      "hr.expense",
+      "create",
+      [
+        {
+          name,
+          date: input.date,
+          employee_id: MERCHANDISER_EXPENSE_TEMPLATE.employeeId,
+          product_id: MERCHANDISER_EXPENSE_TEMPLATE.productId,
+          quantity: 1,
+          price_unit: MERCHANDISER_VISIT_FEE_KES,
+          // price_unit alone is silently recomputed back to 0 by Odoo (it derives
+          // from the product's cost); total_amount_currency is the field that
+          // actually has to be set for the amount to stick — confirmed by hand
+          // against the live instance before shipping this.
+          total_amount_currency: MERCHANDISER_VISIT_FEE_KES,
+          payment_mode: "company_account",
+          journal_id: MERCHANDISER_EXPENSE_TEMPLATE.journalId,
+          payment_method_line_id: MERCHANDISER_EXPENSE_TEMPLATE.paymentMethodLineId,
+          vendor_id: MERCHANDISER_EXPENSE_TEMPLATE.vendorId,
+          account_id: MERCHANDISER_EXPENSE_TEMPLATE.accountId,
+        },
+      ],
+    ]);
+
+    const [expense] = await jsonRpc<Array<{ name: string }>>(auth.url, "object", "execute_kw", [
+      auth.db,
+      auth.uid,
+      auth.apiKey,
+      "hr.expense",
+      "read",
+      [[id], ["name"]],
+    ]);
+
+    return { id, name: expense?.name || name };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Creates a draft Sales Order in Odoo for a branch's current reorder — one line per
  * product with an actual reorder quantity. Returns null (never throws) whenever

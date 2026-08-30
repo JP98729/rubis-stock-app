@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { sendStocktakeSummaryEmail } from "@/lib/email";
+import { createMerchandiserVisitExpense } from "@/lib/odoo";
 import { MIN_STOCK } from "@/lib/brand";
 
 export type StocktakeItemInput = {
@@ -184,6 +185,14 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
   revalidatePath("/branch");
   revalidatePath("/manager");
   revalidatePath("/merchandiser");
+
+  if (!input.embedded) {
+    await createMerchandiserVisitExpense({
+      branchName: store.name,
+      merchandiser: input.merchandiser.trim(),
+      date: input.date,
+    });
+  }
 
   await sendStocktakeSummaryEmail(
     store,
