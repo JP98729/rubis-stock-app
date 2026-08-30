@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { sendMovementSummaryEmail } from "@/lib/email";
+import { attachFileToSaleOrder } from "@/lib/odoo";
 import type { MovementType } from "@prisma/client";
 
 export type MovementInput = {
@@ -108,6 +109,25 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
     receivedBy: (input.receivedBy || "").trim(),
     notes: (input.notes || "").trim(),
   });
+
+  // Best-effort: attach the delivery note straight onto the branch's most recent
+  // Odoo Sales Order, so proof of delivery lives on the order it fulfils. No-ops
+  // silently if Odoo sync isn't configured or this branch has no order on file yet.
+  if (input.type === "DELIVERY" && input.deliveryNotePhotoUrl) {
+    const latestOrder = await prisma.lpoDocument.findFirst({
+      where: { storeId: input.storeId, odooSaleOrderId: { not: null } },
+      orderBy: { uploadedAt: "desc" },
+      select: { odooSaleOrderId: true },
+    });
+    if (latestOrder?.odooSaleOrderId) {
+      const ext = input.deliveryNotePhotoUrl.toLowerCase().endsWith(".pdf") ? "pdf" : "jpg";
+      await attachFileToSaleOrder(
+        latestOrder.odooSaleOrderId,
+        input.deliveryNotePhotoUrl,
+        `Delivery note - ${store.name.trim()} - ${input.date}.${ext}`
+      );
+    }
+  }
 
   revalidatePath("/branch");
   revalidatePath("/manager");

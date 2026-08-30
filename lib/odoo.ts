@@ -180,3 +180,51 @@ export async function createDraftSalesOrder(
     return null;
   }
 }
+
+function mimetypeFor(filename: string): string {
+  const ext = filename.split(".").pop()?.toLowerCase();
+  if (ext === "pdf") return "application/pdf";
+  if (ext === "png") return "image/png";
+  if (ext === "webp") return "image/webp";
+  return "image/jpeg";
+}
+
+/**
+ * Attaches a file (e.g. a delivery note) to an existing Sales Order in Odoo, so proof
+ * of delivery lives right on the order it fulfils. Fetches the file from its own
+ * public URL (Vercel Blob) and uploads it as an ir.attachment. Returns false (never
+ * throws) whenever Odoo sync isn't configured, the URL isn't publicly fetchable
+ * (local dev), or anything else goes wrong — this must never block a movement log.
+ */
+export async function attachFileToSaleOrder(saleOrderId: number, fileUrl: string, filename: string): Promise<boolean> {
+  try {
+    const auth = await authenticate();
+    if (!auth) return false;
+    if (!/^https?:\/\//i.test(fileUrl)) return false;
+
+    const res = await fetch(fileUrl);
+    if (!res.ok) return false;
+    const buffer = Buffer.from(await res.arrayBuffer());
+
+    await jsonRpc<number>(auth.url, "object", "execute_kw", [
+      auth.db,
+      auth.uid,
+      auth.apiKey,
+      "ir.attachment",
+      "create",
+      [
+        {
+          name: filename,
+          datas: buffer.toString("base64"),
+          res_model: "sale.order",
+          res_id: saleOrderId,
+          mimetype: mimetypeFor(filename),
+        },
+      ],
+    ]);
+
+    return true;
+  } catch {
+    return false;
+  }
+}
