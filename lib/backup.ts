@@ -55,6 +55,15 @@ export type Backup = {
     promotionPhotoUrl: string | null;
     competitorBrands: string;
     competitorPhotoUrl: string | null;
+    competitorBrand1: string | null;
+    competitorPrice1: number | null;
+    competitorPhotoUrl1: string | null;
+    competitorBrand2: string | null;
+    competitorPrice2: number | null;
+    competitorPhotoUrl2: string | null;
+    competitorBrand3: string | null;
+    competitorPrice3: number | null;
+    competitorPhotoUrl3: string | null;
     photoTaken: boolean;
     embedded: boolean;
     createdAt: string;
@@ -156,6 +165,15 @@ export async function buildBackup(): Promise<Backup> {
       promotionPhotoUrl: st.promotionPhotoUrl,
       competitorBrands: st.competitorBrands,
       competitorPhotoUrl: st.competitorPhotoUrl,
+      competitorBrand1: st.competitorBrand1,
+      competitorPrice1: st.competitorPrice1,
+      competitorPhotoUrl1: st.competitorPhotoUrl1,
+      competitorBrand2: st.competitorBrand2,
+      competitorPrice2: st.competitorPrice2,
+      competitorPhotoUrl2: st.competitorPhotoUrl2,
+      competitorBrand3: st.competitorBrand3,
+      competitorPrice3: st.competitorPrice3,
+      competitorPhotoUrl3: st.competitorPhotoUrl3,
       photoTaken: st.photoTaken,
       embedded: st.embedded,
       createdAt: st.createdAt.toISOString(),

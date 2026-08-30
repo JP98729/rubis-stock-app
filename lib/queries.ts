@@ -330,6 +330,8 @@ export type LatestCheckDTO = {
   promotionPhotoUrl: string | null;
   competitorBrands: string;
   competitorPhotoUrl: string | null;
+  /** Structured 3-brand competitor check; empty for older stocktakes recorded before this existed. */
+  competitors: Array<{ brand: string; price: number; photoUrl: string | null }>;
 };
 
 /** The single most recent stocktake per store that actually carried display checks. */
@@ -350,6 +352,15 @@ export async function getLatestChecksByStore(): Promise<Record<number, LatestChe
       promotionPhotoUrl: true,
       competitorBrands: true,
       competitorPhotoUrl: true,
+      competitorBrand1: true,
+      competitorPrice1: true,
+      competitorPhotoUrl1: true,
+      competitorBrand2: true,
+      competitorPrice2: true,
+      competitorPhotoUrl2: true,
+      competitorBrand3: true,
+      competitorPrice3: true,
+      competitorPhotoUrl3: true,
     },
   });
   const out: Record<number, LatestCheckDTO> = {};
@@ -361,7 +372,29 @@ export async function getLatestChecksByStore(): Promise<Record<number, LatestChe
     seen.add(r.storeId);
     if (r.checksPlacement === null && r.checksPrices === null && r.checksMissing === null && r.checksPromotion === null)
       continue;
-    out[r.storeId] = r;
+    const competitors = [
+      { brand: r.competitorBrand1, price: r.competitorPrice1, photoUrl: r.competitorPhotoUrl1 },
+      { brand: r.competitorBrand2, price: r.competitorPrice2, photoUrl: r.competitorPhotoUrl2 },
+      { brand: r.competitorBrand3, price: r.competitorPrice3, photoUrl: r.competitorPhotoUrl3 },
+    ]
+      .filter((c) => c.brand)
+      .map((c) => ({ brand: c.brand as string, price: c.price ?? 0, photoUrl: c.photoUrl }));
+    out[r.storeId] = {
+      storeId: r.storeId,
+      date: r.date,
+      checksPlacement: r.checksPlacement,
+      checksPrices: r.checksPrices,
+      checksMissing: r.checksMissing,
+      checksPromotion: r.checksPromotion,
+      checksNotes: r.checksNotes,
+      placementPhotoUrl: r.placementPhotoUrl,
+      pricesPhotoUrl: r.pricesPhotoUrl,
+      promotionType: r.promotionType,
+      promotionPhotoUrl: r.promotionPhotoUrl,
+      competitorBrands: r.competitorBrands,
+      competitorPhotoUrl: r.competitorPhotoUrl,
+      competitors,
+    };
   }
   return out;
 }

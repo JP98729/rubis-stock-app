@@ -55,8 +55,16 @@ export function StocktakeForm({
   const [checksNotes, setChecksNotes] = useState("");
   const [placementPhoto, setPlacementPhoto] = useState<string | null>(null);
   const [pricesPhoto, setPricesPhoto] = useState<string | null>(null);
-  const [competitorBrands, setCompetitorBrands] = useState("");
-  const [competitorPhoto, setCompetitorPhoto] = useState<string | null>(null);
+  const [competitors, setCompetitors] = useState<
+    Array<{ brand: string; price: string; photoUrl: string | null }>
+  >([
+    { brand: "", price: "", photoUrl: null },
+    { brand: "", price: "", photoUrl: null },
+    { brand: "", price: "", photoUrl: null },
+  ]);
+  function updCompetitor(index: number, field: "brand" | "price" | "photoUrl", val: string | null) {
+    setCompetitors((prev) => prev.map((c, i) => (i === index ? { ...c, [field]: val } : c)));
+  }
   const [items, setItems] = useState<Record<string, ItemState>>(() =>
     products.reduce<Record<string, ItemState>>((acc, p) => {
       acc[p.sku] = { shelfQty: 0, backStock: 0, expired: 0, damaged: 0, batchCode: "", photoUrl: null };
@@ -94,11 +102,14 @@ export function StocktakeForm({
         return setError("Please describe the type of promotion before submitting.");
       if (checks.promotion === "Yes" && !promotionPhoto)
         return setError("Please take a photo of the promotion display before submitting.");
-      if (!competitorBrands.trim())
-        return setError(
-          'Please list the competitor brands carried in this outlet (write "None" if there are none) before submitting.'
-        );
-      if (!competitorPhoto) return setError("Please take a photo of the competitor section/shelf before submitting.");
+      for (let i = 0; i < 3; i++) {
+        const c = competitors[i];
+        if (!c.brand.trim())
+          return setError(`Enter the brand name for competitor ${i + 1} before submitting.`);
+        if (!c.price.trim() || Number(c.price) <= 0)
+          return setError(`Enter a valid price for competitor ${i + 1} (${c.brand.trim()}) before submitting.`);
+        if (!c.photoUrl) return setError(`Take a photo for competitor ${i + 1} (${c.brand.trim()}) before submitting.`);
+      }
     }
     if (!signature) return setError("Please sign before submitting.");
 
@@ -120,8 +131,7 @@ export function StocktakeForm({
       pricesPhotoUrl: pricesPhoto,
       promotionType: promotionType.trim(),
       promotionPhotoUrl: promotionPhoto,
-      competitorBrands: competitorBrands.trim(),
-      competitorPhotoUrl: competitorPhoto,
+      competitors: competitors.map((c) => ({ brand: c.brand.trim(), price: Number(c.price) || 0, photoUrl: c.photoUrl })),
       embedded: !!embedded,
       items: payload,
     });
@@ -393,23 +403,50 @@ export function StocktakeForm({
 
           <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3">
             <div className="font-semibold text-sm mb-1">Competitor Check</div>
-            <div className="text-[11px] text-gray-400 mb-2">Which competitor brands are carried in this outlet?</div>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-medium" style={{ color: "#1D4ED8" }}>
-                List the brands — required (write &quot;None&quot; if there are none)
-              </span>
-              <input
-                value={competitorBrands}
-                onChange={(e) => setCompetitorBrands(e.target.value)}
-                placeholder="e.g. Kim-Nuts, Tropical Heat, Kenya Nut Company"
-                className="border border-blue-200 bg-blue-50 rounded-lg px-3 py-2 text-sm"
-              />
-            </label>
-            <div className="mt-3">
-              <span className="text-[11px] font-medium" style={{ color: "#1D4ED8" }}>
-                Photo of the competitor section/shelf — required
-              </span>
-              <PlacementPhotoCapture photo={competitorPhoto} onChange={setCompetitorPhoto} tone="neutral" />
+            <div className="text-[11px] text-gray-400 mb-3">
+              Record 3 competitor brands carried in this outlet — each with its price and a photo.
+            </div>
+            <div className="flex flex-col gap-4">
+              {competitors.map((c, i) => (
+                <div key={i} className={i > 0 ? "pt-4 border-t border-gray-100" : ""}>
+                  <div className="text-[11px] font-semibold text-gray-500 mb-1.5">Competitor {i + 1}</div>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-[11px] font-medium" style={{ color: "#1D4ED8" }}>
+                      Brand name — required
+                    </span>
+                    <input
+                      value={c.brand}
+                      onChange={(e) => updCompetitor(i, "brand", e.target.value)}
+                      placeholder="e.g. Kim-Nuts"
+                      className="border border-blue-200 bg-blue-50 rounded-lg px-3 py-2 text-sm"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 mt-2">
+                    <span className="text-[11px] font-medium" style={{ color: "#1D4ED8" }}>
+                      Price (KES) — required
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      inputMode="numeric"
+                      value={c.price}
+                      onChange={(e) => updCompetitor(i, "price", e.target.value)}
+                      placeholder="e.g. 100"
+                      className="border border-blue-200 bg-blue-50 rounded-lg px-3 py-2 text-sm"
+                    />
+                  </label>
+                  <div className="mt-2">
+                    <span className="text-[11px] font-medium" style={{ color: "#1D4ED8" }}>
+                      Photo — required
+                    </span>
+                    <PlacementPhotoCapture
+                      photo={c.photoUrl}
+                      onChange={(url) => updCompetitor(i, "photoUrl", url)}
+                      tone="neutral"
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </>

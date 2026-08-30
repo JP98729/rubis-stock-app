@@ -16,6 +16,12 @@ export type StocktakeItemInput = {
   photoUrl: string | null;
 };
 
+export type CompetitorInput = {
+  brand: string;
+  price: number;
+  photoUrl: string | null;
+};
+
 export type StocktakeInput = {
   storeId: number;
   date: string;
@@ -32,8 +38,7 @@ export type StocktakeInput = {
   pricesPhotoUrl: string | null;
   promotionType: string;
   promotionPhotoUrl: string | null;
-  competitorBrands: string;
-  competitorPhotoUrl: string | null;
+  competitors: CompetitorInput[];
   embedded: boolean;
   items: StocktakeItemInput[];
 };
@@ -80,11 +85,14 @@ function validate(input: StocktakeInput): string | null {
     if (input.checksPromotion === "Yes" && !input.promotionPhotoUrl) {
       return "Please take a photo of the promotion display before submitting.";
     }
-    if (!input.competitorBrands.trim()) {
-      return 'Please list the competitor brands carried in this outlet (write "None" if there are none) before submitting.';
+    if (!Array.isArray(input.competitors) || input.competitors.length < 3) {
+      return "Please record all 3 competitor brands before submitting.";
     }
-    if (!input.competitorPhotoUrl) {
-      return "Please take a photo of the competitor section/shelf before submitting.";
+    for (let i = 0; i < 3; i++) {
+      const c = input.competitors[i];
+      if (!c.brand.trim()) return `Enter the brand name for competitor ${i + 1} before submitting.`;
+      if (!(c.price > 0)) return `Enter a valid price for competitor ${i + 1} before submitting.`;
+      if (!c.photoUrl) return `Take a photo for competitor ${i + 1} before submitting.`;
     }
   }
   if (!input.signatureUrl) return "Please sign before submitting.";
@@ -120,6 +128,11 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
   const productNames = new Map(products.map((p) => [p.sku, p.flavour]));
   const items = input.items.filter((i) => known.has(i.sku));
 
+  // Legacy scalar fields kept in sync for older reporting code that still reads them.
+  const competitors = input.embedded ? [] : input.competitors;
+  const legacyCompetitorBrands = competitors.map((c) => c.brand.trim()).filter(Boolean).join(", ");
+  const legacyCompetitorPhotoUrl = competitors[0]?.photoUrl ?? null;
+
   await prisma.stocktake.create({
     data: {
       storeId: input.storeId,
@@ -137,8 +150,17 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
       pricesPhotoUrl: input.embedded ? null : input.pricesPhotoUrl,
       promotionType: !input.embedded && input.checksPromotion === "Yes" ? input.promotionType.trim() : "",
       promotionPhotoUrl: !input.embedded && input.checksPromotion === "Yes" ? input.promotionPhotoUrl : null,
-      competitorBrands: input.embedded ? "" : input.competitorBrands.trim(),
-      competitorPhotoUrl: input.embedded ? null : input.competitorPhotoUrl,
+      competitorBrands: legacyCompetitorBrands,
+      competitorPhotoUrl: legacyCompetitorPhotoUrl,
+      competitorBrand1: competitors[0]?.brand.trim() || null,
+      competitorPrice1: competitors[0]?.price ?? null,
+      competitorPhotoUrl1: competitors[0]?.photoUrl ?? null,
+      competitorBrand2: competitors[1]?.brand.trim() || null,
+      competitorPrice2: competitors[1]?.price ?? null,
+      competitorPhotoUrl2: competitors[1]?.photoUrl ?? null,
+      competitorBrand3: competitors[2]?.brand.trim() || null,
+      competitorPrice3: competitors[2]?.price ?? null,
+      competitorPhotoUrl3: competitors[2]?.photoUrl ?? null,
       photoTaken: items.some((i) => !!i.photoUrl),
       embedded: input.embedded,
       items: {
