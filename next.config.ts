@@ -8,10 +8,11 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   // pdfkit (used by @react-pdf/renderer for the emailed PDFs) loads its built-in
-  // font data files with a dynamic require() that Next's file tracing doesn't
-  // follow, so the serverless bundle silently omits them — force-include here.
+  // font data files with dynamic require() calls that Next's file tracing doesn't
+  // follow — including nested chunk files like standard-fonts/chunks/*.cjs — so the
+  // serverless bundle silently omits them. Force-include the whole data tree here.
   outputFileTracingIncludes: {
-    "/**": ["./node_modules/pdfkit/js/standard-fonts/*.cjs", "./node_modules/pdfkit/js/standard-fonts/*.afm"],
+    "/**": ["./node_modules/pdfkit/js/**"],
   },
 };
 
