@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { sendMovementSummaryEmail } from "@/lib/email";
 import type { MovementType } from "@prisma/client";
 
 export type MovementInput = {
@@ -49,17 +50,25 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
     return { ok: false, error: "Enter the invoice nr before submitting." };
   }
 
-  const store = await prisma.store.findUnique({ where: { id: input.storeId }, select: { id: true } });
+  const store = await prisma.store.findUnique({
+    where: { id: input.storeId },
+    select: { id: true, name: true, county: true, type: true },
+  });
   if (!store) return { ok: false, error: "That branch no longer exists." };
 
   // Delivery is logged as paperwork only — no product/quantity to validate.
   let qty = 0;
+  let productName: string | null = null;
   if (input.type !== "DELIVERY") {
     qty = Math.trunc(Number(input.qty) || 0);
     if (qty < 1) return { ok: false, error: "Quantity must be at least 1." };
-    const product = await prisma.product.findUnique({ where: { sku: input.sku }, select: { sku: true, unavailable: true } });
+    const product = await prisma.product.findUnique({
+      where: { sku: input.sku },
+      select: { sku: true, flavour: true, unavailable: true },
+    });
     if (!product) return { ok: false, error: "Unknown product." };
     if (product.unavailable) return { ok: false, error: "This product is not currently made — it can't be logged." };
+    productName = product.flavour;
   }
 
   await prisma.movement.create({
@@ -78,6 +87,20 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
       notes: (input.notes || "").trim(),
       signatureUrl: input.signatureUrl || "",
     },
+  });
+
+  await sendMovementSummaryEmail(store, {
+    type: input.type,
+    date: input.date,
+    time: (input.time || "").trim(),
+    productName,
+    qty,
+    batchCode: (input.batchCode || "").trim(),
+    deliveryNote: (input.deliveryNote || "").trim(),
+    deliveryNotePhotoUrl: input.type === "DELIVERY" ? input.deliveryNotePhotoUrl : null,
+    invoiceNumber: (input.invoiceNumber || "").trim(),
+    receivedBy: (input.receivedBy || "").trim(),
+    notes: (input.notes || "").trim(),
   });
 
   revalidatePath("/branch");

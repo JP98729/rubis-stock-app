@@ -234,3 +234,148 @@ export async function sendStocktakeSummaryEmail(
     // Email is a bonus notification, not part of the submission contract — never throw.
   }
 }
+
+const MOVEMENT_TYPE_LABELS: Record<string, string> = {
+  DELIVERY: "Delivery",
+  SALE: "Sale",
+  RETURN: "Return",
+  EXPIRED_DAMAGED: "Expired/Damaged",
+};
+
+/**
+ * Sends a movement-log summary email the moment a Delivery/Sale/Return/Expired-
+ * Damaged is saved. Same silent no-op behavior as the stocktake email when
+ * RESEND_API_KEY isn't set.
+ */
+export async function sendMovementSummaryEmail(
+  store: { name: string; county: string; type: string },
+  entry: {
+    type: string;
+    date: string;
+    time: string;
+    productName: string | null;
+    qty: number;
+    batchCode: string;
+    deliveryNote: string;
+    deliveryNotePhotoUrl: string | null;
+    invoiceNumber: string;
+    receivedBy: string;
+    notes: string;
+  }
+) {
+  if (!process.env.RESEND_API_KEY) return;
+
+  const typeLabel = MOVEMENT_TYPE_LABELS[entry.type] || entry.type;
+  const typeColor = entry.type === "EXPIRED_DAMAGED" ? RED : GREEN_DARK;
+  const isDelivery = entry.type === "DELIVERY";
+  const subject = `${typeLabel} logged — ${store.name.trim()} — ${entry.date}`;
+
+  const text = [
+    `Branch: ${store.name.trim()} (${store.county} · ${store.type})`,
+    `Type: ${typeLabel}`,
+    `Date: ${entry.date}${entry.time ? ` at ${entry.time}` : ""}`,
+    !isDelivery ? `Product: ${entry.productName || "Unknown"}` : "",
+    !isDelivery ? `Quantity: ${entry.qty}` : "",
+    !isDelivery && entry.batchCode ? `Batch code: ${entry.batchCode}` : "",
+    isDelivery ? `Delivery note nr: ${entry.deliveryNote}` : "",
+    isDelivery ? `Invoice nr: ${entry.invoiceNumber}` : "",
+    isDelivery && entry.receivedBy ? `Received by: ${entry.receivedBy}` : "",
+    entry.notes ? `Notes: ${entry.notes}` : "",
+    "",
+    "Full details and signature are in the Rubis Enjoy Stock & Reorder app.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const html = `
+<div style="background:${BG};padding:24px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid ${BORDER};">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border-bottom:1px solid ${BORDER};">
+      <tr>
+        <td style="padding:12px 24px;">
+          <img src="${PURE_LOGO}" alt="Pure Nutrition" height="48" style="height:48px;width:auto;vertical-align:middle;" />
+        </td>
+        <td style="padding:12px 24px;text-align:right;">
+          <img src="${ENJOY_LOGO}" alt="Rubis Enjoy" height="28" style="height:28px;width:auto;vertical-align:middle;" />
+        </td>
+      </tr>
+    </table>
+    <div style="background:${typeColor};padding:20px 24px;">
+      <div style="color:#ffffff;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;opacity:0.85;">${esc(typeLabel)}</div>
+      <div style="color:#ffffff;font-size:18px;font-weight:700;margin-top:2px;">${esc(store.name.trim())}</div>
+      <div style="color:#ffffff;font-size:13px;margin-top:2px;opacity:0.9;">${esc(store.county)} · ${esc(store.type)}</div>
+    </div>
+
+    <div style="padding:20px 24px;">
+      <table role="presentation" width="100%" style="font-size:13px;color:${INK};margin-bottom:16px;">
+        <tr>
+          <td style="padding:3px 0;color:${MUTED};width:120px;">Date</td>
+          <td style="padding:3px 0;font-weight:600;">${esc(entry.date)}${entry.time ? ` at ${esc(entry.time)}` : ""}</td>
+        </tr>
+        ${
+          !isDelivery
+            ? `<tr>
+                <td style="padding:3px 0;color:${MUTED};">Product</td>
+                <td style="padding:3px 0;font-weight:600;">${esc(entry.productName || "Unknown")}</td>
+              </tr>
+              <tr>
+                <td style="padding:3px 0;color:${MUTED};">Quantity</td>
+                <td style="padding:3px 0;font-weight:600;">${entry.qty}</td>
+              </tr>
+              ${
+                entry.batchCode
+                  ? `<tr>
+                      <td style="padding:3px 0;color:${MUTED};">Batch code</td>
+                      <td style="padding:3px 0;font-weight:600;">${esc(entry.batchCode)}</td>
+                    </tr>`
+                  : ""
+              }`
+            : `<tr>
+                <td style="padding:3px 0;color:${MUTED};">Delivery note nr</td>
+                <td style="padding:3px 0;font-weight:600;">${esc(entry.deliveryNote)}</td>
+              </tr>
+              <tr>
+                <td style="padding:3px 0;color:${MUTED};">Invoice nr</td>
+                <td style="padding:3px 0;font-weight:600;">${esc(entry.invoiceNumber)}</td>
+              </tr>
+              ${
+                entry.receivedBy
+                  ? `<tr>
+                      <td style="padding:3px 0;color:${MUTED};">Received by</td>
+                      <td style="padding:3px 0;font-weight:600;">${esc(entry.receivedBy)}</td>
+                    </tr>`
+                  : ""
+              }`
+        }
+      </table>
+
+      ${entry.notes ? `<div style="font-size:13px;color:${INK};margin-bottom:16px;"><span style="color:${MUTED};">Notes:</span> ${esc(entry.notes)}</div>` : ""}
+
+      ${
+        isDelivery && entry.deliveryNotePhotoUrl
+          ? `<div style="font-size:11px;color:${MUTED};margin-bottom:8px;">Delivery note photo</div>
+             <img src="${entry.deliveryNotePhotoUrl}" alt="Delivery note" style="max-width:100%;border-radius:8px;border:1px solid ${BORDER};margin-bottom:16px;" />`
+          : ""
+      }
+
+      <div style="font-size:12px;color:${MUTED};border-top:1px solid ${BORDER};padding-top:14px;">
+        Full details and signature are in the Rubis Enjoy Stock &amp; Reorder app.
+      </div>
+    </div>
+  </div>
+</div>`;
+
+  try {
+    const { Resend } = await import("resend");
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: NOTIFY_EMAIL,
+      subject,
+      html,
+      text,
+    });
+  } catch {
+    // Email is a bonus notification, not part of the submission contract — never throw.
+  }
+}
