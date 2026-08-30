@@ -18,6 +18,8 @@ export type StocktakeItemInput = {
 
 export type CompetitorInput = {
   brand: string;
+  gram: string;
+  description: string;
   price: number;
   photoUrl: string | null;
 };
@@ -91,6 +93,8 @@ function validate(input: StocktakeInput): string | null {
     for (let i = 0; i < 3; i++) {
       const c = input.competitors[i];
       if (!c.brand.trim()) return `Enter the brand name for competitor ${i + 1} before submitting.`;
+      if (!c.gram.trim()) return `Enter the weight (g) for competitor ${i + 1} before submitting.`;
+      if (!c.description.trim()) return `Enter the item description for competitor ${i + 1} before submitting.`;
       if (!(c.price > 0)) return `Enter a valid price for competitor ${i + 1} before submitting.`;
       if (!c.photoUrl) return `Take a photo for competitor ${i + 1} before submitting.`;
     }
@@ -153,12 +157,18 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
       competitorBrands: legacyCompetitorBrands,
       competitorPhotoUrl: legacyCompetitorPhotoUrl,
       competitorBrand1: competitors[0]?.brand.trim() || null,
+      competitorGram1: competitors[0]?.gram.trim() || null,
+      competitorDescription1: competitors[0]?.description.trim() || null,
       competitorPrice1: competitors[0]?.price ?? null,
       competitorPhotoUrl1: competitors[0]?.photoUrl ?? null,
       competitorBrand2: competitors[1]?.brand.trim() || null,
+      competitorGram2: competitors[1]?.gram.trim() || null,
+      competitorDescription2: competitors[1]?.description.trim() || null,
       competitorPrice2: competitors[1]?.price ?? null,
       competitorPhotoUrl2: competitors[1]?.photoUrl ?? null,
       competitorBrand3: competitors[2]?.brand.trim() || null,
+      competitorGram3: competitors[2]?.gram.trim() || null,
+      competitorDescription3: competitors[2]?.description.trim() || null,
       competitorPrice3: competitors[2]?.price ?? null,
       competitorPhotoUrl3: competitors[2]?.photoUrl ?? null,
       photoTaken: items.some((i) => !!i.photoUrl),

@@ -115,7 +115,9 @@ export function Alerts({ data }: { data: AlertsData }) {
                     {it.competitors.map((c, i) => (
                       <div key={i} className="flex items-center gap-2">
                         <span className="text-xs text-gray-600">
-                          {c.brand} — KES {c.price}
+                          {c.brand}
+                          {c.gram ? ` (${c.gram})` : ""} — KES {c.price}
+                          {c.description ? ` · ${c.description}` : ""}
                         </span>
                         <PhotoRow urls={[c.photoUrl]} />
                       </div>

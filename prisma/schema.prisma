@@ -151,19 +151,25 @@ model Stocktake {
   competitorBrands   String  @default("")
   competitorPhotoUrl String?
 
-  /// Structured competitor entries (brand + price + own photo), required for
-  /// merchandiser visits since it must always be exactly 3. competitorBrands/
-  /// competitorPhotoUrl above are kept in sync (joined brand list + 1st photo)
-  /// so older reporting code that reads those still works.
-  competitorBrand1   String?
-  competitorPrice1   Float?
-  competitorPhotoUrl1 String?
-  competitorBrand2   String?
-  competitorPrice2   Float?
-  competitorPhotoUrl2 String?
-  competitorBrand3   String?
-  competitorPrice3   Float?
-  competitorPhotoUrl3 String?
+  /// Structured competitor entries (brand + gram + description + price + own
+  /// photo), required for merchandiser visits since it must always be exactly
+  /// 3. competitorBrands/competitorPhotoUrl above are kept in sync (joined
+  /// brand list + 1st photo) so older reporting code that reads those still works.
+  competitorBrand1      String?
+  competitorGram1       String?
+  competitorDescription1 String?
+  competitorPrice1      Float?
+  competitorPhotoUrl1   String?
+  competitorBrand2      String?
+  competitorGram2       String?
+  competitorDescription2 String?
+  competitorPrice2      Float?
+  competitorPhotoUrl2   String?
+  competitorBrand3      String?
+  competitorGram3       String?
+  competitorDescription3 String?
+  competitorPrice3      Float?
+  competitorPhotoUrl3   String?
 
   /// True when any product row carried a photo.
   photoTaken Boolean @default(false)

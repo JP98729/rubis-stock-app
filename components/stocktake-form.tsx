@@ -56,13 +56,17 @@ export function StocktakeForm({
   const [placementPhoto, setPlacementPhoto] = useState<string | null>(null);
   const [pricesPhoto, setPricesPhoto] = useState<string | null>(null);
   const [competitors, setCompetitors] = useState<
-    Array<{ brand: string; price: string; photoUrl: string | null }>
+    Array<{ brand: string; gram: string; description: string; price: string; photoUrl: string | null }>
   >([
-    { brand: "", price: "", photoUrl: null },
-    { brand: "", price: "", photoUrl: null },
-    { brand: "", price: "", photoUrl: null },
+    { brand: "", gram: "", description: "", price: "", photoUrl: null },
+    { brand: "", gram: "", description: "", price: "", photoUrl: null },
+    { brand: "", gram: "", description: "", price: "", photoUrl: null },
   ]);
-  function updCompetitor(index: number, field: "brand" | "price" | "photoUrl", val: string | null) {
+  function updCompetitor(
+    index: number,
+    field: "brand" | "gram" | "description" | "price" | "photoUrl",
+    val: string | null
+  ) {
     setCompetitors((prev) => prev.map((c, i) => (i === index ? { ...c, [field]: val } : c)));
   }
   const [items, setItems] = useState<Record<string, ItemState>>(() =>
@@ -106,6 +110,10 @@ export function StocktakeForm({
         const c = competitors[i];
         if (!c.brand.trim())
           return setError(`Enter the brand name for competitor ${i + 1} before submitting.`);
+        if (!c.gram.trim())
+          return setError(`Enter the weight (g) for competitor ${i + 1} (${c.brand.trim()}) before submitting.`);
+        if (!c.description.trim())
+          return setError(`Enter the item description for competitor ${i + 1} (${c.brand.trim()}) before submitting.`);
         if (!c.price.trim() || Number(c.price) <= 0)
           return setError(`Enter a valid price for competitor ${i + 1} (${c.brand.trim()}) before submitting.`);
         if (!c.photoUrl) return setError(`Take a photo for competitor ${i + 1} (${c.brand.trim()}) before submitting.`);
@@ -131,7 +139,13 @@ export function StocktakeForm({
       pricesPhotoUrl: pricesPhoto,
       promotionType: promotionType.trim(),
       promotionPhotoUrl: promotionPhoto,
-      competitors: competitors.map((c) => ({ brand: c.brand.trim(), price: Number(c.price) || 0, photoUrl: c.photoUrl })),
+      competitors: competitors.map((c) => ({
+        brand: c.brand.trim(),
+        gram: c.gram.trim(),
+        description: c.description.trim(),
+        price: Number(c.price) || 0,
+        photoUrl: c.photoUrl,
+      })),
       embedded: !!embedded,
       items: payload,
     });
@@ -404,7 +418,8 @@ export function StocktakeForm({
           <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3">
             <div className="font-semibold text-sm mb-1">Competitor Check</div>
             <div className="text-[11px] text-gray-400 mb-3">
-              Record 3 competitor brands carried in this outlet — each with its price and a photo.
+              Record 3 competitor brands carried in this outlet — each with its weight, description, price, and a
+              photo.
             </div>
             <div className="flex flex-col gap-4">
               {competitors.map((c, i) => (
@@ -418,6 +433,28 @@ export function StocktakeForm({
                       value={c.brand}
                       onChange={(e) => updCompetitor(i, "brand", e.target.value)}
                       placeholder="e.g. Kim-Nuts"
+                      className="border border-blue-200 bg-blue-50 rounded-lg px-3 py-2 text-sm"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 mt-2">
+                    <span className="text-[11px] font-medium" style={{ color: "#1D4ED8" }}>
+                      Weight (g) — required
+                    </span>
+                    <input
+                      value={c.gram}
+                      onChange={(e) => updCompetitor(i, "gram", e.target.value)}
+                      placeholder="e.g. 60g"
+                      className="border border-blue-200 bg-blue-50 rounded-lg px-3 py-2 text-sm"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 mt-2">
+                    <span className="text-[11px] font-medium" style={{ color: "#1D4ED8" }}>
+                      Item description — required
+                    </span>
+                    <input
+                      value={c.description}
+                      onChange={(e) => updCompetitor(i, "description", e.target.value)}
+                      placeholder="e.g. Roasted salted cashew nuts"
                       className="border border-blue-200 bg-blue-50 rounded-lg px-3 py-2 text-sm"
                     />
                   </label>

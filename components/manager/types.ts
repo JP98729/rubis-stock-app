@@ -42,7 +42,7 @@ export type CheckItem = {
   promotionPhotoUrl: string | null;
   competitorBrands: string;
   competitorPhotoUrl: string | null;
-  competitors: Array<{ brand: string; price: number; photoUrl: string | null }>;
+  competitors: Array<{ brand: string; gram: string; description: string; price: number; photoUrl: string | null }>;
 };
 
 export type AlertsData = {

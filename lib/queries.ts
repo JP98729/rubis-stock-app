@@ -331,7 +331,7 @@ export type LatestCheckDTO = {
   competitorBrands: string;
   competitorPhotoUrl: string | null;
   /** Structured 3-brand competitor check; empty for older stocktakes recorded before this existed. */
-  competitors: Array<{ brand: string; price: number; photoUrl: string | null }>;
+  competitors: Array<{ brand: string; gram: string; description: string; price: number; photoUrl: string | null }>;
 };
 
 /** The single most recent stocktake per store that actually carried display checks. */
@@ -353,12 +353,18 @@ export async function getLatestChecksByStore(): Promise<Record<number, LatestChe
       competitorBrands: true,
       competitorPhotoUrl: true,
       competitorBrand1: true,
+      competitorGram1: true,
+      competitorDescription1: true,
       competitorPrice1: true,
       competitorPhotoUrl1: true,
       competitorBrand2: true,
+      competitorGram2: true,
+      competitorDescription2: true,
       competitorPrice2: true,
       competitorPhotoUrl2: true,
       competitorBrand3: true,
+      competitorGram3: true,
+      competitorDescription3: true,
       competitorPrice3: true,
       competitorPhotoUrl3: true,
     },
@@ -373,12 +379,36 @@ export async function getLatestChecksByStore(): Promise<Record<number, LatestChe
     if (r.checksPlacement === null && r.checksPrices === null && r.checksMissing === null && r.checksPromotion === null)
       continue;
     const competitors = [
-      { brand: r.competitorBrand1, price: r.competitorPrice1, photoUrl: r.competitorPhotoUrl1 },
-      { brand: r.competitorBrand2, price: r.competitorPrice2, photoUrl: r.competitorPhotoUrl2 },
-      { brand: r.competitorBrand3, price: r.competitorPrice3, photoUrl: r.competitorPhotoUrl3 },
+      {
+        brand: r.competitorBrand1,
+        gram: r.competitorGram1,
+        description: r.competitorDescription1,
+        price: r.competitorPrice1,
+        photoUrl: r.competitorPhotoUrl1,
+      },
+      {
+        brand: r.competitorBrand2,
+        gram: r.competitorGram2,
+        description: r.competitorDescription2,
+        price: r.competitorPrice2,
+        photoUrl: r.competitorPhotoUrl2,
+      },
+      {
+        brand: r.competitorBrand3,
+        gram: r.competitorGram3,
+        description: r.competitorDescription3,
+        price: r.competitorPrice3,
+        photoUrl: r.competitorPhotoUrl3,
+      },
     ]
       .filter((c) => c.brand)
-      .map((c) => ({ brand: c.brand as string, price: c.price ?? 0, photoUrl: c.photoUrl }));
+      .map((c) => ({
+        brand: c.brand as string,
+        gram: c.gram ?? "",
+        description: c.description ?? "",
+        price: c.price ?? 0,
+        photoUrl: c.photoUrl,
+      }));
     out[r.storeId] = {
       storeId: r.storeId,
       date: r.date,

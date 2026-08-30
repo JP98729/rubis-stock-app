@@ -56,12 +56,18 @@ export type Backup = {
     competitorBrands: string;
     competitorPhotoUrl: string | null;
     competitorBrand1: string | null;
+    competitorGram1: string | null;
+    competitorDescription1: string | null;
     competitorPrice1: number | null;
     competitorPhotoUrl1: string | null;
     competitorBrand2: string | null;
+    competitorGram2: string | null;
+    competitorDescription2: string | null;
     competitorPrice2: number | null;
     competitorPhotoUrl2: string | null;
     competitorBrand3: string | null;
+    competitorGram3: string | null;
+    competitorDescription3: string | null;
     competitorPrice3: number | null;
     competitorPhotoUrl3: string | null;
     photoTaken: boolean;
@@ -166,12 +172,18 @@ export async function buildBackup(): Promise<Backup> {
       competitorBrands: st.competitorBrands,
       competitorPhotoUrl: st.competitorPhotoUrl,
       competitorBrand1: st.competitorBrand1,
+      competitorGram1: st.competitorGram1,
+      competitorDescription1: st.competitorDescription1,
       competitorPrice1: st.competitorPrice1,
       competitorPhotoUrl1: st.competitorPhotoUrl1,
       competitorBrand2: st.competitorBrand2,
+      competitorGram2: st.competitorGram2,
+      competitorDescription2: st.competitorDescription2,
       competitorPrice2: st.competitorPrice2,
       competitorPhotoUrl2: st.competitorPhotoUrl2,
       competitorBrand3: st.competitorBrand3,
+      competitorGram3: st.competitorGram3,
+      competitorDescription3: st.competitorDescription3,
       competitorPrice3: st.competitorPrice3,
       competitorPhotoUrl3: st.competitorPhotoUrl3,
       photoTaken: st.photoTaken,
