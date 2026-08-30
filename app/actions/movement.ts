@@ -7,7 +7,7 @@ import type { MovementType } from "@prisma/client";
 
 export type MovementInput = {
   storeId: number;
-  sku: string;
+  sku: string; // ignored for DELIVERY — logged as paperwork only, no product
   type: MovementType;
   qty: number;
   date: string;
@@ -41,8 +41,6 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
   }
 
   if (!VALID_TYPES.includes(input.type)) return { ok: false, error: "Pick a movement type." };
-  const qty = Math.trunc(Number(input.qty) || 0);
-  if (qty < 1) return { ok: false, error: "Quantity must be at least 1." };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) return { ok: false, error: "Select a valid date." };
   if (input.type === "DELIVERY" && !input.deliveryNote.trim()) {
     return { ok: false, error: "Enter the delivery note nr before submitting." };
@@ -51,16 +49,23 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
     return { ok: false, error: "Enter the invoice nr before submitting." };
   }
 
-  const product = await prisma.product.findUnique({ where: { sku: input.sku }, select: { sku: true, unavailable: true } });
-  if (!product) return { ok: false, error: "Unknown product." };
-  if (product.unavailable) return { ok: false, error: "This product is not currently made — it can't be logged." };
   const store = await prisma.store.findUnique({ where: { id: input.storeId }, select: { id: true } });
   if (!store) return { ok: false, error: "That branch no longer exists." };
+
+  // Delivery is logged as paperwork only — no product/quantity to validate.
+  let qty = 0;
+  if (input.type !== "DELIVERY") {
+    qty = Math.trunc(Number(input.qty) || 0);
+    if (qty < 1) return { ok: false, error: "Quantity must be at least 1." };
+    const product = await prisma.product.findUnique({ where: { sku: input.sku }, select: { sku: true, unavailable: true } });
+    if (!product) return { ok: false, error: "Unknown product." };
+    if (product.unavailable) return { ok: false, error: "This product is not currently made — it can't be logged." };
+  }
 
   await prisma.movement.create({
     data: {
       storeId: input.storeId,
-      sku: input.sku,
+      sku: input.type === "DELIVERY" ? null : input.sku,
       type: input.type,
       qty,
       date: input.date,

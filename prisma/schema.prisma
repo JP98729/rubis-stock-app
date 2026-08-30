@@ -216,8 +216,10 @@ model Movement {
   storeId Int
   store   Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
-  sku     String
-  product Product @relation(fields: [sku], references: [sku])
+  /// Null for a Delivery — that type is logged as paperwork only (note/invoice/
+  /// photo), not tied to a specific product/quantity.
+  sku     String?
+  product Product? @relation(fields: [sku], references: [sku])
 
   type      MovementType
   qty       Int

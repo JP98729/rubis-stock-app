@@ -167,46 +167,50 @@ export function MovementForm({
           ))}
         </div>
         <div className="text-[11px] text-gray-400 -mt-1">{TYPES.find((t) => t.key === type)?.desc}</div>
-        <label className="flex flex-col gap-1">
-          <span className="text-[11px] text-gray-500 font-medium">Product</span>
-          <select
-            value={sku}
-            onChange={(e) => setSku(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-          >
-            {RANGES.map((r) => (
-              <optgroup key={r} label={r}>
-                {availableProducts
-                  .filter((p) => p.range === r)
-                  .map((p) => (
-                    <option key={p.sku} value={p.sku}>
-                      {p.flavour}
-                    </option>
-                  ))}
-              </optgroup>
-            ))}
-          </select>
-          {selectedProduct && (
-            <div className="flex items-center gap-2 mt-1">
-              <ProductThumb product={selectedProduct} size={24} />
-              <span className="text-[11px] text-gray-400">
-                SKU {selectedProduct.sku}
-                {selectedProduct.barcode ? ` · Barcode ${selectedProduct.barcode}` : ""}
-              </span>
-            </div>
-          )}
-        </label>
-        <div className="flex gap-2">
-          <label className="flex flex-col gap-1 flex-1">
-            <span className="text-[11px] text-gray-500 font-medium">Quantity</span>
-            <input
-              type="number"
-              min="1"
-              value={qty}
-              onChange={(e) => setQty(e.target.value)}
+        {type !== "DELIVERY" && (
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] text-gray-500 font-medium">Product</span>
+            <select
+              value={sku}
+              onChange={(e) => setSku(e.target.value)}
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-            />
+            >
+              {RANGES.map((r) => (
+                <optgroup key={r} label={r}>
+                  {availableProducts
+                    .filter((p) => p.range === r)
+                    .map((p) => (
+                      <option key={p.sku} value={p.sku}>
+                        {p.flavour}
+                      </option>
+                    ))}
+                </optgroup>
+              ))}
+            </select>
+            {selectedProduct && (
+              <div className="flex items-center gap-2 mt-1">
+                <ProductThumb product={selectedProduct} size={24} />
+                <span className="text-[11px] text-gray-400">
+                  SKU {selectedProduct.sku}
+                  {selectedProduct.barcode ? ` · Barcode ${selectedProduct.barcode}` : ""}
+                </span>
+              </div>
+            )}
           </label>
+        )}
+        <div className="flex gap-2">
+          {type !== "DELIVERY" && (
+            <label className="flex flex-col gap-1 flex-1">
+              <span className="text-[11px] text-gray-500 font-medium">Quantity</span>
+              <input
+                type="number"
+                min="1"
+                value={qty}
+                onChange={(e) => setQty(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              />
+            </label>
+          )}
           <label className="flex flex-col gap-1 flex-1">
             <span className="text-[11px] text-gray-500 font-medium">Date</span>
             <input

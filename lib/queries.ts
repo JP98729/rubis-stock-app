@@ -171,7 +171,7 @@ export async function getAllStoreStock(products: ProductDTO[]): Promise<Record<n
   const movementsByStore = new Map<number, Array<{ sku: string; type: MovementTypeName; qty: number; date: string }>>();
   for (const m of movements) {
     const arr = movementsByStore.get(m.storeId) ?? [];
-    arr.push({ sku: m.sku, type: m.type as MovementTypeName, qty: m.qty, date: m.date });
+    arr.push({ sku: m.sku ?? "", type: m.type as MovementTypeName, qty: m.qty, date: m.date });
     movementsByStore.set(m.storeId, arr);
   }
 
@@ -204,7 +204,7 @@ export async function getStoreStock(storeId: number, products: ProductDTO[]): Pr
   return computeStoreStock(
     products,
     latest ? [{ date: latest.date, createdAt: latest.createdAt, items: latest.items }] : [],
-    movements.map((m) => ({ sku: m.sku, type: m.type as MovementTypeName, qty: m.qty, date: m.date }))
+    movements.map((m) => ({ sku: m.sku ?? "", type: m.type as MovementTypeName, qty: m.qty, date: m.date }))
   );
 }
 
@@ -219,7 +219,7 @@ export async function getLeaderboard(monthKey: string, stores: StoreDTO[], produ
   });
   const priceBySku = Object.fromEntries(products.map((p) => [p.sku, p.price]));
   const rows = computeMonthlySalesLeaderboard(
-    movements.map((m) => ({ storeId: m.storeId, sku: m.sku, type: m.type as MovementTypeName, qty: m.qty, date: m.date })),
+    movements.map((m) => ({ storeId: m.storeId, sku: m.sku ?? "", type: m.type as MovementTypeName, qty: m.qty, date: m.date })),
     priceBySku,
     monthKey
   );

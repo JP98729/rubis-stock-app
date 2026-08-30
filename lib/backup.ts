@@ -89,7 +89,7 @@ export type Backup = {
   movements: Array<{
     id: string;
     storeId: number;
-    sku: string;
+    sku: string | null;
     type: string;
     qty: number;
     date: string;

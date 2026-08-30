@@ -198,7 +198,7 @@ export async function restoreBackup(json: string): Promise<RestoreResult> {
         }
 
         const movementRows = (backup.movements ?? [])
-          .filter((m) => storeIds.has(m.storeId) && skus.has(m.sku))
+          .filter((m) => storeIds.has(m.storeId) && (m.sku === null || skus.has(m.sku)))
           .map((m) => ({
             id: m.id,
             storeId: m.storeId,
