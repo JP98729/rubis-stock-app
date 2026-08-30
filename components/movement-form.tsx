@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, ArrowLeft, RotateCcw, ShoppingCart, Truck } from "lucide-react";
+import { AlertTriangle, ArrowLeft, PenTool, RotateCcw, ShoppingCart, Truck } from "lucide-react";
 import type { MovementType } from "@prisma/client";
 import { GREEN, RANGES } from "@/lib/brand";
 import { ProductThumb } from "./ui";
 import { PlacementPhotoCapture } from "./photo";
+import { SignaturePad } from "./signature-pad";
 import { submitMovement } from "@/app/actions/movement";
 import type { ProductDTO } from "@/lib/queries";
 
@@ -45,6 +46,7 @@ export function MovementForm({
   const [deliveryNotePhotoUrl, setDeliveryNotePhotoUrl] = useState<string | null>(null);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [notes, setNotes] = useState("");
+  const [signature, setSignature] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -53,6 +55,7 @@ export function MovementForm({
 
   async function handleSubmit() {
     setError("");
+    if (!embedded && !signature) return setError("Please sign before submitting.");
     setSubmitting(true);
     const res = await submitMovement({
       storeId: store.id,
@@ -66,6 +69,7 @@ export function MovementForm({
       deliveryNotePhotoUrl: type === "DELIVERY" ? deliveryNotePhotoUrl : null,
       invoiceNumber: type === "DELIVERY" ? invoiceNumber : "",
       notes,
+      signatureUrl: embedded ? null : signature,
     });
     setSubmitting(false);
     if (!res.ok) {
@@ -213,6 +217,17 @@ export function MovementForm({
           />
         </label>
       </div>
+
+      {!embedded && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3">
+          <div className="text-sm font-semibold mb-1 flex items-center gap-1.5">
+            <PenTool size={14} /> Sign to confirm
+          </div>
+          <div className="text-[11px] text-gray-400 mb-2">I confirm the details above are accurate.</div>
+          <SignaturePad onChange={setSignature} />
+          {!signature && <div className="text-[11px] text-amber-600 mt-1">Signature required before submitting.</div>}
+        </div>
+      )}
 
       {error && (
         <div className="rounded-lg px-3 py-2.5 text-sm mb-3" style={{ background: "#FEF6F5", color: "#C0392B" }}>

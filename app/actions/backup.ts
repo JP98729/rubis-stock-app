@@ -212,6 +212,7 @@ export async function restoreBackup(json: string): Promise<RestoreResult> {
             deliveryNotePhotoUrl: m.deliveryNotePhotoUrl ?? null,
             invoiceNumber: m.invoiceNumber ?? "",
             notes: m.notes ?? "",
+            signatureUrl: m.signatureUrl ?? "",
             createdAt: m.createdAt ? new Date(m.createdAt) : undefined,
           }));
         const movementsAdded = movementRows.length

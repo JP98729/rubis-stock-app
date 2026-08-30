@@ -228,6 +228,9 @@ model Movement {
   deliveryNotePhotoUrl String?
   invoiceNumber        String  @default("")
   notes     String       @default("")
+  /// Required before submitting — enforced in the app, not the DB, matching
+  /// idNumber/kraPin so existing rows don't need a value.
+  signatureUrl String @default("")
   createdAt DateTime     @default(now())
 
   @@index([storeId, date])

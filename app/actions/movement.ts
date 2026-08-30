@@ -17,6 +17,7 @@ export type MovementInput = {
   deliveryNotePhotoUrl: string | null;
   invoiceNumber: string;
   notes: string;
+  signatureUrl: string | null;
 };
 
 export type SubmitResult = { ok: true } | { ok: false; error: string };
@@ -32,6 +33,10 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
     }
   } else if (session.role !== "merchandiser") {
     return { ok: false, error: "Only merchandisers and branch managers can log movements." };
+  }
+
+  if (session.role === "merchandiser" && !input.signatureUrl) {
+    return { ok: false, error: "Please sign before submitting." };
   }
 
   if (!VALID_TYPES.includes(input.type)) return { ok: false, error: "Pick a movement type." };
@@ -58,6 +63,7 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
       deliveryNotePhotoUrl: input.type === "DELIVERY" ? input.deliveryNotePhotoUrl : null,
       invoiceNumber: input.type === "DELIVERY" ? (input.invoiceNumber || "").trim() : "",
       notes: (input.notes || "").trim(),
+      signatureUrl: input.signatureUrl || "",
     },
   });
 

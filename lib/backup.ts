@@ -99,6 +99,7 @@ export type Backup = {
     deliveryNotePhotoUrl: string | null;
     invoiceNumber: string;
     notes: string;
+    signatureUrl: string;
     createdAt: string;
   }>;
   messages: Array<{
@@ -222,6 +223,7 @@ export async function buildBackup(): Promise<Backup> {
       deliveryNotePhotoUrl: m.deliveryNotePhotoUrl,
       invoiceNumber: m.invoiceNumber,
       notes: m.notes,
+      signatureUrl: m.signatureUrl,
       createdAt: m.createdAt.toISOString(),
     })),
     messages: messages.map((m) => ({
