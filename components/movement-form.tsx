@@ -1,9 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, ArrowLeft, MapPin, PenTool, Phone, RotateCcw, ShoppingCart, Truck } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  MapPin,
+  PenTool,
+  Phone,
+  RotateCcw,
+  ShoppingCart,
+  Store as StoreIcon,
+  Truck,
+} from "lucide-react";
 import type { MovementType } from "@prisma/client";
-import { GREEN, RANGES } from "@/lib/brand";
+import { GREEN, GREEN_DARK, RANGES } from "@/lib/brand";
 import { ProductThumb } from "./ui";
 import { PlacementPhotoCapture } from "./photo";
 import { SignaturePad } from "./signature-pad";
@@ -25,7 +35,16 @@ export function MovementForm({
   onBack,
   onSaved,
 }: {
-  store: { id: number; name: string; county: string; type: string; address?: string; phone?: string };
+  store: {
+    id: number;
+    name: string;
+    county: string;
+    type: string;
+    address?: string;
+    phone?: string;
+    managerPhotoUrl?: string | null;
+    managerName?: string | null;
+  };
   products: ProductDTO[];
   today: string;
   embedded?: boolean;
@@ -105,6 +124,30 @@ export function MovementForm({
           <a href={`tel:${store.phone}`} className="text-xs text-gray-500 mt-1 flex items-center gap-1.5 underline">
             <Phone size={12} className="text-gray-400 shrink-0" /> {store.phone}
           </a>
+        )}
+        {!embedded && (store.managerPhotoUrl || store.managerName) && (
+          <div className="flex items-center gap-3 mt-3 p-2.5 rounded-lg" style={{ background: "#EEF7DE" }}>
+            {store.managerPhotoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={store.managerPhotoUrl}
+                alt="Branch manager"
+                className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm shrink-0"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shrink-0 border-2 border-white shadow-sm">
+                <StoreIcon size={24} style={{ color: GREEN_DARK }} />
+              </div>
+            )}
+            <div className="text-sm" style={{ color: GREEN_DARK }}>
+              <div className="font-semibold">{store.managerName || "Branch manager on file"}</div>
+              <div className="text-xs">
+                {store.managerPhotoUrl
+                  ? "Confirm you're speaking with this person before starting."
+                  : "No photo on file yet — confirm their name in person."}
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
