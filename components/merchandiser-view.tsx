@@ -212,6 +212,7 @@ export function MerchandiserView({
           store={selected}
           products={products}
           today={today}
+          defaultName={merchName}
           onBack={() => setConfirmed(false)}
           onSaved={showToast}
         />

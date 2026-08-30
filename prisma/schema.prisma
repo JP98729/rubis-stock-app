@@ -224,6 +224,10 @@ model Movement {
   type      MovementType
   qty       Int
   date      String // "YYYY-MM-DD"
+  /// Name of the merchandiser who delivered/logged it — required for a
+  /// merchandiser submission, enforced in the app not the DB (matching
+  /// idNumber/kraPin), blank for the branch manager's own embedded log.
+  merchandiser String @default("")
   /// Time the movement was logged — "HH:MM", 24h. Optional.
   time      String @default("")
   batchCode String       @default("")

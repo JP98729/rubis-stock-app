@@ -253,6 +253,7 @@ export async function sendMovementSummaryEmail(
     type: string;
     date: string;
     time: string;
+    merchandiser: string;
     productName: string | null;
     qty: number;
     batchCode: string;
@@ -267,6 +268,8 @@ export async function sendMovementSummaryEmail(
 
   const typeLabel = MOVEMENT_TYPE_LABELS[entry.type] || entry.type;
   const typeColor = entry.type === "EXPIRED_DAMAGED" ? RED : GREEN_DARK;
+  const typeTint = entry.type === "EXPIRED_DAMAGED" ? "#FEF6F5" : "#EEF7DE";
+  const typeTintBorder = entry.type === "EXPIRED_DAMAGED" ? "#F5C4BE" : "#D9EEBB";
   const isDelivery = entry.type === "DELIVERY";
   const subject = `${typeLabel} logged — ${store.name.trim()} — ${entry.date}`;
 
@@ -274,6 +277,7 @@ export async function sendMovementSummaryEmail(
     `Branch: ${store.name.trim()} (${store.county} · ${store.type})`,
     `Type: ${typeLabel}`,
     `Date: ${entry.date}${entry.time ? ` at ${entry.time}` : ""}`,
+    entry.merchandiser ? `Logged by: ${entry.merchandiser}` : "",
     !isDelivery ? `Product: ${entry.productName || "Unknown"}` : "",
     !isDelivery ? `Quantity: ${entry.qty}` : "",
     !isDelivery && entry.batchCode ? `Batch code: ${entry.batchCode}` : "",
@@ -286,6 +290,29 @@ export async function sendMovementSummaryEmail(
   ]
     .filter(Boolean)
     .join("\n");
+
+  // Headline summary card — the one fact the reader actually cares about.
+  const summaryCard = isDelivery
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+         <tr>
+           <td style="width:50%;">
+             <div style="font-size:11px;color:${MUTED};text-transform:uppercase;letter-spacing:0.03em;">Delivery note nr</div>
+             <div style="font-size:16px;font-weight:700;color:${INK};margin-top:2px;">${esc(entry.deliveryNote)}</div>
+           </td>
+           <td style="width:50%;">
+             <div style="font-size:11px;color:${MUTED};text-transform:uppercase;letter-spacing:0.03em;">Invoice nr</div>
+             <div style="font-size:16px;font-weight:700;color:${INK};margin-top:2px;">${esc(entry.invoiceNumber)}</div>
+           </td>
+         </tr>
+       </table>`
+    : `<div style="font-size:20px;font-weight:700;color:${INK};">${entry.qty} × ${esc(entry.productName || "Unknown")}</div>`;
+
+  const detailRows = [
+    { label: "Date", value: `${esc(entry.date)}${entry.time ? ` at ${esc(entry.time)}` : ""}` },
+    entry.merchandiser ? { label: "Logged by", value: esc(entry.merchandiser) } : null,
+    !isDelivery && entry.batchCode ? { label: "Batch code", value: esc(entry.batchCode) } : null,
+    isDelivery && entry.receivedBy ? { label: "Received by", value: esc(entry.receivedBy) } : null,
+  ].filter((r): r is { label: string; value: string } => !!r);
 
   const html = `
 <div style="background:${BG};padding:24px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
@@ -307,46 +334,20 @@ export async function sendMovementSummaryEmail(
     </div>
 
     <div style="padding:20px 24px;">
+      <div style="background:${typeTint};border:1px solid ${typeTintBorder};border-radius:8px;padding:14px 16px;margin-bottom:18px;">
+        ${summaryCard}
+      </div>
+
       <table role="presentation" width="100%" style="font-size:13px;color:${INK};margin-bottom:16px;">
-        <tr>
-          <td style="padding:3px 0;color:${MUTED};width:120px;">Date</td>
-          <td style="padding:3px 0;font-weight:600;">${esc(entry.date)}${entry.time ? ` at ${esc(entry.time)}` : ""}</td>
-        </tr>
-        ${
-          !isDelivery
-            ? `<tr>
-                <td style="padding:3px 0;color:${MUTED};">Product</td>
-                <td style="padding:3px 0;font-weight:600;">${esc(entry.productName || "Unknown")}</td>
-              </tr>
-              <tr>
-                <td style="padding:3px 0;color:${MUTED};">Quantity</td>
-                <td style="padding:3px 0;font-weight:600;">${entry.qty}</td>
-              </tr>
-              ${
-                entry.batchCode
-                  ? `<tr>
-                      <td style="padding:3px 0;color:${MUTED};">Batch code</td>
-                      <td style="padding:3px 0;font-weight:600;">${esc(entry.batchCode)}</td>
-                    </tr>`
-                  : ""
-              }`
-            : `<tr>
-                <td style="padding:3px 0;color:${MUTED};">Delivery note nr</td>
-                <td style="padding:3px 0;font-weight:600;">${esc(entry.deliveryNote)}</td>
-              </tr>
-              <tr>
-                <td style="padding:3px 0;color:${MUTED};">Invoice nr</td>
-                <td style="padding:3px 0;font-weight:600;">${esc(entry.invoiceNumber)}</td>
-              </tr>
-              ${
-                entry.receivedBy
-                  ? `<tr>
-                      <td style="padding:3px 0;color:${MUTED};">Received by</td>
-                      <td style="padding:3px 0;font-weight:600;">${esc(entry.receivedBy)}</td>
-                    </tr>`
-                  : ""
-              }`
-        }
+        ${detailRows
+          .map(
+            (r) =>
+              `<tr>
+                 <td style="padding:3px 0;color:${MUTED};width:120px;">${r.label}</td>
+                 <td style="padding:3px 0;font-weight:600;">${r.value}</td>
+               </tr>`
+          )
+          .join("")}
       </table>
 
       ${entry.notes ? `<div style="font-size:13px;color:${INK};margin-bottom:16px;"><span style="color:${MUTED};">Notes:</span> ${esc(entry.notes)}</div>` : ""}

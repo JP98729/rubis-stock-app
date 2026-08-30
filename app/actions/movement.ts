@@ -13,6 +13,7 @@ export type MovementInput = {
   qty: number;
   date: string;
   time: string;
+  merchandiser: string;
   batchCode: string;
   deliveryNote: string;
   deliveryNotePhotoUrl: string | null;
@@ -39,6 +40,9 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
 
   if (session.role === "merchandiser" && !input.signatureUrl) {
     return { ok: false, error: "Please sign before submitting." };
+  }
+  if (session.role === "merchandiser" && !input.merchandiser.trim()) {
+    return { ok: false, error: "Enter your name before submitting." };
   }
 
   if (!VALID_TYPES.includes(input.type)) return { ok: false, error: "Pick a movement type." };
@@ -79,6 +83,7 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
       qty,
       date: input.date,
       time: (input.time || "").trim(),
+      merchandiser: (input.merchandiser || "").trim(),
       batchCode: (input.batchCode || "").trim(),
       deliveryNote: input.type === "DELIVERY" ? (input.deliveryNote || "").trim() : "",
       deliveryNotePhotoUrl: input.type === "DELIVERY" ? input.deliveryNotePhotoUrl : null,
@@ -93,6 +98,7 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
     type: input.type,
     date: input.date,
     time: (input.time || "").trim(),
+    merchandiser: (input.merchandiser || "").trim(),
     productName,
     qty,
     batchCode: (input.batchCode || "").trim(),

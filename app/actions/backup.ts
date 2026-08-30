@@ -207,6 +207,7 @@ export async function restoreBackup(json: string): Promise<RestoreResult> {
             qty: m.qty,
             date: m.date,
             time: m.time ?? "",
+            merchandiser: m.merchandiser ?? "",
             batchCode: m.batchCode ?? "",
             deliveryNote: m.deliveryNote ?? "",
             deliveryNotePhotoUrl: m.deliveryNotePhotoUrl ?? null,

@@ -94,6 +94,7 @@ export type Backup = {
     qty: number;
     date: string;
     time: string;
+    merchandiser: string;
     batchCode: string;
     deliveryNote: string;
     deliveryNotePhotoUrl: string | null;
@@ -219,6 +220,7 @@ export async function buildBackup(): Promise<Backup> {
       qty: m.qty,
       date: m.date,
       time: m.time,
+      merchandiser: m.merchandiser,
       batchCode: m.batchCode,
       deliveryNote: m.deliveryNote,
       deliveryNotePhotoUrl: m.deliveryNotePhotoUrl,

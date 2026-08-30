@@ -32,6 +32,7 @@ export function MovementForm({
   products,
   today,
   embedded,
+  defaultName,
   onBack,
   onSaved,
 }: {
@@ -48,10 +49,12 @@ export function MovementForm({
   products: ProductDTO[];
   today: string;
   embedded?: boolean;
+  defaultName?: string;
   onBack: () => void;
   onSaved: (msg: string) => void;
 }) {
   const availableProducts = products.filter((p) => !p.unavailable);
+  const [merchandiser, setMerchandiser] = useState(defaultName || "");
   const [type, setType] = useState<MovementType>("DELIVERY");
   const [sku, setSku] = useState(availableProducts[0]?.sku ?? "");
   const [qty, setQty] = useState("1");
@@ -75,6 +78,7 @@ export function MovementForm({
 
   async function handleSubmit() {
     setError("");
+    if (!embedded && !merchandiser.trim()) return setError("Enter your name before submitting.");
     if (type === "DELIVERY" && !deliveryNote.trim()) return setError("Enter the delivery note nr before submitting.");
     if (type === "DELIVERY" && !invoiceNumber.trim()) return setError("Enter the invoice nr before submitting.");
     if (!embedded && !signature) return setError("Please sign before submitting.");
@@ -86,6 +90,7 @@ export function MovementForm({
       qty: Number(qty),
       date,
       time,
+      merchandiser: embedded ? "" : merchandiser.trim(),
       batchCode,
       deliveryNote: type === "DELIVERY" ? deliveryNote : "",
       deliveryNotePhotoUrl: type === "DELIVERY" ? deliveryNotePhotoUrl : null,
@@ -152,6 +157,17 @@ export function MovementForm({
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3 flex flex-col gap-3">
+        {!embedded && (
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] text-gray-500 font-medium">Your name</span>
+            <input
+              value={merchandiser}
+              onChange={(e) => setMerchandiser(e.target.value)}
+              placeholder="e.g. Innocent Morarain"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            />
+          </label>
+        )}
         <div className="grid grid-cols-2 gap-2">
           {TYPES.map((t) => (
             <button
