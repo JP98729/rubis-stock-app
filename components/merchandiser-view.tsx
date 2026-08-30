@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, ChevronRight, ClipboardList, Search, Store as StoreIcon, Truck } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ChevronRight, ClipboardList, Search, Store as StoreIcon, Truck } from "lucide-react";
 import { GREEN, GREEN_DARK, RED } from "@/lib/brand";
 import { Badge } from "./ui";
 import { ToastView, useToast } from "./toast";
@@ -37,6 +37,7 @@ export function MerchandiserView({
 }) {
   const [tab, setTab] = useState<"stocktake" | "movement">("stocktake");
   const [selected, setSelected] = useState<StoreDTO | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
   const [q, setQ] = useState("");
   const { toast, showToast } = useToast();
 
@@ -102,7 +103,10 @@ export function MerchandiserView({
             {filtered.map(({ store, hasStocktake, outOfStock }) => (
               <button
                 key={store.id}
-                onClick={() => setSelected(store)}
+                onClick={() => {
+                  setSelected(store);
+                  setConfirmed(false);
+                }}
                 className="bg-white border border-gray-200 rounded-xl px-4 py-3 text-left flex items-center justify-between active:scale-[0.99] transition"
               >
                 <div className="flex items-center gap-3">
@@ -140,6 +144,57 @@ export function MerchandiserView({
             ))}
           </div>
         </div>
+      ) : !confirmed ? (
+        <div className="px-4 pt-4">
+          <button
+            onClick={() => setSelected(null)}
+            className="flex items-center gap-1 text-sm text-gray-500 mb-3"
+          >
+            <ArrowLeft size={15} /> Back to branches
+          </button>
+          <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3">
+            <div className="font-bold text-sm">{selected.name.trim()}</div>
+            <div className="text-xs text-gray-400 mt-0.5">
+              {selected.county} · {selected.type}
+            </div>
+            {(selected.managerPhotoUrl || selected.managerName || selected.phone) && (
+              <div className="flex items-center gap-3 mt-3 p-2.5 rounded-lg" style={{ background: "#EEF7DE" }}>
+                {selected.managerPhotoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={selected.managerPhotoUrl}
+                    alt="Branch manager"
+                    className="w-24 h-24 rounded-full object-cover border-2 border-white shadow-sm shrink-0"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center shrink-0 border-2 border-white shadow-sm">
+                    <StoreIcon size={32} style={{ color: GREEN_DARK }} />
+                  </div>
+                )}
+                <div className="text-sm" style={{ color: GREEN_DARK }}>
+                  <div className="font-semibold">{selected.managerName || "Branch manager on file"}</div>
+                  {selected.phone && (
+                    <a href={`tel:${selected.phone}`} className="underline">
+                      {selected.phone}
+                    </a>
+                  )}
+                  <div className="text-xs">
+                    {selected.managerPhotoUrl
+                      ? "Confirm you're speaking with this person before starting."
+                      : "No photo on file yet — confirm their name in person."}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => setConfirmed(true)}
+            className="w-full py-3 rounded-xl text-white font-bold text-sm"
+            style={{ background: GREEN }}
+          >
+            Continue to {tab === "stocktake" ? "Stocktake" : "Log Movement"}
+          </button>
+        </div>
       ) : tab === "stocktake" ? (
         <StocktakeForm
           store={selected}
@@ -149,7 +204,7 @@ export function MerchandiserView({
           managerPhotoUrl={selected.managerPhotoUrl}
           managerName={selected.managerName}
           managerPhone={selected.phone}
-          onBack={() => setSelected(null)}
+          onBack={() => setConfirmed(false)}
           onSaved={showToast}
         />
       ) : (
@@ -157,7 +212,7 @@ export function MerchandiserView({
           store={selected}
           products={products}
           today={today}
-          onBack={() => setSelected(null)}
+          onBack={() => setConfirmed(false)}
           onSaved={showToast}
         />
       )}
