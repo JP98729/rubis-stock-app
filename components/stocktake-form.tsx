@@ -113,18 +113,6 @@ export function StocktakeForm({
         return setError("Please describe the type of promotion before submitting.");
       if (checks.promotion === "Yes" && !promotionPhoto)
         return setError("Please take a photo of the promotion display before submitting.");
-      for (let i = 0; i < 3; i++) {
-        const c = competitors[i];
-        if (!c.brand.trim())
-          return setError(`Enter the brand name for competitor ${i + 1} before submitting.`);
-        if (!c.gram.trim())
-          return setError(`Enter the weight (g) for competitor ${i + 1} (${c.brand.trim()}) before submitting.`);
-        if (!c.description.trim())
-          return setError(`Enter the item description for competitor ${i + 1} (${c.brand.trim()}) before submitting.`);
-        if (!c.price.trim() || Number(c.price) <= 0)
-          return setError(`Enter a valid price for competitor ${i + 1} (${c.brand.trim()}) before submitting.`);
-        if (!c.photoUrl) return setError(`Take a photo for competitor ${i + 1} (${c.brand.trim()}) before submitting.`);
-      }
     }
     if (!signature) return setError("Please sign before submitting.");
 
@@ -442,8 +430,8 @@ export function StocktakeForm({
           <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3">
             <div className="font-semibold text-sm mb-1">Competitor Check</div>
             <div className="text-[11px] text-gray-400 mb-3">
-              Record 3 competitor brands carried in this outlet — each with its weight, description, price, and a
-              photo.
+              Optional — record up to 3 competitor brands carried in this outlet, each with its weight,
+              description, price, and a photo.
             </div>
             <div className="flex flex-col gap-4">
               {competitors.map((c, i) => (
@@ -451,7 +439,7 @@ export function StocktakeForm({
                   <div className="text-[11px] font-semibold text-gray-500 mb-1.5">Competitor {i + 1}</div>
                   <label className="flex flex-col gap-1">
                     <span className="text-[11px] font-medium" style={{ color: "#1D4ED8" }}>
-                      Brand name — required
+                      Brand name (optional)
                     </span>
                     <input
                       value={c.brand}
@@ -462,7 +450,7 @@ export function StocktakeForm({
                   </label>
                   <label className="flex flex-col gap-1 mt-2">
                     <span className="text-[11px] font-medium" style={{ color: "#1D4ED8" }}>
-                      Weight (g) — required
+                      Weight (g) (optional)
                     </span>
                     <input
                       value={c.gram}
@@ -473,7 +461,7 @@ export function StocktakeForm({
                   </label>
                   <label className="flex flex-col gap-1 mt-2">
                     <span className="text-[11px] font-medium" style={{ color: "#1D4ED8" }}>
-                      Item description — required
+                      Item description (optional)
                     </span>
                     <input
                       value={c.description}
@@ -484,7 +472,7 @@ export function StocktakeForm({
                   </label>
                   <label className="flex flex-col gap-1 mt-2">
                     <span className="text-[11px] font-medium" style={{ color: "#1D4ED8" }}>
-                      Price (KES) — required
+                      Price (KES) (optional)
                     </span>
                     <input
                       type="number"
@@ -498,7 +486,7 @@ export function StocktakeForm({
                   </label>
                   <div className="mt-2">
                     <span className="text-[11px] font-medium" style={{ color: "#1D4ED8" }}>
-                      Photo — required
+                      Photo (optional)
                     </span>
                     <PlacementPhotoCapture
                       photo={c.photoUrl}

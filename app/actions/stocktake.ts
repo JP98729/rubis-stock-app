@@ -89,17 +89,6 @@ function validate(input: StocktakeInput): string | null {
     if (input.checksPromotion === "Yes" && !input.promotionPhotoUrl) {
       return "Please take a photo of the promotion display before submitting.";
     }
-    if (!Array.isArray(input.competitors) || input.competitors.length < 3) {
-      return "Please record all 3 competitor brands before submitting.";
-    }
-    for (let i = 0; i < 3; i++) {
-      const c = input.competitors[i];
-      if (!c.brand.trim()) return `Enter the brand name for competitor ${i + 1} before submitting.`;
-      if (!c.gram.trim()) return `Enter the weight (g) for competitor ${i + 1} before submitting.`;
-      if (!c.description.trim()) return `Enter the item description for competitor ${i + 1} before submitting.`;
-      if (!(c.price > 0)) return `Enter a valid price for competitor ${i + 1} before submitting.`;
-      if (!c.photoUrl) return `Take a photo for competitor ${i + 1} before submitting.`;
-    }
   }
   if (!input.signatureUrl) return "Please sign before submitting.";
   return null;
