@@ -123,12 +123,16 @@ export function PlacementPhotoCapture({
   photo,
   onChange,
   tone,
+  allowLibrary,
 }: {
   photo: string | null;
   onChange: (url: string | null) => void;
   tone?: "good" | "neutral" | "bad";
+  /** Also offer "Scan / choose file" (photo library, Files app, and iOS's document scanner) alongside the camera. */
+  allowLibrary?: boolean;
 }) {
-  const inputId = useId();
+  const cameraInputId = useId();
+  const libraryInputId = useId();
   const [busy, setBusy] = useState(false);
   const isGood = tone === "good";
   const isNeutral = tone === "neutral";
@@ -156,10 +160,36 @@ export function PlacementPhotoCapture({
         <div className="flex items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={photo} alt="Shelf evidence" className={`w-16 h-16 rounded-lg object-cover border ${imgBorderClass}`} />
-          <label htmlFor={inputId} className="text-xs font-semibold cursor-pointer" style={{ color }}>
-            Retake photo
+          <div className="flex flex-col items-start gap-1">
+            <label htmlFor={cameraInputId} className="text-xs font-semibold cursor-pointer" style={{ color }}>
+              Retake photo
+              <input
+                id={cameraInputId}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={handleFile}
+              />
+            </label>
+            {allowLibrary && (
+              <label htmlFor={libraryInputId} className="text-xs font-semibold cursor-pointer" style={{ color }}>
+                Scan / choose file
+                <input id={libraryInputId} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+              </label>
+            )}
+          </div>
+        </div>
+      ) : allowLibrary ? (
+        <div className="flex gap-2">
+          <label
+            htmlFor={cameraInputId}
+            className={`flex-1 flex items-center justify-center gap-2 border-2 border-dashed ${borderClass} ${bgClass} rounded-lg py-3 text-sm font-semibold cursor-pointer`}
+            style={{ color }}
+          >
+            <Camera size={16} /> {busy ? "Uploading…" : "Take photo"}
             <input
-              id={inputId}
+              id={cameraInputId}
               type="file"
               accept="image/*"
               capture="environment"
@@ -167,16 +197,24 @@ export function PlacementPhotoCapture({
               onChange={handleFile}
             />
           </label>
+          <label
+            htmlFor={libraryInputId}
+            className={`flex-1 flex items-center justify-center gap-2 border-2 border-dashed ${borderClass} ${bgClass} rounded-lg py-3 text-sm font-semibold cursor-pointer`}
+            style={{ color }}
+          >
+            {busy ? "Uploading…" : "Scan / choose file"}
+            <input id={libraryInputId} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+          </label>
         </div>
       ) : (
         <label
-          htmlFor={inputId}
+          htmlFor={cameraInputId}
           className={`flex items-center justify-center gap-2 border-2 border-dashed ${borderClass} ${bgClass} rounded-lg py-3 text-sm font-semibold cursor-pointer`}
           style={{ color }}
         >
           <Camera size={16} /> {busy ? "Uploading…" : "Take photo"}
           <input
-            id={inputId}
+            id={cameraInputId}
             type="file"
             accept="image/*"
             capture="environment"

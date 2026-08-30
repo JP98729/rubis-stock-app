@@ -297,7 +297,12 @@ export function MovementForm({
         {type === "DELIVERY" && (
           <div>
             <span className="text-[11px] text-gray-500 font-medium">Photo of the delivery note (optional)</span>
-            <PlacementPhotoCapture photo={deliveryNotePhotoUrl} onChange={setDeliveryNotePhotoUrl} tone="neutral" />
+            <PlacementPhotoCapture
+              photo={deliveryNotePhotoUrl}
+              onChange={setDeliveryNotePhotoUrl}
+              tone="neutral"
+              allowLibrary
+            />
           </div>
         )}
         <label className="flex flex-col gap-1">
