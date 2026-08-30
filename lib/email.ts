@@ -2,6 +2,7 @@ import "server-only";
 
 const NOTIFY_EMAIL = "info@pure-nutritions.com";
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Rubis Enjoy <onboarding@resend.dev>";
+const MERCHANDISER_VISIT_FEE_KES = 300;
 
 const GREEN = "#6DBE00";
 const GREEN_DARK = "#4E8A00";
@@ -27,6 +28,8 @@ export async function sendStocktakeSummaryEmail(
     visitTime: string;
     merchandiser: string;
     idNumber: string;
+    merchandiserPhone: string;
+    embedded: boolean;
     notes: string;
     checksPlacement: string | null;
     checksPrices: string | null;
@@ -58,7 +61,8 @@ export async function sendStocktakeSummaryEmail(
   const text = [
     `Branch: ${store.name.trim()} (${store.county} · ${store.type})`,
     `Date: ${entry.date}${entry.visitTime ? ` at ${entry.visitTime}` : ""}`,
-    `Submitted by: ${entry.merchandiser}${entry.idNumber ? ` (ID ${entry.idNumber})` : ""}`,
+    `Submitted by: ${entry.merchandiser}${entry.idNumber ? ` (ID ${entry.idNumber})` : ""}${entry.merchandiserPhone ? ` — ${entry.merchandiserPhone}` : ""}`,
+    !entry.embedded ? `Service fee for this visit: KES ${MERCHANDISER_VISIT_FEE_KES}` : "",
     "",
     `Products below minimum stock (${minStock} units): ${lowStockCount}`,
     entry.checksPlacement !== null ? `Store display check flagged an issue: ${flagged ? "Yes — see app for details" : "No"}` : "",
@@ -123,8 +127,16 @@ export async function sendStocktakeSummaryEmail(
         </tr>
         <tr>
           <td style="padding:3px 0;color:${MUTED};">Submitted by</td>
-          <td style="padding:3px 0;font-weight:600;">${esc(entry.merchandiser)}${entry.idNumber ? ` (ID ${esc(entry.idNumber)})` : ""}</td>
+          <td style="padding:3px 0;font-weight:600;">${esc(entry.merchandiser)}${entry.idNumber ? ` (ID ${esc(entry.idNumber)})` : ""}${entry.merchandiserPhone ? ` — ${esc(entry.merchandiserPhone)}` : ""}</td>
         </tr>
+        ${
+          !entry.embedded
+            ? `<tr>
+                <td style="padding:3px 0;color:${MUTED};">Service fee</td>
+                <td style="padding:3px 0;font-weight:600;">KES ${MERCHANDISER_VISIT_FEE_KES} (this visit)</td>
+              </tr>`
+            : ""
+        }
       </table>
 
       ${

@@ -435,6 +435,7 @@ export type RecentStocktakeDTO = {
   storeName: string;
   merchandiser: string;
   idNumber: string;
+  merchandiserPhone: string;
   date: string;
   visitTime: string;
   signatureUrl: string;
@@ -450,6 +451,7 @@ export async function getRecentStocktakes(limit = 8): Promise<RecentStocktakeDTO
       storeId: true,
       merchandiser: true,
       idNumber: true,
+      merchandiserPhone: true,
       date: true,
       visitTime: true,
       signatureUrl: true,
@@ -465,6 +467,7 @@ export async function getRecentStocktakes(limit = 8): Promise<RecentStocktakeDTO
     storeName: r.store.name,
     merchandiser: r.merchandiser,
     idNumber: r.idNumber,
+    merchandiserPhone: r.merchandiserPhone,
     date: r.date,
     visitTime: r.visitTime,
     signatureUrl: r.signatureUrl,

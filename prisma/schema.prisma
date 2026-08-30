@@ -135,6 +135,8 @@ model Stocktake {
   visitTime    String @default("")
   merchandiser String
   idNumber     String @default("")
+  /// Merchandiser's own phone — optional, not required, for payment purposes.
+  merchandiserPhone String @default("")
   /// Required for every stocktake.
   signatureUrl String
   notes        String @default("")

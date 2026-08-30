@@ -30,6 +30,7 @@ export type StocktakeInput = {
   visitTime: string;
   merchandiser: string;
   idNumber: string;
+  merchandiserPhone: string;
   signatureUrl: string | null;
   notes: string;
   checksPlacement: string | null;
@@ -135,6 +136,7 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
       visitTime: input.embedded ? "" : input.visitTime.trim(),
       merchandiser: input.merchandiser.trim(),
       idNumber: input.embedded ? "" : input.idNumber.trim(),
+      merchandiserPhone: input.embedded ? "" : input.merchandiserPhone.trim(),
       signatureUrl: input.signatureUrl!,
       notes: input.notes.trim(),
       checksPlacement: input.embedded ? null : input.checksPlacement,
@@ -190,6 +192,8 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
       visitTime: input.embedded ? "" : input.visitTime.trim(),
       merchandiser: input.merchandiser.trim(),
       idNumber: input.idNumber.trim(),
+      merchandiserPhone: input.embedded ? "" : input.merchandiserPhone.trim(),
+      embedded: input.embedded,
       notes: input.notes.trim(),
       checksPlacement: input.checksPlacement,
       checksPrices: input.checksPrices,

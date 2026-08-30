@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, ChevronDown, CreditCard, MapPin, PenTool, Store as StoreIcon } from "lucide-react";
+import { ArrowLeft, ChevronDown, CreditCard, MapPin, PenTool, Phone, Store as StoreIcon } from "lucide-react";
 import { AMBER, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT } from "@/lib/brand";
 import { Badge, NumField, YesNoQuestion } from "./ui";
 import { PlacementPhotoCapture, ProductPhotoPicker } from "./photo";
@@ -43,6 +43,7 @@ export function StocktakeForm({
 }) {
   const [merchandiser, setMerchandiser] = useState(defaultName || "");
   const [idNumber, setIdNumber] = useState("");
+  const [merchandiserPhone, setMerchandiserPhone] = useState("");
   const [visitDate, setVisitDate] = useState(today);
   const [visitTime, setVisitTime] = useState(() => {
     const now = new Date();
@@ -124,6 +125,7 @@ export function StocktakeForm({
       visitTime: embedded ? "" : visitTime,
       merchandiser: merchandiser.trim(),
       idNumber: idNumber.trim(),
+      merchandiserPhone: merchandiserPhone.trim(),
       signatureUrl: signature,
       notes: notes.trim(),
       checksPlacement: checks.placement,
@@ -205,40 +207,55 @@ export function StocktakeForm({
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
           </label>
-          <div className={embedded ? "grid grid-cols-1 gap-2" : "flex gap-2"}>
+          <div className="flex flex-col gap-2">
             {!embedded && (
+              <div className="flex gap-2">
+                <label className="flex flex-col gap-1 flex-1">
+                  <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1">
+                    <CreditCard size={12} /> ID number
+                  </span>
+                  <input
+                    value={idNumber}
+                    onChange={(e) => setIdNumber(e.target.value)}
+                    placeholder="National ID / Staff ID"
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  />
+                </label>
+                <label className="flex flex-col gap-1 flex-1">
+                  <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1">
+                    <Phone size={12} /> Your phone (optional)
+                  </span>
+                  <input
+                    value={merchandiserPhone}
+                    onChange={(e) => setMerchandiserPhone(e.target.value)}
+                    placeholder="+254 7XX XXX XXX"
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  />
+                </label>
+              </div>
+            )}
+            <div className={embedded ? "grid grid-cols-1 gap-2" : "flex gap-2"}>
               <label className="flex flex-col gap-1 flex-1">
-                <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1">
-                  <CreditCard size={12} /> ID number
-                </span>
+                <span className="text-[11px] text-gray-500 font-medium">Date</span>
                 <input
-                  value={idNumber}
-                  onChange={(e) => setIdNumber(e.target.value)}
-                  placeholder="National ID / Staff ID"
+                  type="date"
+                  value={visitDate}
+                  onChange={(e) => setVisitDate(e.target.value)}
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
                 />
               </label>
-            )}
-            <label className="flex flex-col gap-1 flex-1">
-              <span className="text-[11px] text-gray-500 font-medium">Date</span>
-              <input
-                type="date"
-                value={visitDate}
-                onChange={(e) => setVisitDate(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-              />
-            </label>
-            {!embedded && (
-              <label className="flex flex-col gap-1 flex-1">
-                <span className="text-[11px] text-gray-500 font-medium">Time</span>
-                <input
-                  type="time"
-                  value={visitTime}
-                  onChange={(e) => setVisitTime(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                />
-              </label>
-            )}
+              {!embedded && (
+                <label className="flex flex-col gap-1 flex-1">
+                  <span className="text-[11px] text-gray-500 font-medium">Time</span>
+                  <input
+                    type="time"
+                    value={visitTime}
+                    onChange={(e) => setVisitTime(e.target.value)}
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  />
+                </label>
+              )}
+            </div>
           </div>
         </div>
       </div>
