@@ -33,9 +33,11 @@ enum RoleCodeType {
 model Store {
   /// Matches the original seeded ids 1-75; new branches autoincrement from there.
   id     Int    @id @default(autoincrement())
-  name   String
-  type   String // "CODO" | "COCO"
-  county String
+  name    String
+  type    String // "CODO" | "COCO"
+  county  String
+  /// Physical address, branch-manager self-service (like contactPhone/contactEmail).
+  address String @default("")
 
   /// Contact info as it arrived in the original seed data.
   seedPhone String @default("")

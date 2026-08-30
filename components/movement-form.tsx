@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, ArrowLeft, PenTool, RotateCcw, ShoppingCart, Truck } from "lucide-react";
+import { AlertTriangle, ArrowLeft, MapPin, PenTool, Phone, RotateCcw, ShoppingCart, Truck } from "lucide-react";
 import type { MovementType } from "@prisma/client";
 import { GREEN, RANGES } from "@/lib/brand";
 import { ProductThumb } from "./ui";
@@ -25,7 +25,7 @@ export function MovementForm({
   onBack,
   onSaved,
 }: {
-  store: { id: number; name: string; county: string; type: string };
+  store: { id: number; name: string; county: string; type: string; address?: string; phone?: string };
   products: ProductDTO[];
   today: string;
   embedded?: boolean;
@@ -96,6 +96,16 @@ export function MovementForm({
         <div className="text-xs text-gray-400 mt-0.5">
           {store.county} · {store.type}
         </div>
+        {store.address && (
+          <div className="text-xs text-gray-500 mt-1.5 flex items-center gap-1.5">
+            <MapPin size={12} className="text-gray-400 shrink-0" /> {store.address}
+          </div>
+        )}
+        {store.phone && (
+          <a href={`tel:${store.phone}`} className="text-xs text-gray-500 mt-1 flex items-center gap-1.5 underline">
+            <Phone size={12} className="text-gray-400 shrink-0" /> {store.phone}
+          </a>
+        )}
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3 flex flex-col gap-3">

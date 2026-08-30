@@ -18,6 +18,7 @@ export type StoreDTO = {
   name: string;
   type: string;
   county: string;
+  address: string;
   /** Effective contact details — branch-manager override wins over the seed value. */
   phone: string;
   email: string;
@@ -106,6 +107,7 @@ type StoreRow = {
   name: string;
   type: string;
   county: string;
+  address: string;
   seedPhone: string;
   seedEmail: string;
   contactPhone: string | null;
@@ -122,6 +124,7 @@ function toStoreDTO(s: StoreRow): StoreDTO {
     name: s.name,
     type: s.type,
     county: s.county,
+    address: s.address,
     phone: s.contactPhone || s.seedPhone || "",
     email: s.contactEmail || s.seedEmail || "",
     phoneOverridden: !!s.contactPhone,

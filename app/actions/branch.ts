@@ -9,15 +9,16 @@ import { createDraftSalesOrder } from "@/lib/odoo";
 export type SimpleResult = { ok: true } | { ok: false; error: string };
 
 /** Branch-manager self-service contact override (shown with a green * in the admin table). */
-export async function saveBranchContact(phone: string, email: string): Promise<SimpleResult> {
+export async function saveBranchContact(phone: string, email: string, address: string): Promise<SimpleResult> {
   const session = await requireRole("branch");
   if (!session?.storeId) return { ok: false, error: "Your session expired — log in again." };
   await prisma.store.update({
     where: { id: session.storeId },
-    data: { contactPhone: phone.trim() || null, contactEmail: email.trim() || null },
+    data: { contactPhone: phone.trim() || null, contactEmail: email.trim() || null, address: address.trim() },
   });
   revalidatePath("/branch");
   revalidatePath("/manager");
+  revalidatePath("/merchandiser");
   return { ok: true };
 }
 

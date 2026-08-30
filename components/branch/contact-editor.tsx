@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Camera, Mail, Phone } from "lucide-react";
+import { Camera, Mail, MapPin, Phone } from "lucide-react";
 import { GREEN, GREEN_DARK } from "@/lib/brand";
 import { compressAndUpload } from "../photo";
 import { saveBranchContact, saveManagerName, saveManagerPhoto } from "@/app/actions/branch";
@@ -9,27 +9,32 @@ import { saveBranchContact, saveManagerName, saveManagerPhoto } from "@/app/acti
 export function BranchContactEditor({
   phone,
   email,
+  address,
   onSaved,
 }: {
   phone: string;
   email: string;
+  address: string;
   onSaved: (msg: string) => void;
 }) {
   const [effectivePhone, setEffectivePhone] = useState(phone);
   const [effectiveEmail, setEffectiveEmail] = useState(email);
+  const [effectiveAddress, setEffectiveAddress] = useState(address);
   const [editing, setEditing] = useState(!email); // auto-open if no email on file
   const [phoneDraft, setPhoneDraft] = useState(phone);
   const [emailDraft, setEmailDraft] = useState(email);
+  const [addressDraft, setAddressDraft] = useState(address);
   const [saved, setSaved] = useState(false);
 
   async function handleSave() {
-    const res = await saveBranchContact(phoneDraft, emailDraft);
+    const res = await saveBranchContact(phoneDraft, emailDraft, addressDraft);
     if (!res.ok) {
       onSaved(res.error);
       return;
     }
     setEffectivePhone(phoneDraft.trim());
     setEffectiveEmail(emailDraft.trim());
+    setEffectiveAddress(addressDraft.trim());
     setSaved(true);
     setEditing(false);
     onSaved("Contact details updated");
@@ -44,6 +49,9 @@ export function BranchContactEditor({
         </div>
         <div className="text-xs text-gray-500 flex items-center gap-1.5">
           <Mail size={11} className="text-gray-400" /> {effectiveEmail}
+        </div>
+        <div className="text-xs text-gray-500 flex items-center gap-1.5">
+          <MapPin size={11} className="text-gray-400" /> {effectiveAddress || "No address on file"}
         </div>
         <button
           onClick={() => setEditing(true)}
@@ -88,6 +96,15 @@ export function BranchContactEditor({
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
         />
       </label>
+      <label className="flex flex-col gap-1 mb-2">
+        <span className="text-[11px] text-gray-500 font-medium">Address</span>
+        <input
+          value={addressDraft}
+          onChange={(e) => setAddressDraft(e.target.value)}
+          placeholder="Street, building, area"
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+        />
+      </label>
       <div className="flex gap-2">
         <button onClick={handleSave} className="px-3 py-1.5 rounded-lg text-white text-xs font-semibold" style={{ background: GREEN }}>
           {saved ? "Saved ✓" : "Save"}
@@ -97,6 +114,7 @@ export function BranchContactEditor({
             onClick={() => {
               setPhoneDraft(effectivePhone);
               setEmailDraft(effectiveEmail);
+              setAddressDraft(effectiveAddress);
               setEditing(false);
             }}
             className="px-3 py-1.5 rounded-lg border border-gray-300 text-xs font-semibold text-gray-600"

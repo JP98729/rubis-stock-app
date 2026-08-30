@@ -83,7 +83,7 @@ export function BranchManagerView({
             <div className="text-xs text-gray-400 mt-0.5">
               {store.county} · {store.type} · code {store.code}
             </div>
-            <BranchContactEditor phone={store.phone} email={store.email} onSaved={showToast} />
+            <BranchContactEditor phone={store.phone} email={store.email} address={store.address} onSaved={showToast} />
           </div>
           <form action={logout}>
             <button
