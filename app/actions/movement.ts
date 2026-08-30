@@ -12,6 +12,8 @@ export type MovementInput = {
   qty: number;
   date: string;
   batchCode: string;
+  deliveryNote: string;
+  invoiceNumber: string;
   notes: string;
 };
 
@@ -49,6 +51,8 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
       qty,
       date: input.date,
       batchCode: (input.batchCode || "").trim(),
+      deliveryNote: input.type === "DELIVERY" ? (input.deliveryNote || "").trim() : "",
+      invoiceNumber: input.type === "DELIVERY" ? (input.invoiceNumber || "").trim() : "",
       notes: (input.notes || "").trim(),
     },
   });

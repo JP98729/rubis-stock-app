@@ -36,6 +36,8 @@ export function MovementForm({
   const [qty, setQty] = useState("1");
   const [date, setDate] = useState(today);
   const [batchCode, setBatchCode] = useState("");
+  const [deliveryNote, setDeliveryNote] = useState("");
+  const [invoiceNumber, setInvoiceNumber] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -53,6 +55,8 @@ export function MovementForm({
       qty: Number(qty),
       date,
       batchCode,
+      deliveryNote: type === "DELIVERY" ? deliveryNote : "",
+      invoiceNumber: type === "DELIVERY" ? invoiceNumber : "",
       notes,
     });
     setSubmitting(false);
@@ -154,6 +158,28 @@ export function MovementForm({
               className="border border-red-200 bg-red-50 rounded-lg px-3 py-2 text-sm"
             />
           </label>
+        )}
+        {type === "DELIVERY" && (
+          <div className="flex gap-2">
+            <label className="flex flex-col gap-1 flex-1">
+              <span className="text-[11px] text-gray-500 font-medium">Delivery note nr (optional)</span>
+              <input
+                value={deliveryNote}
+                onChange={(e) => setDeliveryNote(e.target.value)}
+                placeholder="e.g. DN-2026-0813"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              />
+            </label>
+            <label className="flex flex-col gap-1 flex-1">
+              <span className="text-[11px] text-gray-500 font-medium">Invoice nr (optional)</span>
+              <input
+                value={invoiceNumber}
+                onChange={(e) => setInvoiceNumber(e.target.value)}
+                placeholder="e.g. INV-2026-0813"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              />
+            </label>
+          </div>
         )}
         <label className="flex flex-col gap-1">
           <span className="text-[11px] text-gray-500 font-medium">Notes (optional)</span>

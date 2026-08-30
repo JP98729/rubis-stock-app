@@ -221,6 +221,9 @@ model Movement {
   qty       Int
   date      String // "YYYY-MM-DD"
   batchCode String       @default("")
+  /// Only relevant for type DELIVERY, optional.
+  deliveryNote  String @default("")
+  invoiceNumber String @default("")
   notes     String       @default("")
   createdAt DateTime     @default(now())
 

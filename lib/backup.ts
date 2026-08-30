@@ -94,6 +94,8 @@ export type Backup = {
     qty: number;
     date: string;
     batchCode: string;
+    deliveryNote: string;
+    invoiceNumber: string;
     notes: string;
     createdAt: string;
   }>;
@@ -213,6 +215,8 @@ export async function buildBackup(): Promise<Backup> {
       qty: m.qty,
       date: m.date,
       batchCode: m.batchCode,
+      deliveryNote: m.deliveryNote,
+      invoiceNumber: m.invoiceNumber,
       notes: m.notes,
       createdAt: m.createdAt.toISOString(),
     })),
