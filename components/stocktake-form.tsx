@@ -172,7 +172,7 @@ export function StocktakeForm({
         <div className="text-xs text-gray-400 mt-0.5">
           {store.county} · {store.type}
         </div>
-        {(managerPhotoUrl || managerName) && (
+        {(managerPhotoUrl || managerName || managerPhone) && (
           <div className="flex items-center gap-2.5 mt-3 p-2.5 rounded-lg" style={{ background: "#EEF7DE" }}>
             {managerPhotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
