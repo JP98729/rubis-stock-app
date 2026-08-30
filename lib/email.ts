@@ -1,5 +1,6 @@
 import "server-only";
 import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO } from "@/lib/brand";
+import { renderStocktakeSummaryPdf, renderMovementSummaryPdf } from "@/lib/pdf";
 
 const NOTIFY_EMAIL = "info@pure-nutritions.com";
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Rubis Enjoy <onboarding@resend.dev>";
@@ -223,12 +224,27 @@ export async function sendStocktakeSummaryEmail(
   try {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
+    let pdfBuffer: Buffer | null = null;
+    try {
+      pdfBuffer = await renderStocktakeSummaryPdf(store, entry, minStock);
+    } catch {
+      // The PDF is a bonus attachment — never let a rendering failure block the email.
+    }
     await resend.emails.send({
       from: FROM_EMAIL,
       to: NOTIFY_EMAIL,
       subject,
       html,
       text,
+      attachments: pdfBuffer
+        ? [
+            {
+              filename: `Stocktake ${store.name.trim()} ${entry.date}.pdf`,
+              content: pdfBuffer,
+              contentType: "application/pdf",
+            },
+          ]
+        : undefined,
     });
   } catch {
     // Email is a bonus notification, not part of the submission contract — never throw.
@@ -369,12 +385,27 @@ export async function sendMovementSummaryEmail(
   try {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
+    let pdfBuffer: Buffer | null = null;
+    try {
+      pdfBuffer = await renderMovementSummaryPdf(store, entry);
+    } catch {
+      // The PDF is a bonus attachment — never let a rendering failure block the email.
+    }
     await resend.emails.send({
       from: FROM_EMAIL,
       to: NOTIFY_EMAIL,
       subject,
       html,
       text,
+      attachments: pdfBuffer
+        ? [
+            {
+              filename: `${typeLabel} ${store.name.trim()} ${entry.date}.pdf`,
+              content: pdfBuffer,
+              contentType: "application/pdf",
+            },
+          ]
+        : undefined,
     });
   } catch {
     // Email is a bonus notification, not part of the submission contract — never throw.
