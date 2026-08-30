@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Camera } from "lucide-react";
+import { Camera, FileText } from "lucide-react";
 import { GREEN_DARK } from "@/lib/brand";
 import { ProductThumb } from "./ui";
 
@@ -55,7 +55,7 @@ export async function compressAndUpload(file: File, maxDim?: number, quality?: n
 }
 
 /** Reads a file (PDF or image) as a data URL without any compression, for document uploads. */
-function readFileAsDataUrl(file: File): Promise<string> {
+export function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
@@ -141,12 +141,18 @@ export function PlacementPhotoCapture({
   const bgClass = isGood ? "bg-green-50" : isNeutral ? "bg-blue-50" : "bg-red-50";
   const imgBorderClass = isGood ? "border-green-200" : isNeutral ? "border-blue-200" : "border-red-200";
 
+  const isPdf = !!photo && photo.toLowerCase().endsWith(".pdf");
+
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setBusy(true);
     try {
-      onChange(await compressAndUpload(file, 260, 0.6));
+      if (file.type === "application/pdf") {
+        onChange(await uploadDataUrl(await readFileAsDataUrl(file)));
+      } else {
+        onChange(await compressAndUpload(file, 260, 0.6));
+      }
     } catch {
       /* ignore capture errors */
     }
@@ -158,8 +164,22 @@ export function PlacementPhotoCapture({
     <div className="mt-1">
       {photo ? (
         <div className="flex items-center gap-2.5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={photo} alt="Shelf evidence" className={`w-16 h-16 rounded-lg object-cover border ${imgBorderClass}`} />
+          {isPdf ? (
+            <a
+              href={photo}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`w-16 h-16 rounded-lg border ${imgBorderClass} bg-white flex flex-col items-center justify-center gap-0.5`}
+            >
+              <FileText size={22} style={{ color }} />
+              <span className="text-[9px] font-semibold" style={{ color }}>
+                PDF
+              </span>
+            </a>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={photo} alt="Shelf evidence" className={`w-16 h-16 rounded-lg object-cover border ${imgBorderClass}`} />
+          )}
           <div className="flex flex-col items-start gap-1">
             <label htmlFor={cameraInputId} className="text-xs font-semibold cursor-pointer" style={{ color }}>
               Retake photo
@@ -175,7 +195,13 @@ export function PlacementPhotoCapture({
             {allowLibrary && (
               <label htmlFor={libraryInputId} className="text-xs font-semibold cursor-pointer" style={{ color }}>
                 Scan / choose file
-                <input id={libraryInputId} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+                <input
+                  id={libraryInputId}
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="hidden"
+                  onChange={handleFile}
+                />
               </label>
             )}
           </div>
@@ -203,7 +229,13 @@ export function PlacementPhotoCapture({
             style={{ color }}
           >
             {busy ? "Uploading…" : "Scan / choose file"}
-            <input id={libraryInputId} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+            <input
+              id={libraryInputId}
+              type="file"
+              accept="image/*,application/pdf"
+              className="hidden"
+              onChange={handleFile}
+            />
           </label>
         </div>
       ) : (

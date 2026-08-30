@@ -1,6 +1,6 @@
 import "server-only";
 import React from "react";
-import { Document, Page, View, Text, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
+import { Document, Page, View, Text, Image, Link, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
 import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO } from "@/lib/brand";
 
 const GREEN = "#6DBE00";
@@ -284,9 +284,15 @@ export async function renderMovementSummaryPdf(
 
         {isDelivery && entry.deliveryNotePhotoUrl ? (
           <View style={{ marginTop: 10 }}>
-            <Text style={[styles.summaryLabel, { marginBottom: 4 }]}>DELIVERY NOTE PHOTO</Text>
-            {/* eslint-disable-next-line jsx-a11y/alt-text */}
-            <Image src={entry.deliveryNotePhotoUrl} style={{ maxWidth: 300, borderRadius: 4 }} />
+            <Text style={[styles.summaryLabel, { marginBottom: 4 }]}>DELIVERY NOTE</Text>
+            {entry.deliveryNotePhotoUrl.toLowerCase().endsWith(".pdf") ? (
+              <Link src={entry.deliveryNotePhotoUrl} style={{ fontSize: 10, color: GREEN_DARK }}>
+                View delivery note (PDF)
+              </Link>
+            ) : (
+              // eslint-disable-next-line jsx-a11y/alt-text
+              <Image src={entry.deliveryNotePhotoUrl} style={{ maxWidth: 300, borderRadius: 4 }} />
+            )}
           </View>
         ) : null}
 

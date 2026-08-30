@@ -370,8 +370,11 @@ export async function sendMovementSummaryEmail(
 
       ${
         isDelivery && entry.deliveryNotePhotoUrl
-          ? `<div style="font-size:11px;color:${MUTED};margin-bottom:8px;">Delivery note photo</div>
-             <img src="${entry.deliveryNotePhotoUrl}" alt="Delivery note" style="max-width:100%;border-radius:8px;border:1px solid ${BORDER};margin-bottom:16px;" />`
+          ? entry.deliveryNotePhotoUrl.toLowerCase().endsWith(".pdf")
+            ? `<div style="font-size:11px;color:${MUTED};margin-bottom:8px;">Delivery note</div>
+               <a href="${entry.deliveryNotePhotoUrl}" style="display:inline-block;font-size:13px;font-weight:600;color:${typeColor};background:${typeTint};border:1px solid ${typeTintBorder};border-radius:8px;padding:10px 14px;text-decoration:none;margin-bottom:16px;">📄 View delivery note (PDF)</a>`
+            : `<div style="font-size:11px;color:${MUTED};margin-bottom:8px;">Delivery note photo</div>
+               <img src="${entry.deliveryNotePhotoUrl}" alt="Delivery note" style="max-width:100%;border-radius:8px;border:1px solid ${BORDER};margin-bottom:16px;" />`
           : ""
       }
 
