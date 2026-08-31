@@ -220,6 +220,7 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
         backStock: i.backStock,
         expired: i.expired,
         damaged: i.damaged,
+        batchCode: i.batchCode,
       })),
       competitors: competitors.map((c) => ({ brand: c.brand, gram: c.gram, description: c.description, price: c.price })),
     },

@@ -38,7 +38,15 @@ export async function sendStocktakeSummaryEmail(
     checksPlacement: string | null;
     checksPrices: string | null;
     checksMissing: string | null;
-    items: Array<{ name: string; range: string; shelfQty: number; backStock: number; expired: number; damaged: number }>;
+    items: Array<{
+      name: string;
+      range: string;
+      shelfQty: number;
+      backStock: number;
+      expired: number;
+      damaged: number;
+      batchCode: string;
+    }>;
     competitors: Array<{ brand: string; gram: string; description: string; price: number }>;
   },
   minStock: number
@@ -55,6 +63,7 @@ export async function sendStocktakeSummaryEmail(
     const extras = [
       it.expired ? `expired ${it.expired}` : "",
       it.damaged ? `damaged ${it.damaged}` : "",
+      (it.expired || it.damaged) && it.batchCode ? `batch ${it.batchCode}` : "",
     ].filter(Boolean);
     const flag = onHand < minStock ? " — LOW" : "";
     return `  ${it.name}: shelf ${it.shelfQty}, back ${it.backStock}, total ${onHand}${extras.length ? ` (${extras.join(", ")})` : ""}${flag}`;
@@ -90,7 +99,11 @@ export async function sendStocktakeSummaryEmail(
   const stockRow = (it: (typeof entry.items)[number]) => {
     const onHand = it.shelfQty + it.backStock;
     const low = onHand < minStock;
-    const extras = [it.expired ? `${it.expired} expired` : "", it.damaged ? `${it.damaged} damaged` : ""]
+    const extras = [
+      it.expired ? `${it.expired} expired` : "",
+      it.damaged ? `${it.damaged} damaged` : "",
+      (it.expired || it.damaged) && it.batchCode ? `batch ${it.batchCode}` : "",
+    ]
       .filter(Boolean)
       .join(", ");
     return `
