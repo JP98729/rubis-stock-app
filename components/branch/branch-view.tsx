@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AlertTriangle, Bell, CheckCircle2, ClipboardList, MessageCircle, Package, Send, Trophy, Truck } from "lucide-react";
-import { AMBER, GREEN, GREEN_DARK, RUBIS_LOGO } from "@/lib/brand";
+import { AMBER, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT, RUBIS_LOGO } from "@/lib/brand";
 import { fmtKES } from "@/lib/utils";
 import { Badge, ProductThumb } from "../ui";
 import { ToastView, useToast } from "../toast";
@@ -195,29 +195,49 @@ export function BranchManagerView({
                   No reorder needed right now — you&apos;re fully stocked.
                 </div>
               ) : (
-                <div className="divide-y divide-gray-50">
-                  {orderItems.map((r) => (
-                    <div key={r.sku} className="px-4 py-2.5 flex items-center gap-3 text-sm">
-                      <ProductThumb product={r} size={28} />
-                      <div className="flex-1">
-                        <div className="font-medium">{r.flavour}</div>
-                        <div className="text-[11px] text-gray-400">
-                          {r.sku} · on hand {r.current}
+                <div>
+                  {RANGES.map((range) => {
+                    const rangeItems = orderItems.filter((r) => r.range === range);
+                    if (rangeItems.length === 0) return null;
+                    const rc = RANGE_COLORS[range];
+                    return (
+                      <div key={range}>
+                        <div
+                          className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wide"
+                          style={{ background: RANGE_TINT[range], color: rc }}
+                        >
+                          {range}
+                        </div>
+                        <div className="divide-y divide-gray-50">
+                          {rangeItems.map((r) => (
+                            <div key={r.sku} className="px-4 py-2.5 flex items-center gap-3 text-sm">
+                              <ProductThumb product={r} size={28} />
+                              <div className="flex-1">
+                                <div className="font-medium">{r.flavour}</div>
+                                <div className="text-[11px] text-gray-400">
+                                  {r.sku} · on hand {r.current}
+                                </div>
+                              </div>
+                              <input
+                                type="number"
+                                min="0"
+                                inputMode="numeric"
+                                value={orderQty[r.sku] ?? r.reorder}
+                                onChange={(e) =>
+                                  setOrderQty((prev) => ({
+                                    ...prev,
+                                    [r.sku]: Math.max(0, Math.trunc(Number(e.target.value) || 0)),
+                                  }))
+                                }
+                                className="w-16 text-center font-semibold border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                                style={{ color: AMBER }}
+                              />
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      <input
-                        type="number"
-                        min="0"
-                        inputMode="numeric"
-                        value={orderQty[r.sku] ?? r.reorder}
-                        onChange={(e) =>
-                          setOrderQty((prev) => ({ ...prev, [r.sku]: Math.max(0, Math.trunc(Number(e.target.value) || 0)) }))
-                        }
-                        className="w-16 text-center font-semibold border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
-                        style={{ color: AMBER }}
-                      />
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
               {!hasStocktake && (
