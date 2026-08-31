@@ -118,6 +118,12 @@ export function StocktakeForm({
         return setError("Please take a photo of the promotion display before submitting.");
     }
     if (!signature) return setError("Please sign before submitting.");
+    const missingBatchProduct = products.find(
+      (p) => (items[p.sku].expired > 0 || items[p.sku].damaged > 0) && !items[p.sku].batchCode.trim()
+    );
+    if (missingBatchProduct) {
+      return setError(`Enter the batch code for ${missingBatchProduct.flavour} (expired/damaged units) before submitting.`);
+    }
 
     setSubmitting(true);
     const payload: StocktakeItemInput[] = products.map((p) => ({ sku: p.sku, ...items[p.sku] }));
@@ -346,11 +352,9 @@ export function StocktakeForm({
                       />
                     </div>
                     {(items[p.sku].expired > 0 || items[p.sku].damaged > 0) && (
-                      // Flagged red but intentionally NOT required to submit — matching
-                      // the original app's behaviour rather than silently tightening it.
                       <label className="flex flex-col gap-1 mt-2">
                         <span className="text-[11px] text-red-500 font-medium">
-                          Batch code (for the expired/damaged units)
+                          Batch code (for the expired/damaged units) — required
                         </span>
                         <input
                           value={items[p.sku].batchCode}

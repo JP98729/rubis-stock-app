@@ -54,10 +54,6 @@ export type SubmitResult = { ok: true } | { ok: false; error: string };
 /**
  * Server-side mirror of the stocktake form validation. The client blocks these first
  * with the original's alert() copy; this is the authoritative check.
- *
- * NOTE: batch code is deliberately NOT required when expired/damaged > 0. The original
- * app flags the field red in that case but never blocks submission — reproduced here
- * on purpose so behaviour matches the tool people already use.
  */
 function validate(input: StocktakeInput): string | null {
   if (!input.merchandiser.trim()) return "Enter your name before submitting.";
@@ -95,6 +91,10 @@ function validate(input: StocktakeInput): string | null {
     }
   }
   if (!input.signatureUrl) return "Please sign before submitting.";
+
+  const missingBatch = input.items.find((i) => (i.expired > 0 || i.damaged > 0) && !i.batchCode.trim());
+  if (missingBatch) return `Enter the batch code for ${missingBatch.sku} (expired/damaged units) before submitting.`;
+
   return null;
 }
 
