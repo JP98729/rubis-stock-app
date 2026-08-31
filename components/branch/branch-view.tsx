@@ -63,6 +63,10 @@ export function BranchManagerView({
   const [orderQty, setOrderQty] = useState<Record<string, number>>(() =>
     Object.fromEntries(orderItems.map((r) => [r.sku, r.reorder]))
   );
+  // Once a manager uses one order method, hide the other — placing an order both
+  // ways would send Pure Nutrition two orders for the same reorder. Session-only:
+  // resets on reload, matching what was asked for (not a persisted lock).
+  const [orderMethodUsed, setOrderMethodUsed] = useState<"order" | "lpo" | null>(null);
 
   async function handlePlaceOrder() {
     setOrderBusy(true);
@@ -70,6 +74,7 @@ export function BranchManagerView({
     const result = await placeManualOrder(orderQty);
     if (result.ok) {
       setOrderConfirmed(true);
+      setOrderMethodUsed("order");
       setTimeout(() => setOrderConfirmed(false), 5000);
       showToast(`Order sent to Pure Nutrition — ${result.itemCount} product${result.itemCount === 1 ? "" : "s"}.`);
     } else {
@@ -247,13 +252,13 @@ export function BranchManagerView({
                 </div>
               )}
             </div>
-            {orderItems.length > 0 && (
+            {orderItems.length > 0 && orderMethodUsed !== "lpo" && (
               <div className="flex flex-col gap-2">
                 <button
                   onClick={handlePlaceOrder}
-                  disabled={orderBusy}
+                  disabled={orderBusy || orderMethodUsed === "order"}
                   className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold text-white"
-                  style={{ background: orderBusy ? "#9CA3AF" : GREEN }}
+                  style={{ background: orderBusy || orderMethodUsed === "order" ? "#9CA3AF" : GREEN }}
                 >
                   <Send size={16} /> {orderBusy ? "Sending…" : "Place Order"}
                 </button>
@@ -267,10 +272,18 @@ export function BranchManagerView({
                     Order sent to Pure Nutrition!
                   </div>
                 )}
-                <div className="text-center text-[11px] text-gray-400">— or upload your signed LPO below —</div>
+                {orderMethodUsed !== "order" && (
+                  <div className="text-center text-[11px] text-gray-400">— or upload your signed LPO below —</div>
+                )}
               </div>
             )}
-            <LpoUploader documents={lpoDocuments} onSaved={showToast} />
+            {orderMethodUsed !== "order" && (
+              <LpoUploader
+                documents={lpoDocuments}
+                onSaved={showToast}
+                onUploaded={() => setOrderMethodUsed("lpo")}
+              />
+            )}
           </div>
         )}
         {tab === "stocktake" && (

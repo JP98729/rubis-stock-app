@@ -10,9 +10,12 @@ import type { LpoDocumentDTO } from "@/lib/queries";
 export function LpoUploader({
   documents,
   onSaved,
+  onUploaded,
 }: {
   documents: LpoDocumentDTO[];
   onSaved: (msg: string) => void;
+  /** Fires only after a successful upload (not on remove) — lets the parent hide the "Place Order" option. */
+  onUploaded?: () => void;
 }) {
   const inputId = useId();
   const [docs, setDocs] = useState(documents);
@@ -46,6 +49,7 @@ export function LpoUploader({
         if (confirmTimer.current) clearTimeout(confirmTimer.current);
         confirmTimer.current = setTimeout(() => setConfirmed(false), 5000);
         onSaved("Thanks for uploading — done successfully!");
+        onUploaded?.();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
