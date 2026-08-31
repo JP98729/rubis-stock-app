@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { getProducts, getStoreStock } from "@/lib/queries";
-import { createDraftSalesOrder } from "@/lib/odoo";
+import { createDraftSalesOrder, attachFileToSaleOrder } from "@/lib/odoo";
 import { sendManualOrderEmail, sendLpoUploadEmail } from "@/lib/email";
 
 export type SimpleResult = { ok: true } | { ok: false; error: string };
@@ -77,6 +77,8 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
         where: { id: doc.id },
         data: { odooSaleOrderId: order.id, odooSaleOrderName: order.name },
       });
+      // Best-effort: put the LPO file itself on the order's paperclip icon in Odoo.
+      await attachFileToSaleOrder(order.id, url, trimmedFilename);
     }
   }
 
