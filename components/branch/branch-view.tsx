@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, Bell, ClipboardList, MessageCircle, Package, Trophy, Truck } from "lucide-react";
+import { AlertTriangle, Bell, CheckCircle2, ClipboardList, MessageCircle, Package, Send, Trophy, Truck } from "lucide-react";
 import { AMBER, GREEN, GREEN_DARK, RUBIS_LOGO } from "@/lib/brand";
 import { fmtKES } from "@/lib/utils";
 import { Badge, ProductThumb } from "../ui";
@@ -13,6 +13,7 @@ import { MovementForm } from "../movement-form";
 import { BranchContactEditor, ManagerPhotoUploader } from "./contact-editor";
 import { LpoUploader } from "./lpo-uploader";
 import { logout } from "@/app/actions/auth";
+import { placeManualOrder } from "@/app/actions/branch";
 import type { LpoDocumentDTO, MessageDTO, ProductDTO, StoreDTO } from "@/lib/queries";
 import type { StockRow } from "@/lib/stock";
 
@@ -56,6 +57,23 @@ export function BranchManagerView({
   const [tab, setTab] = useState<Tab>("overview");
   const { toast, showToast } = useToast();
   const isLeading = myRank === 0;
+  const [orderBusy, setOrderBusy] = useState(false);
+  const [orderError, setOrderError] = useState("");
+  const [orderConfirmed, setOrderConfirmed] = useState(false);
+
+  async function handlePlaceOrder() {
+    setOrderBusy(true);
+    setOrderError("");
+    const result = await placeManualOrder();
+    if (result.ok) {
+      setOrderConfirmed(true);
+      setTimeout(() => setOrderConfirmed(false), 5000);
+      showToast(`Order sent to Pure Nutrition — ${result.itemCount} product${result.itemCount === 1 ? "" : "s"}.`);
+    } else {
+      setOrderError(result.error);
+    }
+    setOrderBusy(false);
+  }
 
   const tabs: Array<{ key: Tab; label: string; icon: typeof ClipboardList; badge?: number }> = [
     { key: "overview", label: "Orders", icon: ClipboardList },
@@ -198,6 +216,29 @@ export function BranchManagerView({
                 </div>
               )}
             </div>
+            {orderItems.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={handlePlaceOrder}
+                  disabled={orderBusy}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold text-white"
+                  style={{ background: orderBusy ? "#9CA3AF" : GREEN }}
+                >
+                  <Send size={16} /> {orderBusy ? "Sending…" : "Place Order"}
+                </button>
+                {orderError && <div className="text-xs text-red-600">{orderError}</div>}
+                {orderConfirmed && (
+                  <div
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold"
+                    style={{ background: "#EEF7DE", color: GREEN_DARK }}
+                  >
+                    <CheckCircle2 size={16} className="shrink-0" />
+                    Order sent to Pure Nutrition!
+                  </div>
+                )}
+                <div className="text-center text-[11px] text-gray-400">— or upload your signed LPO below —</div>
+              </div>
+            )}
             <LpoUploader documents={lpoDocuments} onSaved={showToast} />
           </div>
         )}

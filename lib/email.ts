@@ -418,3 +418,83 @@ export async function sendMovementSummaryEmail(
     // Email is a bonus notification, not part of the submission contract — never throw.
   }
 }
+
+/**
+ * Sends the manual-order notification to Pure Nutrition when a branch manager
+ * places an order directly from their reorder list (no LPO document). Unlike the
+ * emails above, this one IS the delivery mechanism for the order itself, not a
+ * bonus — so a send failure is thrown back to the caller instead of swallowed.
+ */
+export async function sendManualOrderEmail(
+  store: { name: string; county: string; type: string },
+  items: Array<{ sku: string; flavour: string; reorder: number }>,
+  odooOrderName: string | null
+): Promise<void> {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("Email isn't set up on the server — ask Pure Nutrition to check RESEND_API_KEY.");
+  }
+
+  const subject = `Order placed — ${store.name.trim()}`;
+  const text = [
+    `Branch: ${store.name.trim()} (${store.county} · ${store.type})`,
+    odooOrderName ? `Odoo Sales Order: ${odooOrderName}` : "",
+    "",
+    "Items ordered:",
+    ...items.map((i) => `  ${i.flavour} (${i.sku}): ${i.reorder}`),
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const rows = items
+    .map(
+      (i) =>
+        `<tr>
+           <td style="padding:6px 10px;border-bottom:1px solid ${BORDER};">${esc(i.flavour)}<div style="font-size:11px;color:${MUTED};">${esc(i.sku)}</div></td>
+           <td style="padding:6px 10px;border-bottom:1px solid ${BORDER};text-align:right;font-weight:700;">${i.reorder}</td>
+         </tr>`
+    )
+    .join("");
+
+  const html = `
+<div style="background:${BG};padding:24px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid ${BORDER};">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border-bottom:1px solid ${BORDER};">
+      <tr>
+        <td style="padding:12px 24px;">
+          <img src="${PURE_LOGO}" alt="Pure Nutrition" height="48" style="height:48px;width:auto;vertical-align:middle;" />
+        </td>
+        <td style="padding:12px 24px;text-align:right;">
+          <img src="${ENJOY_LOGO}" alt="Rubis Enjoy" height="28" style="height:28px;width:auto;vertical-align:middle;" />
+        </td>
+      </tr>
+    </table>
+    <div style="background:${GREEN_DARK};padding:20px 24px;">
+      <div style="color:#ffffff;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;opacity:0.85;">Order placed</div>
+      <div style="color:#ffffff;font-size:18px;font-weight:700;margin-top:2px;">${esc(store.name.trim())}</div>
+      <div style="color:#ffffff;font-size:13px;margin-top:2px;opacity:0.9;">${esc(store.county)} · ${esc(store.type)}</div>
+    </div>
+    <div style="padding:20px 24px;">
+      ${
+        odooOrderName
+          ? `<div style="font-size:13px;color:${INK};margin-bottom:14px;"><span style="color:${MUTED};">Odoo Sales Order:</span> <strong>${esc(odooOrderName)}</strong></div>`
+          : ""
+      }
+      <table role="presentation" width="100%" style="border-collapse:collapse;font-size:13px;color:${INK};">
+        <tr style="background:${BG};">
+          <th style="padding:6px 10px;text-align:left;font-size:11px;color:${MUTED};text-transform:uppercase;">Product</th>
+          <th style="padding:6px 10px;text-align:right;font-size:11px;color:${MUTED};text-transform:uppercase;">Qty</th>
+        </tr>
+        ${rows}
+      </table>
+      <div style="font-size:12px;color:${MUTED};border-top:1px solid ${BORDER};padding-top:14px;margin-top:16px;">
+        Placed directly from the branch's own reorder list in the Rubis Enjoy Stock &amp; Reorder app.
+      </div>
+    </div>
+  </div>
+</div>`;
+
+  const { Resend } = await import("resend");
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const { error } = await resend.emails.send({ from: FROM_EMAIL, to: NOTIFY_EMAIL, subject, html, text });
+  if (error) throw new Error(error.message || "Failed to send the order email.");
+}
