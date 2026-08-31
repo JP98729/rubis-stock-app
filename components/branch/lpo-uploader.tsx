@@ -34,15 +34,19 @@ export function LpoUploader({
     setError("");
     try {
       const url = await uploadLpoFile(file);
-      await addLpoDocument(url, file.name);
-      setDocs((prev) => [
-        { id: url, url, filename: file.name, uploadedAt: "just now", odooSaleOrderName: null },
-        ...prev,
-      ]);
-      setConfirmed(true);
-      if (confirmTimer.current) clearTimeout(confirmTimer.current);
-      confirmTimer.current = setTimeout(() => setConfirmed(false), 5000);
-      onSaved("Thanks for uploading — done successfully!");
+      const result = await addLpoDocument(url, file.name);
+      if (!result.ok) {
+        setError(result.error);
+      } else {
+        setDocs((prev) => [
+          { id: url, url, filename: file.name, uploadedAt: "just now", odooSaleOrderName: null },
+          ...prev,
+        ]);
+        setConfirmed(true);
+        if (confirmTimer.current) clearTimeout(confirmTimer.current);
+        confirmTimer.current = setTimeout(() => setConfirmed(false), 5000);
+        onSaved("Thanks for uploading — done successfully!");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
     }
