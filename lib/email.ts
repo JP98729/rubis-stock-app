@@ -498,3 +498,91 @@ export async function sendManualOrderEmail(
   const { error } = await resend.emails.send({ from: FROM_EMAIL, to: NOTIFY_EMAIL, subject, html, text });
   if (error) throw new Error(error.message || "Failed to send the order email.");
 }
+
+/**
+ * Sends a notification to Pure Nutrition when a branch manager uploads a signed LPO
+ * document. A bonus notification like the stocktake/movement emails — the LPO record
+ * is already saved either way, so a send failure here is swallowed, not thrown.
+ */
+export async function sendLpoUploadEmail(
+  store: { name: string; county: string; type: string },
+  filename: string,
+  fileUrl: string,
+  items: Array<{ sku: string; flavour: string; reorder: number }>,
+  odooOrderName: string | null
+): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return;
+
+  try {
+    const subject = `LPO uploaded — ${store.name.trim()}`;
+    const text = [
+      `Branch: ${store.name.trim()} (${store.county} · ${store.type})`,
+      `File: ${filename} — ${fileUrl}`,
+      odooOrderName ? `Odoo Sales Order: ${odooOrderName}` : "",
+      items.length
+        ? ["", "Reorder items:", ...items.map((i) => `  ${i.flavour} (${i.sku}): ${i.reorder}`)].join("\n")
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const rows = items
+      .map(
+        (i) =>
+          `<tr>
+             <td style="padding:6px 10px;border-bottom:1px solid ${BORDER};">${esc(i.flavour)}<div style="font-size:11px;color:${MUTED};">${esc(i.sku)}</div></td>
+             <td style="padding:6px 10px;border-bottom:1px solid ${BORDER};text-align:right;font-weight:700;">${i.reorder}</td>
+           </tr>`
+      )
+      .join("");
+
+    const html = `
+<div style="background:${BG};padding:24px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid ${BORDER};">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border-bottom:1px solid ${BORDER};">
+      <tr>
+        <td style="padding:12px 24px;">
+          <img src="${PURE_LOGO}" alt="Pure Nutrition" height="48" style="height:48px;width:auto;vertical-align:middle;" />
+        </td>
+        <td style="padding:12px 24px;text-align:right;">
+          <img src="${ENJOY_LOGO}" alt="Rubis Enjoy" height="28" style="height:28px;width:auto;vertical-align:middle;" />
+        </td>
+      </tr>
+    </table>
+    <div style="background:${GREEN_DARK};padding:20px 24px;">
+      <div style="color:#ffffff;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;opacity:0.85;">LPO uploaded</div>
+      <div style="color:#ffffff;font-size:18px;font-weight:700;margin-top:2px;">${esc(store.name.trim())}</div>
+      <div style="color:#ffffff;font-size:13px;margin-top:2px;opacity:0.9;">${esc(store.county)} · ${esc(store.type)}</div>
+    </div>
+    <div style="padding:20px 24px;">
+      <a href="${fileUrl}" style="display:inline-block;font-size:13px;font-weight:600;color:${GREEN_DARK};background:#EEF7DE;border-radius:8px;padding:10px 14px;text-decoration:none;margin-bottom:16px;">📄 View uploaded LPO (${esc(filename)})</a>
+      ${
+        odooOrderName
+          ? `<div style="font-size:13px;color:${INK};margin-bottom:14px;"><span style="color:${MUTED};">Odoo Sales Order:</span> <strong>${esc(odooOrderName)}</strong></div>`
+          : ""
+      }
+      ${
+        items.length
+          ? `<table role="presentation" width="100%" style="border-collapse:collapse;font-size:13px;color:${INK};">
+               <tr style="background:${BG};">
+                 <th style="padding:6px 10px;text-align:left;font-size:11px;color:${MUTED};text-transform:uppercase;">Product</th>
+                 <th style="padding:6px 10px;text-align:right;font-size:11px;color:${MUTED};text-transform:uppercase;">Qty</th>
+               </tr>
+               ${rows}
+             </table>`
+          : ""
+      }
+      <div style="font-size:12px;color:${MUTED};border-top:1px solid ${BORDER};padding-top:14px;margin-top:16px;">
+        Uploaded from the branch's own account in the Rubis Enjoy Stock &amp; Reorder app.
+      </div>
+    </div>
+  </div>
+</div>`;
+
+    const { Resend } = await import("resend");
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    await resend.emails.send({ from: FROM_EMAIL, to: NOTIFY_EMAIL, subject, html, text });
+  } catch {
+    // Bonus notification — the LPO document itself is already saved either way.
+  }
+}

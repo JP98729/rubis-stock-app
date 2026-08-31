@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { getProducts, getStoreStock } from "@/lib/queries";
 import { createDraftSalesOrder } from "@/lib/odoo";
-import { sendManualOrderEmail } from "@/lib/email";
+import { sendManualOrderEmail, sendLpoUploadEmail } from "@/lib/email";
 
 export type SimpleResult = { ok: true } | { ok: false; error: string };
 export type PlaceOrderResult = { ok: true; itemCount: number } | { ok: false; error: string };
@@ -49,26 +49,46 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
   if (!session?.storeId) return { ok: false, error: "Your session expired — log in again." };
   const storeId = session.storeId;
 
+  const trimmedFilename = filename.trim() || "LPO document";
   const doc = await prisma.lpoDocument.create({
-    data: { storeId, url, filename: filename.trim() || "LPO document" },
+    data: { storeId, url, filename: trimmedFilename },
   });
+
+  const store = await prisma.store.findUnique({
+    where: { id: storeId },
+    select: { name: true, county: true, type: true, odooPartnerId: true },
+  });
+
+  const products = await getProducts();
+  const stock = await getStoreStock(storeId, products);
+  const items = stock.rows.filter((r) => r.reorder > 0);
 
   // Best-effort: mirror the branch's current reorder as a draft Sales Order in Odoo.
   // No-ops silently if Odoo sync isn't configured or this branch has no mapped customer.
-  const store = await prisma.store.findUnique({ where: { id: storeId }, select: { odooPartnerId: true } });
+  let odooOrderName: string | null = null;
   if (store?.odooPartnerId) {
-    const products = await getProducts();
-    const stock = await getStoreStock(storeId, products);
     const order = await createDraftSalesOrder(
       store.odooPartnerId,
-      stock.rows.map((r) => ({ sku: r.sku, reorder: r.reorder }))
+      items.map((r) => ({ sku: r.sku, reorder: r.reorder }))
     );
     if (order) {
+      odooOrderName = order.name;
       await prisma.lpoDocument.update({
         where: { id: doc.id },
         data: { odooSaleOrderId: order.id, odooSaleOrderName: order.name },
       });
     }
+  }
+
+  // Best-effort: let Pure Nutrition know an LPO came in, same as a manual order does.
+  if (store) {
+    await sendLpoUploadEmail(
+      store,
+      trimmedFilename,
+      url,
+      items.map((r) => ({ sku: r.sku, flavour: r.flavour, reorder: r.reorder })),
+      odooOrderName
+    );
   }
 
   revalidatePath("/branch");
