@@ -60,11 +60,14 @@ export function BranchManagerView({
   const [orderBusy, setOrderBusy] = useState(false);
   const [orderError, setOrderError] = useState("");
   const [orderConfirmed, setOrderConfirmed] = useState(false);
+  const [orderQty, setOrderQty] = useState<Record<string, number>>(() =>
+    Object.fromEntries(orderItems.map((r) => [r.sku, r.reorder]))
+  );
 
   async function handlePlaceOrder() {
     setOrderBusy(true);
     setOrderError("");
-    const result = await placeManualOrder();
+    const result = await placeManualOrder(orderQty);
     if (result.ok) {
       setOrderConfirmed(true);
       setTimeout(() => setOrderConfirmed(false), 5000);
@@ -202,9 +205,17 @@ export function BranchManagerView({
                           {r.sku} · on hand {r.current}
                         </div>
                       </div>
-                      <div className="font-semibold" style={{ color: AMBER }}>
-                        +{r.reorder}
-                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        inputMode="numeric"
+                        value={orderQty[r.sku] ?? r.reorder}
+                        onChange={(e) =>
+                          setOrderQty((prev) => ({ ...prev, [r.sku]: Math.max(0, Math.trunc(Number(e.target.value) || 0)) }))
+                        }
+                        className="w-16 text-center font-semibold border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                        style={{ color: AMBER }}
+                      />
                     </div>
                   ))}
                 </div>

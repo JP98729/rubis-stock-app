@@ -77,13 +77,16 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
 }
 
 /**
- * Lets a branch manager place their order directly from the reorder list, without
- * needing a physical LPO to photograph/upload. Emails Pure Nutrition the order (the
- * actual delivery mechanism — a send failure is reported, not swallowed) and
- * best-effort mirrors it as a draft Sales Order in Odoo when the branch has one
- * mapped.
+ * Lets a branch manager place their order directly, without needing a physical LPO
+ * to photograph/upload. `quantities` is a sku -> qty map the manager typed in
+ * themselves (starting from the app's suggested reorder numbers, but freely
+ * editable — e.g. 3 of one product, 6 of another). Quantities are trusted only for
+ * the number; product names/availability are always looked up server-side. Emails
+ * Pure Nutrition the order (the actual delivery mechanism — a send failure is
+ * reported, not swallowed) and best-effort mirrors it as a draft Sales Order in
+ * Odoo when the branch has one mapped.
  */
-export async function placeManualOrder(): Promise<PlaceOrderResult> {
+export async function placeManualOrder(quantities: Record<string, number>): Promise<PlaceOrderResult> {
   const session = await requireRole("branch");
   if (!session?.storeId) return { ok: false, error: "Your session expired — log in again." };
   const storeId = session.storeId;
@@ -95,9 +98,16 @@ export async function placeManualOrder(): Promise<PlaceOrderResult> {
   if (!store) return { ok: false, error: "Your branch no longer exists." };
 
   const products = await getProducts();
-  const stock = await getStoreStock(storeId, products);
-  const items = stock.rows.filter((r) => r.reorder > 0);
-  if (items.length === 0) return { ok: false, error: "No reorder needed right now — you're fully stocked." };
+  const bySku = new Map(products.map((p) => [p.sku, p]));
+
+  const items = Object.entries(quantities)
+    .map(([sku, qty]) => ({ sku, qty: Math.trunc(Number(qty) || 0), product: bySku.get(sku) }))
+    .filter((i): i is typeof i & { product: NonNullable<typeof i.product> } => i.qty > 0 && !!i.product && !i.product.unavailable)
+    .map((i) => ({ sku: i.sku, flavour: i.product.flavour, reorder: i.qty }));
+
+  if (items.length === 0) {
+    return { ok: false, error: "Enter a quantity for at least one product before placing the order." };
+  }
 
   const order = store.odooPartnerId
     ? await createDraftSalesOrder(
@@ -107,11 +117,7 @@ export async function placeManualOrder(): Promise<PlaceOrderResult> {
     : null;
 
   try {
-    await sendManualOrderEmail(
-      store,
-      items.map((r) => ({ sku: r.sku, flavour: r.flavour, reorder: r.reorder })),
-      order?.name ?? null
-    );
+    await sendManualOrderEmail(store, items, order?.name ?? null);
   } catch (e) {
     return {
       ok: false,
