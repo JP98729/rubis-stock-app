@@ -315,3 +315,50 @@ export async function renderMovementSummaryPdf(
 
   return renderToBuffer(doc);
 }
+
+export async function renderOrderSummaryPdf(
+  store: { name: string; county: string; type: string },
+  items: Array<{ sku: string; flavour: string; reorder: number }>,
+  odooOrderName: string | null
+): Promise<Buffer> {
+  const doc = (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <LogoRow />
+        <View style={[styles.headerBand, { backgroundColor: GREEN_DARK }]}>
+          <Text style={styles.headerType}>ORDER PLACED</Text>
+          <Text style={styles.headerStore}>{store.name.trim()}</Text>
+          <Text style={styles.headerSub}>
+            {store.county} · {store.type}
+          </Text>
+        </View>
+
+        {odooOrderName ? <DetailRow label="Odoo Sales Order" value={odooOrderName} /> : null}
+
+        <View style={{ marginTop: 10 }}>
+          <View style={styles.tableHeaderRow}>
+            <Text style={[styles.tableHeaderCell, { flex: 3 }]}>PRODUCT</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1, textAlign: "center" }]}>QTY</Text>
+          </View>
+          {items.map((it, i) => (
+            <View style={styles.tableRow} key={i}>
+              <View style={{ flex: 3 }}>
+                <Text style={styles.tableCell}>{it.flavour}</Text>
+                <Text style={{ fontSize: 7, color: MUTED }}>{it.sku}</Text>
+              </View>
+              <Text style={[styles.tableCell, { flex: 1, textAlign: "center", fontFamily: "Helvetica-Bold" }]}>
+                {it.reorder}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        <Text style={styles.footer}>
+          Placed directly from the branch's own reorder list in the Rubis Enjoy Stock &amp; Reorder app.
+        </Text>
+      </Page>
+    </Document>
+  );
+
+  return renderToBuffer(doc);
+}

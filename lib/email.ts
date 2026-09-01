@@ -1,6 +1,6 @@
 import "server-only";
 import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO } from "@/lib/brand";
-import { renderStocktakeSummaryPdf, renderMovementSummaryPdf } from "@/lib/pdf";
+import { renderStocktakeSummaryPdf, renderMovementSummaryPdf, renderOrderSummaryPdf } from "@/lib/pdf";
 
 const NOTIFY_EMAIL = "info@pure-nutritions.com";
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Rubis Enjoy <onboarding@resend.dev>";
@@ -442,7 +442,7 @@ export async function sendManualOrderEmail(
   store: { name: string; county: string; type: string },
   items: Array<{ sku: string; flavour: string; reorder: number }>,
   odooOrderName: string | null
-): Promise<void> {
+): Promise<Buffer | null> {
   if (!process.env.RESEND_API_KEY) {
     throw new Error("Email isn't set up on the server — ask Pure Nutrition to check RESEND_API_KEY.");
   }
@@ -506,10 +506,28 @@ export async function sendManualOrderEmail(
   </div>
 </div>`;
 
+  let pdfBuffer: Buffer | null = null;
+  try {
+    pdfBuffer = await renderOrderSummaryPdf(store, items, odooOrderName);
+  } catch {
+    // The PDF is a bonus attachment — never let a rendering failure block the email.
+  }
+
   const { Resend } = await import("resend");
   const resend = new Resend(process.env.RESEND_API_KEY);
-  const { error } = await resend.emails.send({ from: FROM_EMAIL, to: NOTIFY_EMAIL, subject, html, text });
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: NOTIFY_EMAIL,
+    subject,
+    html,
+    text,
+    attachments: pdfBuffer
+      ? [{ filename: `Order ${store.name.trim()}.pdf`, content: pdfBuffer, contentType: "application/pdf" }]
+      : undefined,
+  });
   if (error) throw new Error(error.message || "Failed to send the order email.");
+
+  return pdfBuffer;
 }
 
 /**

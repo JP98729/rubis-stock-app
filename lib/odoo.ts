@@ -256,6 +256,14 @@ export async function attachPdfToExpense(expenseId: number, pdfBuffer: Buffer, f
 }
 
 /**
+ * Attaches an order summary PDF to a Sales Order's paperclip icon in Odoo — same
+ * idea as attachPdfToExpense, for the order placed directly from the reorder list.
+ */
+export async function attachPdfToSaleOrder(saleOrderId: number, pdfBuffer: Buffer, filename: string): Promise<boolean> {
+  return attachBufferToOdoo("sale.order", saleOrderId, pdfBuffer, filename, "application/pdf");
+}
+
+/**
  * Writes the delivery note nr / invoice nr onto a Sales Order's Customer Reference
  * field, so the order carries the same numbers as the physical paperwork attached to
  * it. Returns false (never throws) whenever Odoo sync isn't configured or fails.

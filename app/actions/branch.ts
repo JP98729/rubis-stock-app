@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { getProducts, getStoreStock } from "@/lib/queries";
-import { createDraftSalesOrder, attachFileToSaleOrder } from "@/lib/odoo";
+import { createDraftSalesOrder, attachFileToSaleOrder, attachPdfToSaleOrder } from "@/lib/odoo";
 import { sendManualOrderEmail, sendLpoUploadEmail } from "@/lib/email";
 
 export type SimpleResult = { ok: true } | { ok: false; error: string };
@@ -138,14 +138,20 @@ export async function placeManualOrder(quantities: Record<string, number>): Prom
       )
     : null;
 
+  let pdfBuffer: Buffer | null = null;
   try {
-    await sendManualOrderEmail(store, items, order?.name ?? null);
+    pdfBuffer = await sendManualOrderEmail(store, items, order?.name ?? null);
   } catch (e) {
     return {
       ok: false,
       error: "Couldn't send your order — try again, or upload your signed LPO instead. (" +
         (e instanceof Error ? e.message : String(e)) + ")",
     };
+  }
+
+  // Best-effort: put the order PDF on the Sales Order's paperclip icon in Odoo too.
+  if (order && pdfBuffer) {
+    await attachPdfToSaleOrder(order.id, pdfBuffer, `Order ${store.name.trim()}.pdf`);
   }
 
   revalidatePath("/branch");
