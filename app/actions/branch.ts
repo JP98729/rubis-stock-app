@@ -56,7 +56,7 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
 
   const store = await prisma.store.findUnique({
     where: { id: storeId },
-    select: { name: true, county: true, type: true, odooPartnerId: true },
+    select: { name: true, county: true, type: true, odooPartnerId: true, contactEmail: true, seedEmail: true },
   });
 
   const products = await getProducts();
@@ -83,13 +83,15 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
   }
 
   // Best-effort: let Pure Nutrition know an LPO came in, same as a manual order does.
+  // CC'd to the branch's own email too, so the manager has proof they submitted it.
   if (store) {
     await sendLpoUploadEmail(
       store,
       trimmedFilename,
       url,
       items.map((r) => ({ sku: r.sku, flavour: r.flavour, reorder: r.reorder })),
-      odooOrderName
+      odooOrderName,
+      store.contactEmail || store.seedEmail || null
     );
   }
 
@@ -115,7 +117,7 @@ export async function placeManualOrder(quantities: Record<string, number>): Prom
 
   const store = await prisma.store.findUnique({
     where: { id: storeId },
-    select: { name: true, county: true, type: true, odooPartnerId: true },
+    select: { name: true, county: true, type: true, odooPartnerId: true, contactEmail: true, seedEmail: true },
   });
   if (!store) return { ok: false, error: "Your branch no longer exists." };
 
@@ -140,7 +142,12 @@ export async function placeManualOrder(quantities: Record<string, number>): Prom
 
   let pdfBuffer: Buffer | null = null;
   try {
-    pdfBuffer = await sendManualOrderEmail(store, items, order?.name ?? null);
+    pdfBuffer = await sendManualOrderEmail(
+      store,
+      items,
+      order?.name ?? null,
+      store.contactEmail || store.seedEmail || null
+    );
   } catch (e) {
     return {
       ok: false,

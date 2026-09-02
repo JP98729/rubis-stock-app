@@ -19,6 +19,19 @@ function esc(s: string): string {
 }
 
 /**
+ * A short, human-readable, traceable reference for an order — printed on the email
+ * and PDF so a specific order can always be pointed back to (e.g. in a dispute).
+ * Not a DB id: orders placed this way have no separate persisted record, so this is
+ * generated fresh per send rather than looked up.
+ */
+function newOrderRef(): string {
+  const d = new Date();
+  const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `ORD-${stamp}-${rand}`;
+}
+
+/**
  * Sends a stocktake summary email from the server the moment a stocktake is saved —
  * no dependence on the submitter's own device/mail app. Silently no-ops when
  * RESEND_API_KEY isn't set (e.g. local dev) so it never blocks a submission. Returns
@@ -459,15 +472,21 @@ export async function sendMovementSummaryEmail(
 export async function sendManualOrderEmail(
   store: { name: string; county: string; type: string },
   items: Array<{ sku: string; flavour: string; reorder: number }>,
-  odooOrderName: string | null
+  odooOrderName: string | null,
+  managerEmail: string | null
 ): Promise<Buffer | null> {
   if (!process.env.RESEND_API_KEY) {
     throw new Error("Email isn't set up on the server — ask Pure Nutrition to check RESEND_API_KEY.");
   }
 
-  const subject = `Order placed — ${store.name.trim()}`;
+  const orderRef = newOrderRef();
+  const now = new Date();
+  const timestamp = now.toISOString().slice(0, 16).replace("T", " at ") + " UTC";
+  const subject = `Order placed — ${store.name.trim()} — ${orderRef}`;
   const text = [
+    `Order reference: ${orderRef}`,
     `Branch: ${store.name.trim()} (${store.county} · ${store.type})`,
+    `Placed: ${timestamp}`,
     odooOrderName ? `Odoo Sales Order: ${odooOrderName}` : "",
     "",
     "Items ordered:",
@@ -505,6 +524,10 @@ export async function sendManualOrderEmail(
       <div style="color:#ffffff;font-size:13px;margin-top:2px;opacity:0.9;">${esc(store.county)} · ${esc(store.type)}</div>
     </div>
     <div style="padding:20px 24px;">
+      <div style="background:${BG};border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;font-size:12px;">
+        <span style="color:${MUTED};">Order ref <strong style="color:${INK};font-family:monospace;">${esc(orderRef)}</strong></span>
+        <span style="color:${MUTED};">${esc(timestamp)}</span>
+      </div>
       ${
         odooOrderName
           ? `<div style="font-size:13px;color:${INK};margin-bottom:14px;"><span style="color:${MUTED};">Odoo Sales Order:</span> <strong>${esc(odooOrderName)}</strong></div>`
@@ -526,7 +549,7 @@ export async function sendManualOrderEmail(
 
   let pdfBuffer: Buffer | null = null;
   try {
-    pdfBuffer = await renderOrderSummaryPdf(store, items, odooOrderName);
+    pdfBuffer = await renderOrderSummaryPdf(store, items, odooOrderName, orderRef);
   } catch {
     // The PDF is a bonus attachment — never let a rendering failure block the email.
   }
@@ -536,11 +559,12 @@ export async function sendManualOrderEmail(
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: NOTIFY_EMAIL,
+    cc: managerEmail || undefined,
     subject,
     html,
     text,
     attachments: pdfBuffer
-      ? [{ filename: `Order ${store.name.trim()}.pdf`, content: pdfBuffer, contentType: "application/pdf" }]
+      ? [{ filename: `Order ${store.name.trim()} ${orderRef}.pdf`, content: pdfBuffer, contentType: "application/pdf" }]
       : undefined,
   });
   if (error) throw new Error(error.message || "Failed to send the order email.");
@@ -558,14 +582,19 @@ export async function sendLpoUploadEmail(
   filename: string,
   fileUrl: string,
   items: Array<{ sku: string; flavour: string; reorder: number }>,
-  odooOrderName: string | null
+  odooOrderName: string | null,
+  managerEmail: string | null
 ): Promise<void> {
   if (!process.env.RESEND_API_KEY) return;
 
   try {
-    const subject = `LPO uploaded — ${store.name.trim()}`;
+    const orderRef = newOrderRef();
+    const timestamp = new Date().toISOString().slice(0, 16).replace("T", " at ") + " UTC";
+    const subject = `LPO uploaded — ${store.name.trim()} — ${orderRef}`;
     const text = [
+      `Order reference: ${orderRef}`,
       `Branch: ${store.name.trim()} (${store.county} · ${store.type})`,
+      `Uploaded: ${timestamp}`,
       `File: ${filename} — ${fileUrl}`,
       odooOrderName ? `Odoo Sales Order: ${odooOrderName}` : "",
       items.length
@@ -604,6 +633,10 @@ export async function sendLpoUploadEmail(
       <div style="color:#ffffff;font-size:13px;margin-top:2px;opacity:0.9;">${esc(store.county)} · ${esc(store.type)}</div>
     </div>
     <div style="padding:20px 24px;">
+      <div style="background:${BG};border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;font-size:12px;">
+        <span style="color:${MUTED};">Order ref <strong style="color:${INK};font-family:monospace;">${esc(orderRef)}</strong></span>
+        <span style="color:${MUTED};">${esc(timestamp)}</span>
+      </div>
       <a href="${fileUrl}" style="display:inline-block;font-size:13px;font-weight:600;color:${GREEN_DARK};background:#EEF7DE;border-radius:8px;padding:10px 14px;text-decoration:none;margin-bottom:16px;">📄 View uploaded LPO (${esc(filename)})</a>
       ${
         odooOrderName
@@ -630,7 +663,14 @@ export async function sendLpoUploadEmail(
 
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({ from: FROM_EMAIL, to: NOTIFY_EMAIL, subject, html, text });
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: NOTIFY_EMAIL,
+      cc: managerEmail || undefined,
+      subject,
+      html,
+      text,
+    });
   } catch {
     // Bonus notification — the LPO document itself is already saved either way.
   }

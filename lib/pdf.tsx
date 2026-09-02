@@ -339,7 +339,8 @@ export async function renderMovementSummaryPdf(
 export async function renderOrderSummaryPdf(
   store: { name: string; county: string; type: string },
   items: Array<{ sku: string; flavour: string; reorder: number }>,
-  odooOrderName: string | null
+  odooOrderName: string | null,
+  orderRef: string
 ): Promise<Buffer> {
   const doc = (
     <Document>
@@ -353,6 +354,7 @@ export async function renderOrderSummaryPdf(
           </Text>
         </View>
 
+        <DetailRow label="Order reference" value={orderRef} />
         {odooOrderName ? <DetailRow label="Odoo Sales Order" value={odooOrderName} /> : null}
 
         <View style={{ marginTop: 10 }}>
