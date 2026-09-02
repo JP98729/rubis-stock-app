@@ -209,6 +209,7 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
       merchandiserPhone: input.embedded ? "" : input.merchandiserPhone.trim(),
       kraPin: input.embedded ? "" : input.kraPin.trim(),
       embedded: input.embedded,
+      signatureUrl: input.signatureUrl!,
       notes: input.notes.trim(),
       checksPlacement: input.checksPlacement,
       checksPrices: input.checksPrices,

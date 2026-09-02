@@ -34,6 +34,7 @@ export async function sendStocktakeSummaryEmail(
     merchandiserPhone: string;
     kraPin: string;
     embedded: boolean;
+    signatureUrl: string;
     notes: string;
     checksPlacement: string | null;
     checksPrices: string | null;
@@ -90,7 +91,8 @@ export async function sendStocktakeSummaryEmail(
     ...itemLines,
     ...(competitorLines.length > 0 ? ["", "Competitor check:", ...competitorLines] : []),
     "",
-    "Full details, photos, and signature are in the Rubis Enjoy Stock & Reorder app.",
+    entry.signatureUrl ? `Signature: ${entry.signatureUrl}` : "",
+    "Full details and photos are in the Rubis Enjoy Stock & Reorder app.",
   ]
     .filter(Boolean)
     .join("\n");
@@ -228,8 +230,15 @@ export async function sendStocktakeSummaryEmail(
           : ""
       }
 
+      ${
+        entry.signatureUrl
+          ? `<div style="font-size:11px;color:${MUTED};margin-bottom:6px;">Signed by ${esc(entry.merchandiser)}</div>
+             <img src="${entry.signatureUrl}" alt="Signature" style="max-width:220px;border:1px solid ${BORDER};border-radius:8px;background:#ffffff;margin-bottom:16px;" />`
+          : ""
+      }
+
       <div style="font-size:12px;color:${MUTED};border-top:1px solid ${BORDER};padding-top:14px;">
-        Full details, photos, and signature are in the Rubis Enjoy Stock &amp; Reorder app.
+        Full details and photos are in the Rubis Enjoy Stock &amp; Reorder app.
       </div>
     </div>
   </div>
@@ -295,6 +304,7 @@ export async function sendMovementSummaryEmail(
     invoiceNumber: string;
     receivedBy: string;
     notes: string;
+    signatureUrl: string;
   }
 ) {
   if (!process.env.RESEND_API_KEY) return;
@@ -319,7 +329,8 @@ export async function sendMovementSummaryEmail(
     isDelivery && entry.receivedBy ? `Received by: ${entry.receivedBy}` : "",
     entry.notes ? `Notes: ${entry.notes}` : "",
     "",
-    "Full details and signature are in the Rubis Enjoy Stock & Reorder app.",
+    entry.signatureUrl ? `Signature: ${entry.signatureUrl}` : "",
+    "Full details are in the Rubis Enjoy Stock & Reorder app.",
   ]
     .filter(Boolean)
     .join("\n");
@@ -395,8 +406,15 @@ export async function sendMovementSummaryEmail(
           : ""
       }
 
+      ${
+        entry.signatureUrl
+          ? `<div style="font-size:11px;color:${MUTED};margin-bottom:6px;">Signed${entry.merchandiser ? ` by ${esc(entry.merchandiser)}` : ""}</div>
+             <img src="${entry.signatureUrl}" alt="Signature" style="max-width:220px;border:1px solid ${BORDER};border-radius:8px;background:#ffffff;margin-bottom:16px;" />`
+          : ""
+      }
+
       <div style="font-size:12px;color:${MUTED};border-top:1px solid ${BORDER};padding-top:14px;">
-        Full details and signature are in the Rubis Enjoy Stock &amp; Reorder app.
+        Full details are in the Rubis Enjoy Stock &amp; Reorder app.
       </div>
     </div>
   </div>

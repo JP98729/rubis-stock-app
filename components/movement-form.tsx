@@ -81,7 +81,7 @@ export function MovementForm({
     if (!embedded && !merchandiser.trim()) return setError("Enter your name before submitting.");
     if (type === "DELIVERY" && !deliveryNote.trim()) return setError("Enter the delivery note nr before submitting.");
     if (type === "DELIVERY" && !invoiceNumber.trim()) return setError("Enter the invoice nr before submitting.");
-    if (!embedded && !signature) return setError("Please sign before submitting.");
+    if (!signature) return setError("Please sign before submitting.");
     setSubmitting(true);
     const res = await submitMovement({
       storeId: store.id,
@@ -97,7 +97,7 @@ export function MovementForm({
       invoiceNumber: type === "DELIVERY" ? invoiceNumber : "",
       receivedBy: type === "DELIVERY" ? receivedBy : "",
       notes,
-      signatureUrl: embedded ? null : signature,
+      signatureUrl: signature,
     });
     setSubmitting(false);
     if (!res.ok) {
@@ -315,16 +315,14 @@ export function MovementForm({
         </label>
       </div>
 
-      {!embedded && (
-        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3">
-          <div className="text-sm font-semibold mb-1 flex items-center gap-1.5">
-            <PenTool size={14} /> Sign to confirm
-          </div>
-          <div className="text-[11px] text-gray-400 mb-2">I confirm the details above are accurate.</div>
-          <SignaturePad onChange={setSignature} />
-          {!signature && <div className="text-[11px] text-amber-600 mt-1">Signature required before submitting.</div>}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3">
+        <div className="text-sm font-semibold mb-1 flex items-center gap-1.5">
+          <PenTool size={14} /> Sign to confirm
         </div>
-      )}
+        <div className="text-[11px] text-gray-400 mb-2">I confirm the details above are accurate.</div>
+        <SignaturePad onChange={setSignature} />
+        {!signature && <div className="text-[11px] text-amber-600 mt-1">Signature required before submitting.</div>}
+      </div>
 
       {error && (
         <div className="rounded-lg px-3 py-2.5 text-sm mb-3" style={{ background: "#FEF6F5", color: "#C0392B" }}>

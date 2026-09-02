@@ -39,7 +39,7 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
     return { ok: false, error: "Only merchandisers and branch managers can log movements." };
   }
 
-  if (session.role === "merchandiser" && !input.signatureUrl) {
+  if (!input.signatureUrl) {
     return { ok: false, error: "Please sign before submitting." };
   }
   if (session.role === "merchandiser" && !input.merchandiser.trim()) {
@@ -108,6 +108,7 @@ export async function submitMovement(input: MovementInput): Promise<SubmitResult
     invoiceNumber: (input.invoiceNumber || "").trim(),
     receivedBy: (input.receivedBy || "").trim(),
     notes: (input.notes || "").trim(),
+    signatureUrl: input.signatureUrl || "",
   });
 
   // Best-effort: attach the delivery note straight onto the branch's most recent

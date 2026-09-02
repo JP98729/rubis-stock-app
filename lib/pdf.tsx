@@ -75,6 +75,7 @@ export async function renderStocktakeSummaryPdf(
     merchandiserPhone: string;
     kraPin: string;
     embedded: boolean;
+    signatureUrl: string;
     notes: string;
     checksPlacement: string | null;
     checksPrices: string | null;
@@ -219,6 +220,14 @@ export async function renderStocktakeSummaryPdf(
           </View>
         )}
 
+        {entry.signatureUrl ? (
+          <View style={{ marginTop: 10 }}>
+            <Text style={[styles.summaryLabel, { marginBottom: 4 }]}>SIGNED BY {entry.merchandiser.toUpperCase()}</Text>
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
+            <Image src={entry.signatureUrl} style={{ maxWidth: 180, borderRadius: 4 }} />
+          </View>
+        ) : null}
+
         <Text style={styles.footer}>Generated automatically by the Rubis Enjoy Stock &amp; Reorder app.</Text>
       </Page>
     </Document>
@@ -249,6 +258,7 @@ export async function renderMovementSummaryPdf(
     invoiceNumber: string;
     receivedBy: string;
     notes: string;
+    signatureUrl: string;
   }
 ): Promise<Buffer> {
   const typeLabel = MOVEMENT_TYPE_LABELS[entry.type] || entry.type;
@@ -305,6 +315,16 @@ export async function renderMovementSummaryPdf(
               // eslint-disable-next-line jsx-a11y/alt-text
               <Image src={entry.deliveryNotePhotoUrl} style={{ maxWidth: 300, borderRadius: 4 }} />
             )}
+          </View>
+        ) : null}
+
+        {entry.signatureUrl ? (
+          <View style={{ marginTop: 10 }}>
+            <Text style={[styles.summaryLabel, { marginBottom: 4 }]}>
+              SIGNED{entry.merchandiser ? ` BY ${entry.merchandiser.toUpperCase()}` : ""}
+            </Text>
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
+            <Image src={entry.signatureUrl} style={{ maxWidth: 180, borderRadius: 4 }} />
           </View>
         ) : null}
 
