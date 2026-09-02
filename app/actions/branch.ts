@@ -110,9 +110,13 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
  * reported, not swallowed) and best-effort mirrors it as a draft Sales Order in
  * Odoo when the branch has one mapped.
  */
-export async function placeManualOrder(quantities: Record<string, number>): Promise<PlaceOrderResult> {
+export async function placeManualOrder(
+  quantities: Record<string, number>,
+  signatureUrl: string | null
+): Promise<PlaceOrderResult> {
   const session = await requireRole("branch");
   if (!session?.storeId) return { ok: false, error: "Your session expired — log in again." };
+  if (!signatureUrl) return { ok: false, error: "Please sign before placing the order." };
   const storeId = session.storeId;
 
   const store = await prisma.store.findUnique({
@@ -146,7 +150,8 @@ export async function placeManualOrder(quantities: Record<string, number>): Prom
       store,
       items,
       order?.name ?? null,
-      store.contactEmail || store.seedEmail || null
+      store.contactEmail || store.seedEmail || null,
+      signatureUrl
     );
   } catch (e) {
     return {

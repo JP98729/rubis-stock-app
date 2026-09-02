@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, Bell, CheckCircle2, ClipboardList, MessageCircle, Package, Send, Trophy, Truck } from "lucide-react";
+import { AlertTriangle, Bell, CheckCircle2, ClipboardList, MessageCircle, Package, PenTool, Send, Trophy, Truck } from "lucide-react";
 import { AMBER, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT, RUBIS_LOGO } from "@/lib/brand";
 import { fmtKES } from "@/lib/utils";
 import { Badge, ProductThumb } from "../ui";
@@ -12,6 +12,7 @@ import { StocktakeForm } from "../stocktake-form";
 import { MovementForm } from "../movement-form";
 import { BranchContactEditor, ManagerPhotoUploader } from "./contact-editor";
 import { LpoUploader } from "./lpo-uploader";
+import { SignaturePad } from "../signature-pad";
 import { logout } from "@/app/actions/auth";
 import { placeManualOrder } from "@/app/actions/branch";
 import type { LpoDocumentDTO, MessageDTO, ProductDTO, StoreDTO } from "@/lib/queries";
@@ -67,11 +68,16 @@ export function BranchManagerView({
   // ways would send Pure Nutrition two orders for the same reorder. Session-only:
   // resets on reload, matching what was asked for (not a persisted lock).
   const [orderMethodUsed, setOrderMethodUsed] = useState<"order" | "lpo" | null>(null);
+  const [orderSignature, setOrderSignature] = useState<string | null>(null);
 
   async function handlePlaceOrder() {
+    if (!orderSignature) {
+      setOrderError("Please sign before placing the order.");
+      return;
+    }
     setOrderBusy(true);
     setOrderError("");
-    const result = await placeManualOrder(orderQty);
+    const result = await placeManualOrder(orderQty, orderSignature);
     if (result.ok) {
       setOrderConfirmed(true);
       setOrderMethodUsed("order");
@@ -254,11 +260,23 @@ export function BranchManagerView({
             </div>
             {orderItems.length > 0 && orderMethodUsed !== "lpo" && (
               <div className="flex flex-col gap-2">
+                <div className="bg-white rounded-xl border border-gray-200 p-4">
+                  <div className="text-sm font-semibold mb-1 flex items-center gap-1.5">
+                    <PenTool size={14} /> Sign to confirm
+                  </div>
+                  <div className="text-[11px] text-gray-400 mb-2">I confirm this order is accurate.</div>
+                  <SignaturePad onChange={setOrderSignature} />
+                  {!orderSignature && (
+                    <div className="text-[11px] text-amber-600 mt-1">Signature required before placing the order.</div>
+                  )}
+                </div>
                 <button
                   onClick={handlePlaceOrder}
-                  disabled={orderBusy || orderMethodUsed === "order"}
+                  disabled={orderBusy || orderMethodUsed === "order" || !orderSignature}
                   className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold text-white"
-                  style={{ background: orderBusy || orderMethodUsed === "order" ? "#9CA3AF" : GREEN }}
+                  style={{
+                    background: orderBusy || orderMethodUsed === "order" || !orderSignature ? "#9CA3AF" : GREEN,
+                  }}
                 >
                   <Send size={16} /> {orderBusy ? "Sending…" : "Place Order"}
                 </button>

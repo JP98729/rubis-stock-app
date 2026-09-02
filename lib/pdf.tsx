@@ -340,7 +340,8 @@ export async function renderOrderSummaryPdf(
   store: { name: string; county: string; type: string },
   items: Array<{ sku: string; flavour: string; reorder: number }>,
   odooOrderName: string | null,
-  orderRef: string
+  orderRef: string,
+  signatureUrl: string | null
 ): Promise<Buffer> {
   const doc = (
     <Document>
@@ -374,6 +375,14 @@ export async function renderOrderSummaryPdf(
             </View>
           ))}
         </View>
+
+        {signatureUrl ? (
+          <View style={{ marginTop: 10 }}>
+            <Text style={[styles.summaryLabel, { marginBottom: 4 }]}>SIGNED</Text>
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
+            <Image src={signatureUrl} style={{ maxWidth: 180, borderRadius: 4 }} />
+          </View>
+        ) : null}
 
         <Text style={styles.footer}>
           Placed directly from the branch's own reorder list in the Rubis Enjoy Stock &amp; Reorder app.

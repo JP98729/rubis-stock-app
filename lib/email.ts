@@ -473,7 +473,8 @@ export async function sendManualOrderEmail(
   store: { name: string; county: string; type: string },
   items: Array<{ sku: string; flavour: string; reorder: number }>,
   odooOrderName: string | null,
-  managerEmail: string | null
+  managerEmail: string | null,
+  signatureUrl: string | null
 ): Promise<Buffer | null> {
   if (!process.env.RESEND_API_KEY) {
     throw new Error("Email isn't set up on the server — ask Pure Nutrition to check RESEND_API_KEY.");
@@ -491,6 +492,8 @@ export async function sendManualOrderEmail(
     "",
     "Items ordered:",
     ...items.map((i) => `  ${i.flavour} (${i.sku}): ${i.reorder}`),
+    "",
+    signatureUrl ? `Signature: ${signatureUrl}` : "",
   ]
     .filter(Boolean)
     .join("\n");
@@ -540,6 +543,12 @@ export async function sendManualOrderEmail(
         </tr>
         ${rows}
       </table>
+      ${
+        signatureUrl
+          ? `<div style="font-size:11px;color:${MUTED};margin-top:16px;margin-bottom:6px;">Signed</div>
+             <img src="${signatureUrl}" alt="Signature" style="max-width:220px;border:1px solid ${BORDER};border-radius:8px;background:#ffffff;" />`
+          : ""
+      }
       <div style="font-size:12px;color:${MUTED};border-top:1px solid ${BORDER};padding-top:14px;margin-top:16px;">
         Placed directly from the branch's own reorder list in the Rubis Enjoy Stock &amp; Reorder app.
       </div>
@@ -549,7 +558,7 @@ export async function sendManualOrderEmail(
 
   let pdfBuffer: Buffer | null = null;
   try {
-    pdfBuffer = await renderOrderSummaryPdf(store, items, odooOrderName, orderRef);
+    pdfBuffer = await renderOrderSummaryPdf(store, items, odooOrderName, orderRef, signatureUrl);
   } catch {
     // The PDF is a bonus attachment — never let a rendering failure block the email.
   }
