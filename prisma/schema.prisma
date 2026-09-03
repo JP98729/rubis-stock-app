@@ -137,6 +137,9 @@ model CourierDispatch {
 
   odooSaleOrderId   Int?
   odooSaleOrderName String?
+  /// Odoo's computed "Shipping Weight" for the Sales Order (kg) — shown to the
+  /// courier instead of per-product quantities.
+  shippingWeightKg  Float?
 
   status     String    @default("pending") // "pending" | "accepted" | "delivered"
   acceptedAt DateTime?

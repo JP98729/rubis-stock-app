@@ -181,6 +181,31 @@ export async function createDraftSalesOrder(
   }
 }
 
+/**
+ * Reads Odoo's computed "Shipping Weight" (kg) off a Sales Order, shown to the
+ * courier instead of per-product quantities. Returns null (never throws) whenever
+ * Odoo sync isn't configured or the field isn't set.
+ */
+export async function getSaleOrderShippingWeight(saleOrderId: number): Promise<number | null> {
+  try {
+    const auth = await authenticate();
+    if (!auth) return null;
+
+    const [order] = await jsonRpc<Array<{ shipping_weight?: number }>>(auth.url, "object", "execute_kw", [
+      auth.db,
+      auth.uid,
+      auth.apiKey,
+      "sale.order",
+      "read",
+      [[saleOrderId], ["shipping_weight"]],
+    ]);
+
+    return typeof order?.shipping_weight === "number" ? order.shipping_weight : null;
+  } catch {
+    return null;
+  }
+}
+
 function mimetypeFor(filename: string): string {
   const ext = filename.split(".").pop()?.toLowerCase();
   if (ext === "pdf") return "application/pdf";

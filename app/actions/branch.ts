@@ -4,16 +4,17 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { getProducts, getStoreStock } from "@/lib/queries";
-import { createDraftSalesOrder, attachFileToSaleOrder, attachPdfToSaleOrder } from "@/lib/odoo";
-import { sendManualOrderEmail, sendLpoUploadEmail, newOrderRef } from "@/lib/email";
+import { createDraftSalesOrder, attachFileToSaleOrder, attachPdfToSaleOrder, getSaleOrderShippingWeight } from "@/lib/odoo";
+import { sendManualOrderEmail, sendLpoUploadEmail, sendCourierDispatchEmail, newOrderRef } from "@/lib/email";
 
 export type SimpleResult = { ok: true } | { ok: false; error: string };
 export type PlaceOrderResult = { ok: true; itemCount: number } | { ok: false; error: string };
 
 const APP_BASE_URL = process.env.APP_BASE_URL || "https://rubis-stock-app.vercel.app";
 
-function summarizeItems(items: Array<{ sku: string; flavour: string; reorder: number }>): string {
-  return items.map((i) => `${i.flavour} (${i.sku}): ${i.reorder}`).join(", ");
+/** Item names only, no quantities — the courier's own dispatch email/page shows weight instead. */
+function summarizeItems(items: Array<{ sku: string; flavour: string }>): string {
+  return items.map((i) => `${i.flavour} (${i.sku})`).join(", ");
 }
 
 /**
@@ -26,7 +27,8 @@ async function createCourierDispatch(
   orderRef: string,
   items: Array<{ sku: string; flavour: string; reorder: number }>,
   odooSaleOrderId: number | null,
-  odooSaleOrderName: string | null
+  odooSaleOrderName: string | null,
+  shippingWeightKg: number | null
 ): Promise<string | null> {
   try {
     const dispatch = await prisma.courierDispatch.create({
@@ -36,6 +38,7 @@ async function createCourierDispatch(
         itemsSummary: summarizeItems(items),
         odooSaleOrderId,
         odooSaleOrderName,
+        shippingWeightKg,
       },
     });
     return `${APP_BASE_URL}/courier/${dispatch.id}`;
@@ -90,7 +93,7 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
 
   const store = await prisma.store.findUnique({
     where: { id: storeId },
-    select: { name: true, county: true, type: true, odooPartnerId: true, contactEmail: true, seedEmail: true },
+    select: { name: true, county: true, type: true, address: true, odooPartnerId: true, contactEmail: true, seedEmail: true },
   });
 
   const products = await getProducts();
@@ -101,6 +104,7 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
   // No-ops silently if Odoo sync isn't configured or this branch has no mapped customer.
   let odooOrderId: number | null = null;
   let odooOrderName: string | null = null;
+  let shippingWeightKg: number | null = null;
   if (store?.odooPartnerId) {
     const order = await createDraftSalesOrder(
       store.odooPartnerId,
@@ -115,6 +119,7 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
       });
       // Best-effort: put the LPO file itself on the order's paperclip icon in Odoo.
       await attachFileToSaleOrder(order.id, url, trimmedFilename);
+      shippingWeightKg = await getSaleOrderShippingWeight(order.id);
     }
   }
 
@@ -123,7 +128,14 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
   if (store) {
     const orderItems = items.map((r) => ({ sku: r.sku, flavour: r.flavour, reorder: r.reorder }));
     const orderRef = newOrderRef();
-    const courierLink = await createCourierDispatch(storeId, orderRef, orderItems, odooOrderId, odooOrderName);
+    const courierLink = await createCourierDispatch(
+      storeId,
+      orderRef,
+      orderItems,
+      odooOrderId,
+      odooOrderName,
+      shippingWeightKg
+    );
     await sendLpoUploadEmail(
       store,
       trimmedFilename,
@@ -134,6 +146,9 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
       orderRef,
       courierLink
     );
+    if (courierLink) {
+      await sendCourierDispatchEmail(store, orderRef, orderItems, shippingWeightKg, courierLink);
+    }
   }
 
   revalidatePath("/branch");
@@ -164,7 +179,7 @@ export async function placeManualOrder(
 
   const store = await prisma.store.findUnique({
     where: { id: storeId },
-    select: { name: true, county: true, type: true, odooPartnerId: true, contactEmail: true, seedEmail: true },
+    select: { name: true, county: true, type: true, address: true, odooPartnerId: true, contactEmail: true, seedEmail: true },
   });
   if (!store) return { ok: false, error: "Your branch no longer exists." };
 
@@ -186,9 +201,17 @@ export async function placeManualOrder(
         items.map((r) => ({ sku: r.sku, reorder: r.reorder }))
       )
     : null;
+  const shippingWeightKg = order ? await getSaleOrderShippingWeight(order.id) : null;
 
   const orderRef = newOrderRef();
-  const courierLink = await createCourierDispatch(storeId, orderRef, items, order?.id ?? null, order?.name ?? null);
+  const courierLink = await createCourierDispatch(
+    storeId,
+    orderRef,
+    items,
+    order?.id ?? null,
+    order?.name ?? null,
+    shippingWeightKg
+  );
 
   let pdfBuffer: Buffer | null = null;
   try {
@@ -202,6 +225,9 @@ export async function placeManualOrder(
       orderRef,
       courierLink
     );
+    if (courierLink) {
+      await sendCourierDispatchEmail(store, orderRef, items, shippingWeightKg, courierLink);
+    }
   } catch (e) {
     return {
       ok: false,

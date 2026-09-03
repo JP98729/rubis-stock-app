@@ -55,6 +55,9 @@ export default async function CourierDispatchPage({ params }: { params: Promise<
         {dispatch.odooSaleOrderName && (
           <div className="text-xs text-gray-500 mt-1">Odoo order: {dispatch.odooSaleOrderName}</div>
         )}
+        {dispatch.shippingWeightKg != null && (
+          <div className="text-xs text-gray-500 mt-1">Shipping weight: {dispatch.shippingWeightKg} kg</div>
+        )}
         <div className="text-[11px] text-gray-400 mt-2">Placed {timeAgo(dispatch.createdAt)}</div>
       </div>
 
