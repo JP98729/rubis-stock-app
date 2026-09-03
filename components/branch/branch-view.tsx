@@ -69,15 +69,20 @@ export function BranchManagerView({
   // resets on reload, matching what was asked for (not a persisted lock).
   const [orderMethodUsed, setOrderMethodUsed] = useState<"order" | "lpo" | null>(null);
   const [orderSignature, setOrderSignature] = useState<string | null>(null);
+  const [orderName, setOrderName] = useState(store.managerName || "");
 
   async function handlePlaceOrder() {
+    if (!orderName.trim()) {
+      setOrderError("Please enter your name before placing the order.");
+      return;
+    }
     if (!orderSignature) {
       setOrderError("Please sign before placing the order.");
       return;
     }
     setOrderBusy(true);
     setOrderError("");
-    const result = await placeManualOrder(orderQty, orderSignature);
+    const result = await placeManualOrder(orderQty, orderName.trim(), orderSignature);
     if (result.ok) {
       setOrderConfirmed(true);
       setOrderMethodUsed("order");
@@ -265,6 +270,14 @@ export function BranchManagerView({
                     <PenTool size={14} /> Sign to confirm
                   </div>
                   <div className="text-[11px] text-gray-400 mb-2">I confirm this order is accurate.</div>
+                  <label className="text-[11px] text-gray-500 font-semibold">Your name</label>
+                  <input
+                    type="text"
+                    value={orderName}
+                    onChange={(e) => setOrderName(e.target.value)}
+                    placeholder="Type your full name"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 mb-3"
+                  />
                   <SignaturePad onChange={setOrderSignature} />
                   {!orderSignature && (
                     <div className="text-[11px] text-amber-600 mt-1">Signature required before placing the order.</div>
@@ -272,10 +285,11 @@ export function BranchManagerView({
                 </div>
                 <button
                   onClick={handlePlaceOrder}
-                  disabled={orderBusy || orderMethodUsed === "order" || !orderSignature}
+                  disabled={orderBusy || orderMethodUsed === "order" || !orderSignature || !orderName.trim()}
                   className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold text-white"
                   style={{
-                    background: orderBusy || orderMethodUsed === "order" || !orderSignature ? "#9CA3AF" : GREEN,
+                    background:
+                      orderBusy || orderMethodUsed === "order" || !orderSignature || !orderName.trim() ? "#9CA3AF" : GREEN,
                   }}
                 >
                   <Send size={16} /> {orderBusy ? "Sending…" : "Place Order"}

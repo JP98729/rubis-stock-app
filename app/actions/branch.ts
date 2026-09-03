@@ -153,10 +153,12 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
  */
 export async function placeManualOrder(
   quantities: Record<string, number>,
+  placedByName: string,
   signatureUrl: string | null
 ): Promise<PlaceOrderResult> {
   const session = await requireRole("branch");
   if (!session?.storeId) return { ok: false, error: "Your session expired — log in again." };
+  if (!placedByName.trim()) return { ok: false, error: "Please enter your name before placing the order." };
   if (!signatureUrl) return { ok: false, error: "Please sign before placing the order." };
   const storeId = session.storeId;
 
@@ -195,6 +197,7 @@ export async function placeManualOrder(
       items,
       order?.name ?? null,
       store.contactEmail || store.seedEmail || null,
+      placedByName.trim(),
       signatureUrl,
       orderRef,
       courierLink
