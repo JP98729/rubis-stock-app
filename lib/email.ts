@@ -3,6 +3,8 @@ import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO } from "@/lib/brand";
 import { renderStocktakeSummaryPdf, renderMovementSummaryPdf, renderOrderSummaryPdf } from "@/lib/pdf";
 
 const NOTIFY_EMAIL = "info@pure-nutritions.com";
+/** Courier service — CC'd on order notifications (Place Order / LPO upload) so they know what to deliver and where. */
+const COURIER_EMAIL = "jprsfortain@gmail.com";
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Rubis Enjoy <onboarding@resend.dev>";
 const MERCHANDISER_VISIT_FEE_KES = 300;
 
@@ -568,7 +570,7 @@ export async function sendManualOrderEmail(
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: NOTIFY_EMAIL,
-    cc: managerEmail || undefined,
+    cc: [managerEmail, COURIER_EMAIL].filter((e): e is string => !!e),
     subject,
     html,
     text,
@@ -675,7 +677,7 @@ export async function sendLpoUploadEmail(
     await resend.emails.send({
       from: FROM_EMAIL,
       to: NOTIFY_EMAIL,
-      cc: managerEmail || undefined,
+      cc: [managerEmail, COURIER_EMAIL].filter((e): e is string => !!e),
       subject,
       html,
       text,
