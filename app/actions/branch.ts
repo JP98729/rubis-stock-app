@@ -5,10 +5,44 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { getProducts, getStoreStock } from "@/lib/queries";
 import { createDraftSalesOrder, attachFileToSaleOrder, attachPdfToSaleOrder } from "@/lib/odoo";
-import { sendManualOrderEmail, sendLpoUploadEmail } from "@/lib/email";
+import { sendManualOrderEmail, sendLpoUploadEmail, newOrderRef } from "@/lib/email";
 
 export type SimpleResult = { ok: true } | { ok: false; error: string };
 export type PlaceOrderResult = { ok: true; itemCount: number } | { ok: false; error: string };
+
+const APP_BASE_URL = process.env.APP_BASE_URL || "https://rubis-stock-app.vercel.app";
+
+function summarizeItems(items: Array<{ sku: string; flavour: string; reorder: number }>): string {
+  return items.map((i) => `${i.flavour} (${i.sku}): ${i.reorder}`).join(", ");
+}
+
+/**
+ * Creates the courier dispatch record for an order and returns its public link.
+ * Best-effort: if this fails for any reason, the order email still goes out —
+ * it just won't have a courier link in it.
+ */
+async function createCourierDispatch(
+  storeId: number,
+  orderRef: string,
+  items: Array<{ sku: string; flavour: string; reorder: number }>,
+  odooSaleOrderId: number | null,
+  odooSaleOrderName: string | null
+): Promise<string | null> {
+  try {
+    const dispatch = await prisma.courierDispatch.create({
+      data: {
+        storeId,
+        orderRef,
+        itemsSummary: summarizeItems(items),
+        odooSaleOrderId,
+        odooSaleOrderName,
+      },
+    });
+    return `${APP_BASE_URL}/courier/${dispatch.id}`;
+  } catch {
+    return null;
+  }
+}
 
 /** Branch-manager self-service contact override (shown with a green * in the admin table). */
 export async function saveBranchContact(phone: string, email: string, address: string): Promise<SimpleResult> {
@@ -65,6 +99,7 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
 
   // Best-effort: mirror the branch's current reorder as a draft Sales Order in Odoo.
   // No-ops silently if Odoo sync isn't configured or this branch has no mapped customer.
+  let odooOrderId: number | null = null;
   let odooOrderName: string | null = null;
   if (store?.odooPartnerId) {
     const order = await createDraftSalesOrder(
@@ -72,6 +107,7 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
       items.map((r) => ({ sku: r.sku, reorder: r.reorder }))
     );
     if (order) {
+      odooOrderId = order.id;
       odooOrderName = order.name;
       await prisma.lpoDocument.update({
         where: { id: doc.id },
@@ -85,13 +121,18 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
   // Best-effort: let Pure Nutrition know an LPO came in, same as a manual order does.
   // CC'd to the branch's own email too, so the manager has proof they submitted it.
   if (store) {
+    const orderItems = items.map((r) => ({ sku: r.sku, flavour: r.flavour, reorder: r.reorder }));
+    const orderRef = newOrderRef();
+    const courierLink = await createCourierDispatch(storeId, orderRef, orderItems, odooOrderId, odooOrderName);
     await sendLpoUploadEmail(
       store,
       trimmedFilename,
       url,
-      items.map((r) => ({ sku: r.sku, flavour: r.flavour, reorder: r.reorder })),
+      orderItems,
       odooOrderName,
-      store.contactEmail || store.seedEmail || null
+      store.contactEmail || store.seedEmail || null,
+      orderRef,
+      courierLink
     );
   }
 
@@ -144,6 +185,9 @@ export async function placeManualOrder(
       )
     : null;
 
+  const orderRef = newOrderRef();
+  const courierLink = await createCourierDispatch(storeId, orderRef, items, order?.id ?? null, order?.name ?? null);
+
   let pdfBuffer: Buffer | null = null;
   try {
     pdfBuffer = await sendManualOrderEmail(
@@ -151,7 +195,9 @@ export async function placeManualOrder(
       items,
       order?.name ?? null,
       store.contactEmail || store.seedEmail || null,
-      signatureUrl
+      signatureUrl,
+      orderRef,
+      courierLink
     );
   } catch (e) {
     return {

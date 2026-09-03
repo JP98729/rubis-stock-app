@@ -23,10 +23,10 @@ function esc(s: string): string {
 /**
  * A short, human-readable, traceable reference for an order — printed on the email
  * and PDF so a specific order can always be pointed back to (e.g. in a dispute).
- * Not a DB id: orders placed this way have no separate persisted record, so this is
- * generated fresh per send rather than looked up.
+ * Generated once by the caller (app/actions/branch.ts) so the same ref can also be
+ * stored on the CourierDispatch row created for that order.
  */
-function newOrderRef(): string {
+export function newOrderRef(): string {
   const d = new Date();
   const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
   const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
@@ -476,13 +476,14 @@ export async function sendManualOrderEmail(
   items: Array<{ sku: string; flavour: string; reorder: number }>,
   odooOrderName: string | null,
   managerEmail: string | null,
-  signatureUrl: string | null
+  signatureUrl: string | null,
+  orderRef: string,
+  courierLink: string | null
 ): Promise<Buffer | null> {
   if (!process.env.RESEND_API_KEY) {
     throw new Error("Email isn't set up on the server — ask Pure Nutrition to check RESEND_API_KEY.");
   }
 
-  const orderRef = newOrderRef();
   const now = new Date();
   const timestamp = now.toISOString().slice(0, 16).replace("T", " at ") + " UTC";
   const subject = `Order placed — ${store.name.trim()} — ${orderRef}`;
@@ -495,6 +496,7 @@ export async function sendManualOrderEmail(
     "Items ordered:",
     ...items.map((i) => `  ${i.flavour} (${i.sku}): ${i.reorder}`),
     "",
+    courierLink ? `Courier — accept dispatch & upload signed delivery note: ${courierLink}` : "",
     signatureUrl ? `Signature: ${signatureUrl}` : "",
   ]
     .filter(Boolean)
@@ -546,6 +548,13 @@ export async function sendManualOrderEmail(
         ${rows}
       </table>
       ${
+        courierLink
+          ? `<div style="margin-top:16px;text-align:center;">
+               <a href="${courierLink}" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 Courier: Accept & Upload Delivery Note</a>
+             </div>`
+          : ""
+      }
+      ${
         signatureUrl
           ? `<div style="font-size:11px;color:${MUTED};margin-top:16px;margin-bottom:6px;">Signed</div>
              <img src="${signatureUrl}" alt="Signature" style="max-width:220px;border:1px solid ${BORDER};border-radius:8px;background:#ffffff;" />`
@@ -594,12 +603,13 @@ export async function sendLpoUploadEmail(
   fileUrl: string,
   items: Array<{ sku: string; flavour: string; reorder: number }>,
   odooOrderName: string | null,
-  managerEmail: string | null
+  managerEmail: string | null,
+  orderRef: string,
+  courierLink: string | null
 ): Promise<void> {
   if (!process.env.RESEND_API_KEY) return;
 
   try {
-    const orderRef = newOrderRef();
     const timestamp = new Date().toISOString().slice(0, 16).replace("T", " at ") + " UTC";
     const subject = `LPO uploaded — ${store.name.trim()} — ${orderRef}`;
     const text = [
@@ -611,6 +621,8 @@ export async function sendLpoUploadEmail(
       items.length
         ? ["", "Reorder items:", ...items.map((i) => `  ${i.flavour} (${i.sku}): ${i.reorder}`)].join("\n")
         : "",
+      "",
+      courierLink ? `Courier — accept dispatch & upload signed delivery note: ${courierLink}` : "",
     ]
       .filter(Boolean)
       .join("\n");
@@ -665,6 +677,13 @@ export async function sendLpoUploadEmail(
              </table>`
           : ""
       }
+      ${
+        courierLink
+          ? `<div style="margin-top:16px;text-align:center;">
+               <a href="${courierLink}" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 Courier: Accept & Upload Delivery Note</a>
+             </div>`
+          : ""
+      }
       <div style="font-size:12px;color:${MUTED};border-top:1px solid ${BORDER};padding-top:14px;margin-top:16px;">
         Uploaded from the branch's own account in the Rubis Enjoy Stock &amp; Reorder app.
       </div>
@@ -684,5 +703,87 @@ export async function sendLpoUploadEmail(
     });
   } catch {
     // Bonus notification — the LPO document itself is already saved either way.
+  }
+}
+
+/**
+ * Confirms back to Pure Nutrition and the branch when the courier acts on a
+ * dispatch — accepting it, or uploading the signed/stamped delivery note. Bonus
+ * notification: the dispatch record itself is already saved either way, so a send
+ * failure here is swallowed, not thrown.
+ */
+export async function sendCourierStatusEmail(
+  store: { name: string; county: string; type: string },
+  orderRef: string,
+  event: "accepted" | "delivered",
+  managerEmail: string | null,
+  deliveryNoteUrl?: string | null
+): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return;
+
+  try {
+    const label = event === "accepted" ? "Courier accepted dispatch" : "Courier delivered — note uploaded";
+    const subject = `${label} — ${store.name.trim()} — ${orderRef}`;
+    const text = [
+      `Order reference: ${orderRef}`,
+      `Branch: ${store.name.trim()} (${store.county} · ${store.type})`,
+      event === "accepted" ? "The courier has accepted this dispatch." : "The courier has delivered and uploaded the signed/stamped delivery note.",
+      deliveryNoteUrl ? `Delivery note: ${deliveryNoteUrl}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const html = `
+<div style="background:${BG};padding:24px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid ${BORDER};">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border-bottom:1px solid ${BORDER};">
+      <tr>
+        <td style="padding:12px 24px;">
+          <img src="${PURE_LOGO}" alt="Pure Nutrition" height="48" style="height:48px;width:auto;vertical-align:middle;" />
+        </td>
+        <td style="padding:12px 24px;text-align:right;">
+          <img src="${ENJOY_LOGO}" alt="Rubis Enjoy" height="28" style="height:28px;width:auto;vertical-align:middle;" />
+        </td>
+      </tr>
+    </table>
+    <div style="background:${GREEN_DARK};padding:20px 24px;">
+      <div style="color:#ffffff;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;opacity:0.85;">${esc(label)}</div>
+      <div style="color:#ffffff;font-size:18px;font-weight:700;margin-top:2px;">${esc(store.name.trim())}</div>
+      <div style="color:#ffffff;font-size:13px;margin-top:2px;opacity:0.9;">${esc(store.county)} · ${esc(store.type)}</div>
+    </div>
+    <div style="padding:20px 24px;">
+      <div style="background:${BG};border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:${MUTED};">
+        Order ref <strong style="color:${INK};font-family:monospace;">${esc(orderRef)}</strong>
+      </div>
+      <div style="font-size:13px;color:${INK};margin-bottom:14px;">
+        ${
+          event === "accepted"
+            ? "The courier has accepted this dispatch and will deliver it."
+            : "The courier has delivered this order and uploaded the signed/stamped delivery note."
+        }
+      </div>
+      ${
+        deliveryNoteUrl
+          ? deliveryNoteUrl.toLowerCase().endsWith(".pdf")
+            ? `<a href="${deliveryNoteUrl}" style="display:inline-block;font-size:13px;font-weight:600;color:${GREEN_DARK};background:#EEF7DE;border-radius:8px;padding:10px 14px;text-decoration:none;">📄 View delivery note (PDF)</a>`
+            : `<img src="${deliveryNoteUrl}" alt="Delivery note" style="max-width:100%;border-radius:8px;border:1px solid ${BORDER};" />`
+          : ""
+      }
+    </div>
+  </div>
+</div>`;
+
+    const { Resend } = await import("resend");
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: NOTIFY_EMAIL,
+      cc: [managerEmail, COURIER_EMAIL].filter((e): e is string => !!e),
+      subject,
+      html,
+      text,
+    });
+  } catch {
+    // Bonus notification — never block the courier's action on this.
   }
 }

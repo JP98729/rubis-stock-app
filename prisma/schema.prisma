@@ -68,6 +68,7 @@ model Store {
   stocktakes    Stocktake[]
   movements     Movement[]
   lpoDocuments  LpoDocument[]
+  courierDispatches CourierDispatch[]
   messages   Message[]
 
   @@index([county])
@@ -119,6 +120,31 @@ model LpoDocument {
   /// mapped Odoo customer yet.
   odooSaleOrderId   Int?
   odooSaleOrderName String?
+
+  store Store @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+}
+
+/// One row per order dispatch sent to the courier — created when Place Order or an
+/// LPO upload fires. The id doubles as an unguessable link token: the courier gets
+/// "/courier/<id>" in their email and needs no account to act on it.
+model CourierDispatch {
+  id           String @id @default(cuid())
+  storeId      Int
+  orderRef     String
+  itemsSummary String
+
+  odooSaleOrderId   Int?
+  odooSaleOrderName String?
+
+  status     String    @default("pending") // "pending" | "accepted" | "delivered"
+  acceptedAt DateTime?
+
+  deliveryNoteUrl String?
+  deliveredAt     DateTime?
+
+  createdAt DateTime @default(now())
 
   store Store @relation(fields: [storeId], references: [id])
 
