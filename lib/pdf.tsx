@@ -65,6 +65,18 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+/** Wraps a JPEG/PNG photo into a single-page PDF, so a phone photo can be delivered as a PDF file. */
+export async function renderPhotoAsPdf(imageBuffer: Buffer): Promise<Buffer> {
+  return renderToBuffer(
+    <Document>
+      <Page size="A4" style={{ padding: 24 }}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text */}
+        <Image src={imageBuffer} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+      </Page>
+    </Document>
+  );
+}
+
 export async function renderStocktakeSummaryPdf(
   store: { name: string; county: string; type: string },
   entry: {

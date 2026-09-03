@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { uploadFile } from "@/lib/storage";
+import { renderPhotoAsPdf } from "@/lib/pdf";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -32,15 +33,28 @@ export async function POST(request: Request) {
   if (!m) return NextResponse.json({ error: "Only PDF, JPEG, PNG, or WebP files are accepted." }, { status: 400 });
 
   const contentType = m[1];
-  const buffer = Buffer.from(m[2], "base64");
+  let buffer = Buffer.from(m[2], "base64");
   if (buffer.byteLength > MAX_BYTES) {
     return NextResponse.json({ error: "That file is too large (8MB max)." }, { status: 413 });
   }
 
+  // Waybills and delivery notes must be received as PDFs — a photo (jpeg/png) gets
+  // wrapped into a one-page PDF here. webp isn't supported by the PDF renderer, so
+  // it's left as-is rather than failing the upload.
+  let finalContentType = contentType;
+  if (contentType === "image/jpeg" || contentType === "image/png") {
+    try {
+      buffer = Buffer.from(await renderPhotoAsPdf(buffer));
+      finalContentType = "application/pdf";
+    } catch {
+      // Fall back to the original photo if PDF conversion fails for any reason.
+    }
+  }
+
   const ext =
-    contentType === "application/pdf" ? "pdf" : contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
+    finalContentType === "application/pdf" ? "pdf" : finalContentType === "image/png" ? "png" : finalContentType === "image/webp" ? "webp" : "jpg";
   try {
-    const url = await uploadFile(buffer, `delivery-note.${ext}`, contentType);
+    const url = await uploadFile(buffer, `delivery-note.${ext}`, finalContentType);
     return NextResponse.json({ url });
   } catch (e) {
     return NextResponse.json(
