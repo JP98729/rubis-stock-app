@@ -4,7 +4,9 @@ import { renderStocktakeSummaryPdf, renderMovementSummaryPdf, renderOrderSummary
 
 const NOTIFY_EMAIL = "info@pure-nutritions.com";
 /** Courier service — CC'd on order notifications (Place Order / LPO upload) so they know what to deliver and where. */
+const COURIER_COMPANY = "CMB Bridge Logistics";
 const COURIER_EMAIL = "jprsfortain@gmail.com";
+const COURIER_CC = `${COURIER_COMPANY} <${COURIER_EMAIL}>`;
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Rubis Enjoy <onboarding@resend.dev>";
 const MERCHANDISER_VISIT_FEE_KES = 300;
 
@@ -496,7 +498,7 @@ export async function sendManualOrderEmail(
     "Items ordered:",
     ...items.map((i) => `  ${i.flavour} (${i.sku}): ${i.reorder}`),
     "",
-    courierLink ? `Courier — accept dispatch & upload signed delivery note: ${courierLink}` : "",
+    courierLink ? `${COURIER_COMPANY} — accept dispatch & upload signed delivery note: ${courierLink}` : "",
     signatureUrl ? `Signature: ${signatureUrl}` : "",
   ]
     .filter(Boolean)
@@ -550,7 +552,7 @@ export async function sendManualOrderEmail(
       ${
         courierLink
           ? `<div style="margin-top:16px;text-align:center;">
-               <a href="${courierLink}" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 Courier: Accept & Upload Delivery Note</a>
+               <a href="${courierLink}" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 ${COURIER_COMPANY}: Accept & Upload Delivery Note</a>
              </div>`
           : ""
       }
@@ -579,7 +581,7 @@ export async function sendManualOrderEmail(
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: NOTIFY_EMAIL,
-    cc: [managerEmail, COURIER_EMAIL].filter((e): e is string => !!e),
+    cc: [managerEmail, COURIER_CC].filter((e): e is string => !!e),
     subject,
     html,
     text,
@@ -622,7 +624,7 @@ export async function sendLpoUploadEmail(
         ? ["", "Reorder items:", ...items.map((i) => `  ${i.flavour} (${i.sku}): ${i.reorder}`)].join("\n")
         : "",
       "",
-      courierLink ? `Courier — accept dispatch & upload signed delivery note: ${courierLink}` : "",
+      courierLink ? `${COURIER_COMPANY} — accept dispatch & upload signed delivery note: ${courierLink}` : "",
     ]
       .filter(Boolean)
       .join("\n");
@@ -680,7 +682,7 @@ export async function sendLpoUploadEmail(
       ${
         courierLink
           ? `<div style="margin-top:16px;text-align:center;">
-               <a href="${courierLink}" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 Courier: Accept & Upload Delivery Note</a>
+               <a href="${courierLink}" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 ${COURIER_COMPANY}: Accept & Upload Delivery Note</a>
              </div>`
           : ""
       }
@@ -696,7 +698,7 @@ export async function sendLpoUploadEmail(
     await resend.emails.send({
       from: FROM_EMAIL,
       to: NOTIFY_EMAIL,
-      cc: [managerEmail, COURIER_EMAIL].filter((e): e is string => !!e),
+      cc: [managerEmail, COURIER_CC].filter((e): e is string => !!e),
       subject,
       html,
       text,
@@ -725,10 +727,10 @@ export async function sendCourierStatusEmail(
     const docLabel = event === "waybill" ? "Waybill" : "Delivery note";
     const label =
       event === "accepted"
-        ? "Courier accepted dispatch"
+        ? `${COURIER_COMPANY} accepted dispatch`
         : event === "waybill"
-        ? "Courier uploaded the waybill"
-        : "Courier delivered — note uploaded";
+        ? `${COURIER_COMPANY} uploaded the waybill`
+        : `${COURIER_COMPANY} delivered — note uploaded`;
     const subject = `${label} — ${store.name.trim()} — ${orderRef}`;
     const text = [
       `Order reference: ${orderRef}`,
@@ -790,7 +792,7 @@ export async function sendCourierStatusEmail(
     await resend.emails.send({
       from: FROM_EMAIL,
       to: NOTIFY_EMAIL,
-      cc: [managerEmail, COURIER_EMAIL].filter((e): e is string => !!e),
+      cc: [managerEmail, COURIER_CC].filter((e): e is string => !!e),
       subject,
       html,
       text,

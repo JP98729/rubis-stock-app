@@ -41,7 +41,7 @@ export default async function CourierDispatchPage({ params }: { params: Promise<
         <img src={RUBIS_LOGO} alt="Rubis" className="h-9 w-9 rounded-lg object-cover" />
         <div>
           <div className="font-bold text-sm">Rubis Enjoy — Courier</div>
-          <div className="text-[11px] text-gray-400">Order ref {dispatch.orderRef}</div>
+          <div className="text-[11px] text-gray-400">CMB Bridge Logistics · Order ref {dispatch.orderRef}</div>
         </div>
       </div>
 
