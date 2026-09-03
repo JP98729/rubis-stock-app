@@ -69,7 +69,12 @@ export default async function CourierDispatchPage({ params }: { params: Promise<
         </div>
       )}
 
-      <CourierActions dispatchId={dispatch.id} initialStatus={dispatch.status} initialDeliveryNoteUrl={dispatch.deliveryNoteUrl} />
+      <CourierActions
+        dispatchId={dispatch.id}
+        initialStatus={dispatch.status}
+        initialDeliveryNoteUrl={dispatch.deliveryNoteUrl}
+        initialWaybillUrl={dispatch.waybillUrl}
+      />
     </div>
   );
 }

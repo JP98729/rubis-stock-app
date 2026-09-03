@@ -144,6 +144,9 @@ model CourierDispatch {
   deliveryNoteUrl String?
   deliveredAt     DateTime?
 
+  waybillUrl        String?
+  waybillUploadedAt DateTime?
+
   createdAt DateTime @default(now())
 
   store Store @relation(fields: [storeId], references: [id])

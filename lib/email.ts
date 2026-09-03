@@ -715,20 +715,30 @@ export async function sendLpoUploadEmail(
 export async function sendCourierStatusEmail(
   store: { name: string; county: string; type: string },
   orderRef: string,
-  event: "accepted" | "delivered",
+  event: "accepted" | "delivered" | "waybill",
   managerEmail: string | null,
-  deliveryNoteUrl?: string | null
+  fileUrl?: string | null
 ): Promise<void> {
   if (!process.env.RESEND_API_KEY) return;
 
   try {
-    const label = event === "accepted" ? "Courier accepted dispatch" : "Courier delivered — note uploaded";
+    const docLabel = event === "waybill" ? "Waybill" : "Delivery note";
+    const label =
+      event === "accepted"
+        ? "Courier accepted dispatch"
+        : event === "waybill"
+        ? "Courier uploaded the waybill"
+        : "Courier delivered — note uploaded";
     const subject = `${label} — ${store.name.trim()} — ${orderRef}`;
     const text = [
       `Order reference: ${orderRef}`,
       `Branch: ${store.name.trim()} (${store.county} · ${store.type})`,
-      event === "accepted" ? "The courier has accepted this dispatch." : "The courier has delivered and uploaded the signed/stamped delivery note.",
-      deliveryNoteUrl ? `Delivery note: ${deliveryNoteUrl}` : "",
+      event === "accepted"
+        ? "The courier has accepted this dispatch."
+        : event === "waybill"
+        ? "The courier has uploaded the waybill."
+        : "The courier has delivered and uploaded the signed/stamped delivery note.",
+      fileUrl ? `${docLabel}: ${fileUrl}` : "",
     ]
       .filter(Boolean)
       .join("\n");
@@ -759,14 +769,16 @@ export async function sendCourierStatusEmail(
         ${
           event === "accepted"
             ? "The courier has accepted this dispatch and will deliver it."
+            : event === "waybill"
+            ? "The courier has uploaded the waybill for this order."
             : "The courier has delivered this order and uploaded the signed/stamped delivery note."
         }
       </div>
       ${
-        deliveryNoteUrl
-          ? deliveryNoteUrl.toLowerCase().endsWith(".pdf")
-            ? `<a href="${deliveryNoteUrl}" style="display:inline-block;font-size:13px;font-weight:600;color:${GREEN_DARK};background:#EEF7DE;border-radius:8px;padding:10px 14px;text-decoration:none;">📄 View delivery note (PDF)</a>`
-            : `<img src="${deliveryNoteUrl}" alt="Delivery note" style="max-width:100%;border-radius:8px;border:1px solid ${BORDER};" />`
+        fileUrl
+          ? fileUrl.toLowerCase().endsWith(".pdf")
+            ? `<a href="${fileUrl}" style="display:inline-block;font-size:13px;font-weight:600;color:${GREEN_DARK};background:#EEF7DE;border-radius:8px;padding:10px 14px;text-decoration:none;">📄 View ${docLabel.toLowerCase()} (PDF)</a>`
+            : `<img src="${fileUrl}" alt="${docLabel}" style="max-width:100%;border-radius:8px;border:1px solid ${BORDER};" />`
           : ""
       }
     </div>

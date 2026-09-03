@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 import { Camera, CheckCircle2, FileText } from "lucide-react";
 import { GREEN, GREEN_DARK } from "@/lib/brand";
-import { acceptCourierDispatch, uploadCourierDeliveryNote } from "@/app/actions/courier";
+import { acceptCourierDispatch, uploadCourierDeliveryNote, uploadCourierWaybill } from "@/app/actions/courier";
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -18,17 +18,23 @@ export function CourierActions({
   dispatchId,
   initialStatus,
   initialDeliveryNoteUrl,
+  initialWaybillUrl,
 }: {
   dispatchId: string;
   initialStatus: string;
   initialDeliveryNoteUrl: string | null;
+  initialWaybillUrl: string | null;
 }) {
   const cameraInputId = useId();
   const libraryInputId = useId();
+  const waybillCameraInputId = useId();
+  const waybillLibraryInputId = useId();
   const [status, setStatus] = useState(initialStatus);
   const [deliveryNoteUrl, setDeliveryNoteUrl] = useState(initialDeliveryNoteUrl);
+  const [waybillUrl, setWaybillUrl] = useState(initialWaybillUrl);
   const [acceptBusy, setAcceptBusy] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
+  const [waybillBusy, setWaybillBusy] = useState(false);
   const [error, setError] = useState("");
 
   async function handleAccept() {
@@ -68,7 +74,32 @@ export function CourierActions({
     e.target.value = "";
   }
 
+  async function handleWaybillFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setWaybillBusy(true);
+    setError("");
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      const uploadRes = await fetch("/api/upload-courier", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dispatchId, dataUrl }),
+      });
+      const uploadJson = (await uploadRes.json()) as { url?: string; error?: string };
+      if (!uploadRes.ok || !uploadJson.url) throw new Error(uploadJson.error || "Upload failed");
+      const result = await uploadCourierWaybill(dispatchId, uploadJson.url);
+      if (!result.ok) throw new Error(result.error);
+      setWaybillUrl(uploadJson.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+    }
+    setWaybillBusy(false);
+    e.target.value = "";
+  }
+
   const isPdf = !!deliveryNoteUrl && deliveryNoteUrl.toLowerCase().endsWith(".pdf");
+  const isWaybillPdf = !!waybillUrl && waybillUrl.toLowerCase().endsWith(".pdf");
 
   return (
     <div className="flex flex-col gap-4">
@@ -145,6 +176,66 @@ export function CourierActions({
                 accept="image/*,application/pdf"
                 className="hidden"
                 onChange={handleFile}
+              />
+            </label>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="text-sm font-semibold mb-2">3. Upload the waybill</div>
+        {waybillUrl ? (
+          <div className="flex items-center gap-2.5">
+            {isWaybillPdf ? (
+              <a
+                href={waybillUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-16 h-16 rounded-lg border border-green-200 bg-white flex flex-col items-center justify-center gap-0.5"
+              >
+                <FileText size={22} style={{ color: GREEN_DARK }} />
+                <span className="text-[9px] font-semibold" style={{ color: GREEN_DARK }}>
+                  PDF
+                </span>
+              </a>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={waybillUrl} alt="Waybill" className="w-16 h-16 rounded-lg object-cover border border-green-200" />
+            )}
+            <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: GREEN_DARK }}>
+              <CheckCircle2 size={16} className="shrink-0" />
+              Waybill uploaded
+            </div>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <label
+              htmlFor={waybillCameraInputId}
+              className="flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-blue-300 bg-blue-50 rounded-lg py-3 text-sm font-semibold cursor-pointer"
+              style={{ color: "#1D4ED8" }}
+            >
+              <Camera size={16} /> {waybillBusy ? "Uploading…" : "Take photo"}
+              <input
+                id={waybillCameraInputId}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={handleWaybillFile}
+              />
+            </label>
+            <label
+              htmlFor={waybillLibraryInputId}
+              className="flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-blue-300 bg-blue-50 rounded-lg py-3 text-sm font-semibold cursor-pointer"
+              style={{ color: "#1D4ED8" }}
+            >
+              {waybillBusy ? "Uploading…" : "Scan / choose file"}
+              <input
+                id={waybillLibraryInputId}
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                onChange={handleWaybillFile}
               />
             </label>
           </div>

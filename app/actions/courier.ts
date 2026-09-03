@@ -76,3 +76,35 @@ export async function uploadCourierDeliveryNote(id: string, url: string): Promis
   revalidatePath(`/courier/${id}`);
   return { ok: true };
 }
+
+export async function uploadCourierWaybill(id: string, url: string): Promise<SimpleResult> {
+  const dispatch = await loadDispatch(id);
+  if (!dispatch) return { ok: false, error: "This dispatch link is invalid." };
+  if (!url) return { ok: false, error: "Upload a photo or PDF of the waybill first." };
+
+  await prisma.courierDispatch.update({
+    where: { id },
+    data: { waybillUrl: url, waybillUploadedAt: new Date() },
+  });
+
+  // Best-effort: put the waybill on the Sales Order's paperclip icon in Odoo too.
+  if (dispatch.odooSaleOrderId) {
+    const ext = url.toLowerCase().endsWith(".pdf") ? "pdf" : "jpg";
+    await attachFileToSaleOrder(
+      dispatch.odooSaleOrderId,
+      url,
+      `Waybill ${dispatch.store.name.trim()} ${dispatch.orderRef}.${ext}`
+    );
+  }
+
+  await sendCourierStatusEmail(
+    dispatch.store,
+    dispatch.orderRef,
+    "waybill",
+    dispatch.store.contactEmail || dispatch.store.seedEmail || null,
+    url
+  );
+
+  revalidatePath(`/courier/${id}`);
+  return { ok: true };
+}
