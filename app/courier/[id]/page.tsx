@@ -29,10 +29,9 @@ export default async function CourierDispatchPage({ params }: { params: Promise<
   }
 
   const phone = dispatch.store.contactPhone || dispatch.store.seedPhone || "";
-  const items = dispatch.itemsSummary
-    .split(", ")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  // Rounds to 2 decimals and strips trailing zeros (avoids Odoo's raw floats like 47.67000000000001).
+  const weightKg =
+    dispatch.shippingWeightKg != null ? Math.round(dispatch.shippingWeightKg * 100) / 100 : null;
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6 max-w-lg mx-auto">
@@ -55,20 +54,18 @@ export default async function CourierDispatchPage({ params }: { params: Promise<
         {dispatch.odooSaleOrderName && (
           <div className="text-xs text-gray-500 mt-1">Odoo order: {dispatch.odooSaleOrderName}</div>
         )}
-        {dispatch.shippingWeightKg != null && (
-          <div className="text-xs text-gray-500 mt-1">Shipping weight: {dispatch.shippingWeightKg} kg</div>
-        )}
         <div className="text-[11px] text-gray-400 mt-2">Placed {timeAgo(dispatch.createdAt)}</div>
       </div>
 
-      {items.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4">
-          <div className="text-sm font-semibold mb-2">Items to deliver</div>
-          <ul className="text-sm text-gray-700 flex flex-col gap-1">
-            {items.map((it, i) => (
-              <li key={i}>{it}</li>
-            ))}
-          </ul>
+      {weightKg != null && (
+        <div className="rounded-xl p-4 mb-4 text-center" style={{ background: "#EEF7DE" }}>
+          <div className="text-3xl">📦</div>
+          <div className="text-[11px] font-bold uppercase tracking-wide mt-1" style={{ color: "#4E8A00" }}>
+            Shipping weight
+          </div>
+          <div className="text-2xl font-bold mt-0.5" style={{ color: "#4E8A00" }}>
+            {weightKg} kg
+          </div>
         </div>
       )}
 

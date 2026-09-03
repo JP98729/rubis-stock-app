@@ -147,7 +147,7 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
       courierLink
     );
     if (courierLink) {
-      await sendCourierDispatchEmail(store, orderRef, orderItems, shippingWeightKg, courierLink);
+      await sendCourierDispatchEmail(store, orderRef, shippingWeightKg, courierLink);
     }
   }
 
@@ -226,7 +226,7 @@ export async function placeManualOrder(
       courierLink
     );
     if (courierLink) {
-      await sendCourierDispatchEmail(store, orderRef, items, shippingWeightKg, courierLink);
+      await sendCourierDispatchEmail(store, orderRef, shippingWeightKg, courierLink);
     }
   } catch (e) {
     return {

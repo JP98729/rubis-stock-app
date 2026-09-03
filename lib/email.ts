@@ -711,17 +711,21 @@ export async function sendLpoUploadEmail(
   }
 }
 
+/** Rounds to 2 decimals and strips trailing zeros (avoids Odoo's raw floats like 47.67000000000001). */
+function formatKg(kg: number): string {
+  return (Math.round(kg * 100) / 100).toString();
+}
+
 /**
- * Sent directly to the courier company when a new order comes in — item names only,
- * no quantities (the courier doesn't need the per-product count breakdown), plus
- * Odoo's computed shipping weight and the link to accept/upload the delivery note.
- * Bonus notification: the order itself is already saved either way, so a send
- * failure here is swallowed, not thrown.
+ * Sent directly to the courier company when a new order comes in — no product
+ * names or quantities at all (the courier shouldn't see what's in the box), just
+ * the branch, Odoo's computed shipping weight, and the link to accept/upload the
+ * delivery note. Bonus notification: the order itself is already saved either way,
+ * so a send failure here is swallowed, not thrown.
  */
 export async function sendCourierDispatchEmail(
   store: { name: string; county: string; type: string; address?: string },
   orderRef: string,
-  items: Array<{ sku: string; flavour: string }>,
   shippingWeightKg: number | null,
   courierLink: string
 ): Promise<void> {
@@ -733,22 +737,12 @@ export async function sendCourierDispatchEmail(
       `Order reference: ${orderRef}`,
       `Branch: ${store.name.trim()} (${store.county} · ${store.type})`,
       store.address ? `Address: ${store.address}` : "",
-      shippingWeightKg != null ? `Shipping weight: ${shippingWeightKg} kg` : "",
-      "",
-      "Items:",
-      ...items.map((i) => `  ${i.flavour} (${i.sku})`),
+      shippingWeightKg != null ? `Shipping weight: ${formatKg(shippingWeightKg)} kg` : "",
       "",
       `Accept dispatch & upload delivery note: ${courierLink}`,
     ]
       .filter(Boolean)
       .join("\n");
-
-    const itemRows = items
-      .map(
-        (i) =>
-          `<tr><td style="padding:6px 10px;border-bottom:1px solid ${BORDER};font-size:13px;color:${INK};">${esc(i.flavour)}<div style="font-size:11px;color:${MUTED};">${esc(i.sku)}</div></td></tr>`
-      )
-      .join("");
 
     const html = `
 <div style="background:${BG};padding:24px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
@@ -769,16 +763,19 @@ export async function sendCourierDispatchEmail(
       <div style="color:#ffffff;font-size:13px;margin-top:2px;opacity:0.9;">${esc(store.county)} · ${esc(store.type)}${store.address ? ` · ${esc(store.address)}` : ""}</div>
     </div>
     <div style="padding:20px 24px;">
-      <div style="background:${BG};border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;font-size:12px;">
-        <span style="color:${MUTED};">Order ref <strong style="color:${INK};font-family:monospace;">${esc(orderRef)}</strong></span>
-        ${
-          shippingWeightKg != null
-            ? `<span style="color:${MUTED};">Shipping weight <strong style="color:${INK};">${shippingWeightKg} kg</strong></span>`
-            : ""
-        }
+      <div style="background:${BG};border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:${MUTED};">
+        Order ref <strong style="color:${INK};font-family:monospace;">${esc(orderRef)}</strong>
       </div>
-      <table role="presentation" width="100%" style="border-collapse:collapse;">${itemRows}</table>
-      <div style="margin-top:16px;text-align:center;">
+      ${
+        shippingWeightKg != null
+          ? `<div style="background:#EEF7DE;border-radius:8px;padding:16px;margin-bottom:16px;text-align:center;">
+               <div style="font-size:28px;">📦</div>
+               <div style="font-size:11px;color:${GREEN_DARK};text-transform:uppercase;letter-spacing:0.04em;font-weight:700;margin-top:4px;">Shipping weight</div>
+               <div style="font-size:24px;font-weight:700;color:${GREEN_DARK};margin-top:2px;">${formatKg(shippingWeightKg)} kg</div>
+             </div>`
+          : ""
+      }
+      <div style="text-align:center;">
         <a href="${courierLink}" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 Accept & Upload Delivery Note</a>
       </div>
     </div>
