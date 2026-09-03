@@ -797,7 +797,9 @@ export async function sendCourierStatusEmail(
       html,
       text,
     });
-  } catch {
-    // Bonus notification — never block the courier's action on this.
+  } catch (e) {
+    // Bonus notification — never block the courier's action on this — but log so a
+    // silent Resend failure (bad address, rate limit, etc.) is still visible.
+    console.error("sendCourierStatusEmail failed:", e instanceof Error ? e.message : e);
   }
 }
