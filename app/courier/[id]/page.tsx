@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { CourierActions } from "@/components/courier/courier-actions";
 import { RUBIS_LOGO } from "@/lib/brand";
 import { timeAgo } from "@/lib/utils";
+import { PICKUP_ADDRESS } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,12 @@ export default async function CourierDispatchPage({ params }: { params: Promise<
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4">
+        <div className="text-[11px] font-bold uppercase tracking-wide text-gray-400">📍 Collect from</div>
+        <div className="text-sm text-gray-800 mt-0.5">{PICKUP_ADDRESS}</div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4">
+        <div className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-1">🏁 Deliver to</div>
         <div className="font-bold text-base">{dispatch.store.name.trim()}</div>
         <div className="text-xs text-gray-500 mt-0.5">
           {dispatch.store.county} · {dispatch.store.type}

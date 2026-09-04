@@ -7,6 +7,8 @@ const NOTIFY_EMAIL = "info@pure-nutritions.com";
 const COURIER_COMPANY = "CMB Bridge Logistics";
 const COURIER_EMAIL = "jprsfortain@gmail.com";
 const COURIER_CC = `${COURIER_COMPANY} <${COURIER_EMAIL}>`;
+/** Fixed pickup point where the courier collects the box from — Pure Nutrition's own location, not the branch. */
+export const PICKUP_ADDRESS = "Upper Kabete, Ndumbuini, Kwa Daggy, Nairobi";
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Rubis Enjoy <onboarding@resend.dev>";
 const MERCHANDISER_VISIT_FEE_KES = 300;
 
@@ -735,8 +737,9 @@ export async function sendCourierDispatchEmail(
     const subject = `New dispatch — ${store.name.trim()} — ${orderRef}`;
     const text = [
       `Order reference: ${orderRef}`,
-      `Branch: ${store.name.trim()} (${store.county} · ${store.type})`,
-      store.address ? `Address: ${store.address}` : "",
+      `Collect from: ${PICKUP_ADDRESS}`,
+      `Deliver to: ${store.name.trim()} (${store.county} · ${store.type})`,
+      store.address ? `Delivery address: ${store.address}` : "",
       shippingWeightKg != null ? `Shipping weight: ${formatKg(shippingWeightKg)} kg` : "",
       "",
       `Accept dispatch & upload delivery note: ${courierLink}`,
@@ -765,6 +768,14 @@ export async function sendCourierDispatchEmail(
     <div style="padding:20px 24px;">
       <div style="background:${BG};border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:${MUTED};">
         Order ref <strong style="color:${INK};font-family:monospace;">${esc(orderRef)}</strong>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:${MUTED};text-transform:uppercase;letter-spacing:0.04em;font-weight:700;">📍 Collect from</div>
+        <div style="font-size:14px;color:${INK};margin-top:2px;">${esc(PICKUP_ADDRESS)}</div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:${MUTED};text-transform:uppercase;letter-spacing:0.04em;font-weight:700;">🏁 Deliver to</div>
+        <div style="font-size:14px;color:${INK};margin-top:2px;">${esc(store.name.trim())}${store.address ? ` — ${esc(store.address)}` : ""}</div>
       </div>
       ${
         shippingWeightKg != null
