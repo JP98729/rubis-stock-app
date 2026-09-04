@@ -775,9 +775,12 @@ export async function sendCourierDispatchEmail(
       <div style="background:${BG};border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:${MUTED};">
         Order ref <strong style="color:${INK};font-family:monospace;">${esc(orderRef)}</strong>
       </div>
-      <div style="margin-bottom:14px;">
-        <div style="font-size:11px;color:${MUTED};text-transform:uppercase;letter-spacing:0.04em;font-weight:700;">📍 Collect from</div>
-        <div style="font-size:14px;color:${INK};margin-top:2px;">${esc(PICKUP_ADDRESS)}</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <img src="${PURE_LOGO}" alt="Pure Nutrition" width="40" height="40" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;" />
+        <div>
+          <div style="font-size:11px;color:${MUTED};text-transform:uppercase;letter-spacing:0.04em;font-weight:700;">📍 Collect from</div>
+          <div style="font-size:14px;color:${INK};margin-top:2px;">${esc(PICKUP_ADDRESS)}</div>
+        </div>
       </div>
       <div style="margin-bottom:14px;">
         <div style="font-size:11px;color:${MUTED};text-transform:uppercase;letter-spacing:0.04em;font-weight:700;">🏁 Deliver to</div>

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { CourierActions } from "@/components/courier/courier-actions";
-import { RUBIS_LOGO } from "@/lib/brand";
+import { RUBIS_LOGO, PURE_LOGO } from "@/lib/brand";
 import { timeAgo } from "@/lib/utils";
 import { PICKUP_ADDRESS } from "@/lib/email";
 
@@ -45,9 +45,13 @@ export default async function CourierDispatchPage({ params }: { params: Promise<
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4">
-        <div className="text-[11px] font-bold uppercase tracking-wide text-gray-400">📍 Collect from</div>
-        <div className="text-sm text-gray-800 mt-0.5">{PICKUP_ADDRESS}</div>
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4 flex items-center gap-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={PURE_LOGO} alt="Pure Nutrition" className="h-10 w-10 rounded-lg object-cover shrink-0" />
+        <div>
+          <div className="text-[11px] font-bold uppercase tracking-wide text-gray-400">📍 Collect from</div>
+          <div className="text-sm text-gray-800 mt-0.5">{PICKUP_ADDRESS}</div>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4">
