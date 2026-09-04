@@ -19,25 +19,42 @@ async function loadDispatch(id: string) {
   });
 }
 
+async function markAccepted(dispatch: NonNullable<Awaited<ReturnType<typeof loadDispatch>>>): Promise<void> {
+  await prisma.courierDispatch.update({
+    where: { id: dispatch.id },
+    data: { status: "accepted", acceptedAt: new Date() },
+  });
+  await sendCourierStatusEmail(
+    dispatch.store,
+    dispatch.orderRef,
+    "accepted",
+    dispatch.store.contactEmail || dispatch.store.seedEmail || null
+  );
+}
+
 export async function acceptCourierDispatch(id: string): Promise<SimpleResult> {
   const dispatch = await loadDispatch(id);
   if (!dispatch) return { ok: false, error: "This dispatch link is invalid." };
 
   if (dispatch.status === "pending") {
-    await prisma.courierDispatch.update({
-      where: { id },
-      data: { status: "accepted", acceptedAt: new Date() },
-    });
-    await sendCourierStatusEmail(
-      dispatch.store,
-      dispatch.orderRef,
-      "accepted",
-      dispatch.store.contactEmail || dispatch.store.seedEmail || null
-    );
+    await markAccepted(dispatch);
   }
 
   revalidatePath(`/courier/${id}`);
   return { ok: true };
+}
+
+/**
+ * Same accept logic as acceptCourierDispatch, used when the courier page itself
+ * auto-accepts from the email's ?accept=1 link. Skips revalidatePath — calling that
+ * mid-render is unsupported in Next.js, and it's unnecessary here anyway since the
+ * page re-reads fresh state within the same request.
+ */
+export async function acceptCourierDispatchDuringRender(id: string): Promise<void> {
+  const dispatch = await loadDispatch(id);
+  if (dispatch && dispatch.status === "pending") {
+    await markAccepted(dispatch);
+  }
 }
 
 export async function uploadCourierDeliveryNote(id: string, url: string): Promise<SimpleResult> {

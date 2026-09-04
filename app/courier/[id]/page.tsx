@@ -3,7 +3,7 @@ import { CourierActions } from "@/components/courier/courier-actions";
 import { RUBIS_LOGO, PURE_LOGO } from "@/lib/brand";
 import { timeAgo } from "@/lib/utils";
 import { PICKUP_ADDRESS } from "@/lib/email";
-import { acceptCourierDispatch } from "@/app/actions/courier";
+import { acceptCourierDispatchDuringRender } from "@/app/actions/courier";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +40,7 @@ export default async function CourierDispatchPage({
   // The email's "Accept & Upload" button links here with ?accept=1, so tapping it
   // from the inbox accepts the dispatch in one tap — no separate button needed.
   if (accept === "1" && dispatch.status === "pending") {
-    await acceptCourierDispatch(id);
+    await acceptCourierDispatchDuringRender(id);
     dispatch.status = "accepted";
   }
 
