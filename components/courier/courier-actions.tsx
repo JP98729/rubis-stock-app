@@ -100,6 +100,7 @@ export function CourierActions({
 
   const isPdf = !!deliveryNoteUrl && deliveryNoteUrl.toLowerCase().endsWith(".pdf");
   const isWaybillPdf = !!waybillUrl && waybillUrl.toLowerCase().endsWith(".pdf");
+  const accepted = status !== "pending";
 
   return (
     <div className="flex flex-col gap-4">
@@ -124,7 +125,9 @@ export function CourierActions({
 
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="text-sm font-semibold mb-2">2. Upload the signed &amp; stamped delivery note</div>
-        {deliveryNoteUrl ? (
+        {!accepted ? (
+          <div className="text-xs text-gray-400 italic">Accept the dispatch first.</div>
+        ) : deliveryNoteUrl ? (
           <div className="flex items-center gap-2.5">
             {isPdf ? (
               <a
@@ -184,7 +187,9 @@ export function CourierActions({
 
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="text-sm font-semibold mb-2">3. Upload the waybill</div>
-        {waybillUrl ? (
+        {!accepted ? (
+          <div className="text-xs text-gray-400 italic">Accept the dispatch first.</div>
+        ) : waybillUrl ? (
           <div className="flex items-center gap-2.5">
             {isWaybillPdf ? (
               <a

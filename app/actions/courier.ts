@@ -43,6 +43,7 @@ export async function acceptCourierDispatch(id: string): Promise<SimpleResult> {
 export async function uploadCourierDeliveryNote(id: string, url: string): Promise<SimpleResult> {
   const dispatch = await loadDispatch(id);
   if (!dispatch) return { ok: false, error: "This dispatch link is invalid." };
+  if (dispatch.status === "pending") return { ok: false, error: "Accept the dispatch before uploading the delivery note." };
   if (!url) return { ok: false, error: "Upload a photo or PDF of the signed delivery note first." };
 
   await prisma.courierDispatch.update({
@@ -80,6 +81,7 @@ export async function uploadCourierDeliveryNote(id: string, url: string): Promis
 export async function uploadCourierWaybill(id: string, url: string): Promise<SimpleResult> {
   const dispatch = await loadDispatch(id);
   if (!dispatch) return { ok: false, error: "This dispatch link is invalid." };
+  if (dispatch.status === "pending") return { ok: false, error: "Accept the dispatch before uploading the waybill." };
   if (!url) return { ok: false, error: "Upload a photo or PDF of the waybill first." };
 
   await prisma.courierDispatch.update({
