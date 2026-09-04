@@ -5,7 +5,7 @@ import { renderStocktakeSummaryPdf, renderMovementSummaryPdf, renderOrderSummary
 const NOTIFY_EMAIL = "info@pure-nutritions.com";
 /** Courier service — CC'd on order notifications (Place Order / LPO upload) so they know what to deliver and where. */
 const COURIER_COMPANY = "CMB Bridge Logistics";
-const COURIER_EMAIL = "jprsfortain@gmail.com";
+const COURIER_EMAIL = "fortain.jp@gmail.com";
 const COURIER_CC = `${COURIER_COMPANY} <${COURIER_EMAIL}>`;
 /** Fixed pickup point where the courier collects the box from — Pure Nutrition's own location, not the branch. */
 export const PICKUP_ADDRESS = "Upper Kabete, Ndumbuini, Kwa Daggy, Nairobi";
