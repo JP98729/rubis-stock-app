@@ -273,7 +273,7 @@ export async function sendStocktakeSummaryEmail(
   try {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: NOTIFY_EMAIL,
       subject,
@@ -289,8 +289,10 @@ export async function sendStocktakeSummaryEmail(
           ]
         : undefined,
     });
-  } catch {
+    if (error) console.error("sendStocktakeSummaryEmail failed:", error.message);
+  } catch (e) {
     // Email is a bonus notification, not part of the submission contract — never throw.
+    console.error("sendStocktakeSummaryEmail failed:", e instanceof Error ? e.message : e);
   }
 
   return pdfBuffer;
@@ -448,7 +450,7 @@ export async function sendMovementSummaryEmail(
     } catch {
       // The PDF is a bonus attachment — never let a rendering failure block the email.
     }
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: NOTIFY_EMAIL,
       subject,
@@ -464,8 +466,10 @@ export async function sendMovementSummaryEmail(
           ]
         : undefined,
     });
-  } catch {
+    if (error) console.error("sendMovementSummaryEmail failed:", error.message);
+  } catch (e) {
     // Email is a bonus notification, not part of the submission contract — never throw.
+    console.error("sendMovementSummaryEmail failed:", e instanceof Error ? e.message : e);
   }
 }
 
@@ -700,7 +704,7 @@ export async function sendLpoUploadEmail(
 
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: NOTIFY_EMAIL,
       cc: [managerEmail].filter((e): e is string => !!e),
@@ -708,8 +712,10 @@ export async function sendLpoUploadEmail(
       html,
       text,
     });
-  } catch {
+    if (error) console.error("sendLpoUploadEmail failed:", error.message);
+  } catch (e) {
     // Bonus notification — the LPO document itself is already saved either way.
+    console.error("sendLpoUploadEmail failed:", e instanceof Error ? e.message : e);
   }
 }
 
@@ -795,13 +801,15 @@ export async function sendCourierDispatchEmail(
 
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: COURIER_EMAIL,
       subject,
       html,
       text,
     });
+    if (error) throw new Error(error.message || "Resend rejected the courier dispatch email.");
+    console.log("sendCourierDispatchEmail sent:", data?.id);
   } catch (e) {
     console.error("sendCourierDispatchEmail failed:", e instanceof Error ? e.message : e);
   }
@@ -888,7 +896,7 @@ export async function sendCourierStatusEmail(
 
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: NOTIFY_EMAIL,
       cc: [managerEmail, COURIER_CC].filter((e): e is string => !!e),
@@ -896,6 +904,8 @@ export async function sendCourierStatusEmail(
       html,
       text,
     });
+    if (error) throw new Error(error.message || "Resend rejected the courier status email.");
+    console.log("sendCourierStatusEmail sent:", data?.id);
   } catch (e) {
     // Bonus notification — never block the courier's action on this — but log so a
     // silent Resend failure (bad address, rate limit, etc.) is still visible.
