@@ -3,6 +3,7 @@ import { CourierActions } from "@/components/courier/courier-actions";
 import { RUBIS_LOGO, PURE_LOGO } from "@/lib/brand";
 import { timeAgo } from "@/lib/utils";
 import { PICKUP_ADDRESS } from "@/lib/email";
+import { acceptCourierDispatch } from "@/app/actions/courier";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +12,15 @@ export const dynamic = "force-dynamic";
  * order email) is the courier's only credential, same trust model as a package
  * tracking link.
  */
-export default async function CourierDispatchPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function CourierDispatchPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ accept?: string }>;
+}) {
   const { id } = await params;
+  const { accept } = await searchParams;
   const dispatch = await prisma.courierDispatch.findUnique({
     where: { id },
     include: { store: { select: { name: true, county: true, type: true, address: true, contactPhone: true, seedPhone: true } } },
@@ -27,6 +35,13 @@ export default async function CourierDispatchPage({ params }: { params: Promise<
         </div>
       </div>
     );
+  }
+
+  // The email's "Accept & Upload" button links here with ?accept=1, so tapping it
+  // from the inbox accepts the dispatch in one tap — no separate button needed.
+  if (accept === "1" && dispatch.status === "pending") {
+    await acceptCourierDispatch(id);
+    dispatch.status = "accepted";
   }
 
   const phone = dispatch.store.contactPhone || dispatch.store.seedPhone || "";

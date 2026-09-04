@@ -506,7 +506,7 @@ export async function sendManualOrderEmail(
     "Items ordered:",
     ...items.map((i) => `  ${i.flavour} (${i.sku}): ${i.reorder}`),
     "",
-    courierLink ? `${COURIER_COMPANY} — accept dispatch & upload signed delivery note: ${courierLink}` : "",
+    courierLink ? `${COURIER_COMPANY} — accept dispatch & upload signed delivery note: ${courierLink}?accept=1` : "",
     signatureUrl ? `Signature: ${signatureUrl}` : "",
   ]
     .filter(Boolean)
@@ -561,7 +561,7 @@ export async function sendManualOrderEmail(
       ${
         courierLink
           ? `<div style="margin-top:16px;text-align:center;">
-               <a href="${courierLink}" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 ${COURIER_COMPANY}: Accept & Upload Delivery Note</a>
+               <a href="${courierLink}?accept=1" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 ${COURIER_COMPANY}: Accept & Upload Delivery Note</a>
              </div>`
           : ""
       }
@@ -633,7 +633,7 @@ export async function sendLpoUploadEmail(
         ? ["", "Reorder items:", ...items.map((i) => `  ${i.flavour} (${i.sku}): ${i.reorder}`)].join("\n")
         : "",
       "",
-      courierLink ? `${COURIER_COMPANY} — accept dispatch & upload signed delivery note: ${courierLink}` : "",
+      courierLink ? `${COURIER_COMPANY} — accept dispatch & upload signed delivery note: ${courierLink}?accept=1` : "",
     ]
       .filter(Boolean)
       .join("\n");
@@ -691,7 +691,7 @@ export async function sendLpoUploadEmail(
       ${
         courierLink
           ? `<div style="margin-top:16px;text-align:center;">
-               <a href="${courierLink}" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 ${COURIER_COMPANY}: Accept & Upload Delivery Note</a>
+               <a href="${courierLink}?accept=1" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 ${COURIER_COMPANY}: Accept & Upload Delivery Note</a>
              </div>`
           : ""
       }
@@ -748,7 +748,7 @@ export async function sendCourierDispatchEmail(
       store.address ? `Delivery address: ${store.address}` : "",
       shippingWeightKg != null ? `Shipping weight: ${formatKg(shippingWeightKg)} kg` : "",
       "",
-      `Accept dispatch & upload delivery note: ${courierLink}`,
+      `Accept dispatch & upload delivery note: ${courierLink}?accept=1`,
     ]
       .filter(Boolean)
       .join("\n");
@@ -796,7 +796,7 @@ export async function sendCourierDispatchEmail(
           : ""
       }
       <div style="text-align:center;">
-        <a href="${courierLink}" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 Accept & Upload Delivery Note</a>
+        <a href="${courierLink}?accept=1" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 Accept & Upload Delivery Note</a>
       </div>
     </div>
   </div>
