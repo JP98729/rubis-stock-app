@@ -304,6 +304,13 @@ export function StocktakeForm({
                   <span className="font-semibold text-gray-600">A007747135E</span>, add the service details{" "}
                   <span className="font-semibold text-gray-600">&quot;Merchandising&quot;</span>, input the quantity and
                   price, then confirm to generate. Screenshot it and upload below.
+                  <a
+                    href="tel:*222%23"
+                    className="mt-2 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold"
+                    style={{ background: GREEN, color: "#ffffff" }}
+                  >
+                    <Phone size={13} /> Dial *222# now
+                  </a>
                 </div>
                 <PlacementPhotoCapture photo={etimsInvoice} onChange={setEtimsInvoice} allowLibrary />
               </label>
