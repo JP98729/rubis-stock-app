@@ -32,10 +32,17 @@ export function Dashboard({
   async function handleSendWhatsApp(id: string) {
     setWaBusyId(id);
     setWaError(null);
+    // Open the tab synchronously, in direct response to the click — Safari (and
+    // other browsers) silently block window.open() called after an awaited
+    // network round-trip, since it no longer counts as a direct user gesture.
+    // Navigate that already-open tab once the wa.me link is ready.
+    const pending = window.open("about:blank", "_blank");
     const result = await sendStocktakeWhatsApp(id);
     if (result.ok) {
-      window.open(result.waUrl, "_blank");
+      if (pending) pending.location.href = result.waUrl;
+      else window.open(result.waUrl, "_blank");
     } else {
+      pending?.close();
       setWaError({ id, message: result.error });
     }
     setWaBusyId(null);
