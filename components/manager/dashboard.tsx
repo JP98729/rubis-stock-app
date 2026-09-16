@@ -28,8 +28,9 @@ export function Dashboard({
 }) {
   const [waBusyId, setWaBusyId] = useState<string | null>(null);
   const [waError, setWaError] = useState<{ id: string; message: string } | null>(null);
+  const [phoneDrafts, setPhoneDrafts] = useState<Record<string, string>>({});
 
-  async function handleSendWhatsApp(id: string) {
+  async function handleSendWhatsApp(id: string, phoneOverride?: string) {
     setWaBusyId(id);
     setWaError(null);
     // Open the tab synchronously, in direct response to the click — Safari (and
@@ -37,7 +38,7 @@ export function Dashboard({
     // network round-trip, since it no longer counts as a direct user gesture.
     // Navigate that already-open tab once the wa.me link is ready.
     const pending = window.open("about:blank", "_blank");
-    const result = await sendStocktakeWhatsApp(id);
+    const result = await sendStocktakeWhatsApp(id, phoneOverride);
     if (result.ok) {
       if (pending) pending.location.href = result.waUrl;
       else window.open(result.waUrl, "_blank");
@@ -129,11 +130,20 @@ export function Dashboard({
                     <span className="text-[10px] text-gray-300 shrink-0">no signature</span>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {!st.merchandiserPhone && (
+                    <input
+                      type="tel"
+                      value={phoneDrafts[st.id] || ""}
+                      onChange={(e) => setPhoneDrafts((d) => ({ ...d, [st.id]: e.target.value }))}
+                      placeholder="Phone number"
+                      className="border border-gray-300 rounded-lg px-2 py-1 text-xs w-32"
+                    />
+                  )}
                   <button
-                    onClick={() => handleSendWhatsApp(st.id)}
-                    disabled={waBusyId === st.id || !st.merchandiserPhone}
-                    title={st.merchandiserPhone ? "" : "No phone number on file for this merchandiser"}
+                    onClick={() => handleSendWhatsApp(st.id, phoneDrafts[st.id])}
+                    disabled={waBusyId === st.id || !(st.merchandiserPhone || phoneDrafts[st.id]?.trim())}
+                    title={st.merchandiserPhone || phoneDrafts[st.id]?.trim() ? "" : "Type a phone number first"}
                     className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold disabled:opacity-40"
                     style={{ background: "#EEF7DE", color: GREEN_DARK }}
                   >

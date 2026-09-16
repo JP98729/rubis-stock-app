@@ -205,7 +205,7 @@ function normalizeWhatsAppPhone(raw: string): string | null {
  * for this app. Meant to be used after the manager has paid the merchandiser's
  * KES 300 visit fee in Odoo.
  */
-export async function sendStocktakeWhatsApp(stocktakeId: string): Promise<WhatsAppLinkResult> {
+export async function sendStocktakeWhatsApp(stocktakeId: string, phoneOverride?: string): Promise<WhatsAppLinkResult> {
   if (!(await guard())) return { ok: false, error: "Your session expired — sign in again." };
 
   const st = await prisma.stocktake.findUnique({
@@ -217,8 +217,10 @@ export async function sendStocktakeWhatsApp(stocktakeId: string): Promise<WhatsA
   });
   if (!st) return { ok: false, error: "Stocktake not found." };
 
-  const phone = normalizeWhatsAppPhone(st.merchandiserPhone);
-  if (!phone) return { ok: false, error: "This merchandiser has no phone number on file." };
+  // Not every stocktake has a phone on file (it's an optional field on the visit
+  // form) — the manager can type one in on the dashboard right before sending.
+  const phone = normalizeWhatsAppPhone((phoneOverride && phoneOverride.trim()) || st.merchandiserPhone);
+  if (!phone) return { ok: false, error: "Enter a phone number first." };
 
   const competitors = [
     { brand: st.competitorBrand1, gram: st.competitorGram1, description: st.competitorDescription1, price: st.competitorPrice1 },
