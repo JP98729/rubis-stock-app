@@ -5,10 +5,14 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { genMerchCode, normalizeCode, storeCodeFor } from "@/lib/codes";
+import { renderStocktakeSummaryPdf } from "@/lib/pdf";
+import { uploadFile } from "@/lib/storage";
+import { MIN_STOCK } from "@/lib/brand";
 import type { RoleCodeType } from "@prisma/client";
 
 export type SimpleResult = { ok: true } | { ok: false; error: string };
 export type CodeResult = { ok: true; code: string } | { ok: false; error: string };
+export type WhatsAppLinkResult = { ok: true; waUrl: string } | { ok: false; error: string };
 
 async function guard() {
   const session = await requireRole("manager");
@@ -180,4 +184,89 @@ export async function checkDatabase(): Promise<DbStatus> {
   } catch (e) {
     return { ok: false, detail: "Database connection: ERROR\n" + (e instanceof Error ? e.message : String(e)) };
   }
+}
+
+// ---------- Send stocktake receipt to merchandiser's WhatsApp ----------
+
+/** Kenyan numbers arrive as "07XX...", "+254 7XX...", or bare "7XX..." — wa.me needs digits-only, country-code-first. */
+function normalizeWhatsAppPhone(raw: string): string | null {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return null;
+  if (digits.startsWith("254")) return digits;
+  if (digits.startsWith("0")) return `254${digits.slice(1)}`;
+  if (digits.length === 9) return `254${digits}`;
+  return digits;
+}
+
+/**
+ * Regenerates the stocktake receipt PDF and returns a wa.me click-to-chat link
+ * pre-filled with a message + the PDF's URL — the manager still taps Send
+ * themselves in WhatsApp, since there's no WhatsApp Business API account set up
+ * for this app. Meant to be used after the manager has paid the merchandiser's
+ * KES 300 visit fee in Odoo.
+ */
+export async function sendStocktakeWhatsApp(stocktakeId: string): Promise<WhatsAppLinkResult> {
+  if (!(await guard())) return { ok: false, error: "Your session expired — sign in again." };
+
+  const st = await prisma.stocktake.findUnique({
+    where: { id: stocktakeId },
+    include: {
+      store: { select: { name: true, county: true, type: true } },
+      items: { include: { product: { select: { flavour: true, range: true } } } },
+    },
+  });
+  if (!st) return { ok: false, error: "Stocktake not found." };
+
+  const phone = normalizeWhatsAppPhone(st.merchandiserPhone);
+  if (!phone) return { ok: false, error: "This merchandiser has no phone number on file." };
+
+  const competitors = [
+    { brand: st.competitorBrand1, gram: st.competitorGram1, description: st.competitorDescription1, price: st.competitorPrice1 },
+    { brand: st.competitorBrand2, gram: st.competitorGram2, description: st.competitorDescription2, price: st.competitorPrice2 },
+    { brand: st.competitorBrand3, gram: st.competitorGram3, description: st.competitorDescription3, price: st.competitorPrice3 },
+  ]
+    .filter((c): c is { brand: string; gram: string; description: string; price: number } => !!c.brand)
+    .map((c) => ({ brand: c.brand, gram: c.gram ?? "", description: c.description ?? "", price: c.price ?? 0 }));
+
+  let pdfBuffer: Buffer;
+  try {
+    pdfBuffer = await renderStocktakeSummaryPdf(
+      st.store,
+      {
+        date: st.date,
+        visitTime: st.visitTime,
+        merchandiser: st.merchandiser,
+        idNumber: st.idNumber,
+        merchandiserPhone: st.merchandiserPhone,
+        kraPin: st.kraPin,
+        embedded: st.embedded,
+        signatureUrl: st.signatureUrl,
+        notes: st.notes,
+        checksPlacement: st.checksPlacement,
+        checksPrices: st.checksPrices,
+        checksMissing: st.checksMissing,
+        items: st.items.map((it) => ({
+          name: it.product.flavour,
+          range: it.product.range,
+          shelfQty: it.shelfQty,
+          backStock: it.backStock,
+          expired: it.expired,
+          damaged: it.damaged,
+          batchCode: it.batchCode,
+        })),
+        competitors,
+      },
+      MIN_STOCK
+    );
+  } catch (e) {
+    return { ok: false, error: "Couldn't generate the receipt PDF. (" + (e instanceof Error ? e.message : String(e)) + ")" };
+  }
+
+  const filename = `Stocktake receipt ${st.merchandiser.trim()} ${st.date}.pdf`;
+  const url = await uploadFile(pdfBuffer, filename, "application/pdf");
+
+  const message = `Hi ${st.merchandiser.trim()}, here is your stocktake receipt for ${st.store.name.trim()} on ${st.date}: ${url}`;
+  const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+  return { ok: true, waUrl };
 }

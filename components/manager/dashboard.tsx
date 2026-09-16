@@ -1,11 +1,13 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, MessageCircle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 import { AMBER, GREEN, GREEN_DARK, RED } from "@/lib/brand";
 import { fmtKES } from "@/lib/utils";
 import { KpiCard } from "../ui";
 import { TopBranchSpotlight, type SpotlightRow } from "../spotlight";
+import { sendStocktakeWhatsApp } from "@/app/actions/manager";
 import type { DashboardData } from "./types";
 import type { RecentStocktakeDTO } from "@/lib/queries";
 
@@ -24,6 +26,21 @@ export function Dashboard({
   monthLabelText: string;
   reward: { note: string; sent: boolean };
 }) {
+  const [waBusyId, setWaBusyId] = useState<string | null>(null);
+  const [waError, setWaError] = useState<{ id: string; message: string } | null>(null);
+
+  async function handleSendWhatsApp(id: string) {
+    setWaBusyId(id);
+    setWaError(null);
+    const result = await sendStocktakeWhatsApp(id);
+    if (result.ok) {
+      window.open(result.waUrl, "_blank");
+    } else {
+      setWaError({ id, message: result.error });
+    }
+    setWaBusyId(null);
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <TopBranchSpotlight
@@ -80,29 +97,44 @@ export function Dashboard({
         ) : (
           <div className="flex flex-col divide-y divide-gray-100">
             {recentStocktakes.map((st) => (
-              <div key={st.id} className="py-2.5 flex items-center justify-between text-sm gap-3">
-                <div className="min-w-0">
-                  <div className="font-medium truncate flex items-center gap-1.5">
-                    {st.storeName.trim()}
-                    {st.hasIssue && <AlertTriangle size={13} style={{ color: "#C0392B" }} className="shrink-0" />}
+              <div key={st.id} className="py-2.5 flex flex-col gap-1.5 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-medium truncate flex items-center gap-1.5">
+                      {st.storeName.trim()}
+                      {st.hasIssue && <AlertTriangle size={13} style={{ color: "#C0392B" }} className="shrink-0" />}
+                    </div>
+                    <div className="text-gray-400 text-xs truncate">
+                      {st.merchandiser}
+                      {st.idNumber ? ` · ID ${st.idNumber}` : ""}
+                      {st.merchandiserPhone ? ` · ${st.merchandiserPhone}` : ""} · {st.date}
+                      {st.visitTime ? ` ${st.visitTime}` : ""}
+                    </div>
                   </div>
-                  <div className="text-gray-400 text-xs truncate">
-                    {st.merchandiser}
-                    {st.idNumber ? ` · ID ${st.idNumber}` : ""}
-                    {st.merchandiserPhone ? ` · ${st.merchandiserPhone}` : ""} · {st.date}
-                    {st.visitTime ? ` ${st.visitTime}` : ""}
-                  </div>
+                  {st.signatureUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={st.signatureUrl}
+                      alt="signature"
+                      className="h-7 w-16 object-contain border border-gray-100 rounded bg-white shrink-0"
+                    />
+                  ) : (
+                    <span className="text-[10px] text-gray-300 shrink-0">no signature</span>
+                  )}
                 </div>
-                {st.signatureUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={st.signatureUrl}
-                    alt="signature"
-                    className="h-7 w-16 object-contain border border-gray-100 rounded bg-white shrink-0"
-                  />
-                ) : (
-                  <span className="text-[10px] text-gray-300 shrink-0">no signature</span>
-                )}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleSendWhatsApp(st.id)}
+                    disabled={waBusyId === st.id || !st.merchandiserPhone}
+                    title={st.merchandiserPhone ? "" : "No phone number on file for this merchandiser"}
+                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold disabled:opacity-40"
+                    style={{ background: "#EEF7DE", color: GREEN_DARK }}
+                  >
+                    <MessageCircle size={13} />
+                    {waBusyId === st.id ? "Preparing…" : "Send receipt to WhatsApp"}
+                  </button>
+                  {waError?.id === st.id && <span className="text-[11px] text-red-600">{waError.message}</span>}
+                </div>
               </div>
             ))}
           </div>
