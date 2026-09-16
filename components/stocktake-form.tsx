@@ -61,6 +61,7 @@ export function StocktakeForm({
   const [promotionType, setPromotionType] = useState("");
   const [promotionPhoto, setPromotionPhoto] = useState<string | null>(null);
   const [checksNotes, setChecksNotes] = useState("");
+  const [storePhoto, setStorePhoto] = useState<string | null>(null);
   const [placementPhoto, setPlacementPhoto] = useState<string | null>(null);
   const [pricesPhoto, setPricesPhoto] = useState<string | null>(null);
   const [competitors, setCompetitors] = useState<
@@ -103,6 +104,7 @@ export function StocktakeForm({
     if (!embedded && !kraPin.trim()) return setError("Enter your KRA PIN before submitting.");
     if (!visitDate) return setError("Select the date before submitting.");
     if (!embedded && !visitTime) return setError("Select the visit time before submitting.");
+    if (!embedded && !storePhoto) return setError("Please take a photo of the store before submitting.");
     if (!embedded) {
       if (checks.placement === null || checks.prices === null || checks.missing === null || checks.promotion === null)
         return setError("Please answer all four store display questions before submitting.");
@@ -137,6 +139,7 @@ export function StocktakeForm({
       kraPin: kraPin.trim(),
       signatureUrl: signature,
       notes: notes.trim(),
+      storePhotoUrl: storePhoto,
       checksPlacement: checks.placement,
       checksPrices: checks.prices,
       checksMissing: checks.missing,
@@ -278,6 +281,14 @@ export function StocktakeForm({
                 </label>
               )}
             </div>
+            {!embedded && (
+              <label className="flex flex-col gap-1">
+                <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1">
+                  <StoreIcon size={12} /> Photo of the store — required
+                </span>
+                <PlacementPhotoCapture photo={storePhoto} onChange={setStorePhoto} />
+              </label>
+            )}
           </div>
         </div>
       </div>

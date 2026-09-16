@@ -35,6 +35,7 @@ export type StocktakeInput = {
   kraPin: string;
   signatureUrl: string | null;
   notes: string;
+  storePhotoUrl: string | null;
   checksPlacement: string | null;
   checksPrices: string | null;
   checksMissing: string | null;
@@ -61,6 +62,7 @@ function validate(input: StocktakeInput): string | null {
   if (!input.embedded && !input.kraPin.trim()) return "Enter your KRA PIN before submitting.";
   if (!input.date) return "Select the date before submitting.";
   if (!input.embedded && !input.visitTime.trim()) return "Select the visit time before submitting.";
+  if (!input.embedded && !input.storePhotoUrl) return "Please take a photo of the store before submitting.";
 
   if (!input.embedded) {
     if (
@@ -144,6 +146,7 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
       kraPin: input.embedded ? "" : input.kraPin.trim(),
       signatureUrl: input.signatureUrl!,
       notes: input.notes.trim(),
+      storePhotoUrl: input.embedded ? null : input.storePhotoUrl,
       checksPlacement: input.embedded ? null : input.checksPlacement,
       checksPrices: input.embedded ? null : input.checksPrices,
       checksMissing: input.embedded ? null : input.checksMissing,

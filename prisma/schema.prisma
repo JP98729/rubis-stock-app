@@ -178,6 +178,10 @@ model Stocktake {
   signatureUrl String
   notes        String @default("")
 
+  /// A general photo of the store (storefront/shop), required for every
+  /// merchandiser visit — not the branch manager's own embedded stocktake.
+  storePhotoUrl String?
+
   checksPlacement String? // "Yes" | "No"
   checksPrices    String?
   checksMissing   String?
