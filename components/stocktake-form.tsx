@@ -300,9 +300,10 @@ export function StocktakeForm({
                 <div className="text-[11px] text-gray-400 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2 leading-relaxed">
                   No invoice yet? Make one by USSD: dial <span className="font-semibold text-gray-600">*222#</span>, select{" "}
                   <span className="font-semibold text-gray-600">Tax Payment (KRA)</span>, choose{" "}
-                  <span className="font-semibold text-gray-600">Sales Invoice</span>, enter the customer&apos;s name or KRA
-                  PIN, add the product or service details, input the quantity and price, then confirm to generate. Screenshot
-                  it and upload below.
+                  <span className="font-semibold text-gray-600">Sales Invoice</span>, enter the customer&apos;s KRA PIN{" "}
+                  <span className="font-semibold text-gray-600">A007747135E</span>, add the service details{" "}
+                  <span className="font-semibold text-gray-600">&quot;Merchandising&quot;</span>, input the quantity and
+                  price, then confirm to generate. Screenshot it and upload below.
                 </div>
                 <PlacementPhotoCapture photo={etimsInvoice} onChange={setEtimsInvoice} allowLibrary />
               </label>
