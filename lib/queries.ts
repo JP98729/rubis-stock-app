@@ -439,6 +439,10 @@ export type RecentStocktakeDTO = {
   merchandiser: string;
   idNumber: string;
   merchandiserPhone: string;
+  /// merchandiserPhone if set, otherwise this merchandiser's phone from their most
+  /// recent OTHER visit that had one — lets the UI pre-fill instead of asking the
+  /// manager to retype/look up a number the app has already seen before.
+  suggestedPhone: string;
   kraPin: string;
   date: string;
   visitTime: string;
@@ -466,6 +470,26 @@ export async function getRecentStocktakes(limit = 8): Promise<RecentStocktakeDTO
       store: { select: { name: true } },
     },
   });
+
+  const needPhoneFor = new Set(
+    rows.filter((r) => !r.merchandiserPhone.trim()).map((r) => r.merchandiser.trim().toLowerCase())
+  );
+  const phoneByMerchandiser = new Map<string, string>();
+  if (needPhoneFor.size > 0) {
+    const phoneRows = await prisma.stocktake.findMany({
+      where: { merchandiserPhone: { not: "" } },
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+      take: 200,
+      select: { merchandiser: true, merchandiserPhone: true },
+    });
+    for (const p of phoneRows) {
+      const key = p.merchandiser.trim().toLowerCase();
+      if (needPhoneFor.has(key) && !phoneByMerchandiser.has(key)) {
+        phoneByMerchandiser.set(key, p.merchandiserPhone);
+      }
+    }
+  }
+
   return rows.map((r) => ({
     id: r.id,
     storeId: r.storeId,
@@ -473,6 +497,7 @@ export async function getRecentStocktakes(limit = 8): Promise<RecentStocktakeDTO
     merchandiser: r.merchandiser,
     idNumber: r.idNumber,
     merchandiserPhone: r.merchandiserPhone,
+    suggestedPhone: r.merchandiserPhone || phoneByMerchandiser.get(r.merchandiser.trim().toLowerCase()) || "",
     kraPin: r.kraPin,
     date: r.date,
     visitTime: r.visitTime,

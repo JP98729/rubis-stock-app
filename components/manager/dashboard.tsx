@@ -128,41 +128,48 @@ export function Dashboard({
                     <span className="text-[10px] text-gray-300 shrink-0">no signature</span>
                   )}
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {!st.merchandiserPhone && !waLinks[st.id] && (
-                    <input
-                      type="tel"
-                      value={phoneDrafts[st.id] || ""}
-                      onChange={(e) => setPhoneDrafts((d) => ({ ...d, [st.id]: e.target.value }))}
-                      placeholder="Phone number"
-                      className="border border-gray-300 rounded-lg px-2 py-1 text-xs w-32"
-                    />
-                  )}
-                  {waLinks[st.id] ? (
-                    <a
-                      href={waLinks[st.id]}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold"
-                      style={{ background: GREEN_DARK, color: "#ffffff" }}
-                    >
-                      <MessageCircle size={13} />
-                      Open WhatsApp
-                    </a>
-                  ) : (
-                    <button
-                      onClick={() => handlePrepareWhatsApp(st.id, phoneDrafts[st.id])}
-                      disabled={waBusyId === st.id || !(st.merchandiserPhone || phoneDrafts[st.id]?.trim())}
-                      title={st.merchandiserPhone || phoneDrafts[st.id]?.trim() ? "" : "Type a phone number first"}
-                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold disabled:opacity-40"
-                      style={{ background: "#EEF7DE", color: GREEN_DARK }}
-                    >
-                      <MessageCircle size={13} />
-                      {waBusyId === st.id ? "Preparing…" : "Send receipt to WhatsApp"}
-                    </button>
-                  )}
-                  {waError?.id === st.id && <span className="text-[11px] text-red-600">{waError.message}</span>}
-                </div>
+                {(() => {
+                  // Falls back to a phone this merchandiser used on a past visit, if
+                  // this stocktake itself has none — pre-filled, still editable.
+                  const effectivePhone = phoneDrafts[st.id] ?? st.suggestedPhone;
+                  return (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {!st.merchandiserPhone && !waLinks[st.id] && (
+                        <input
+                          type="tel"
+                          value={effectivePhone}
+                          onChange={(e) => setPhoneDrafts((d) => ({ ...d, [st.id]: e.target.value }))}
+                          placeholder="Phone number"
+                          className="border border-gray-300 rounded-lg px-2 py-1 text-xs w-32"
+                        />
+                      )}
+                      {waLinks[st.id] ? (
+                        <a
+                          href={waLinks[st.id]}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold"
+                          style={{ background: GREEN_DARK, color: "#ffffff" }}
+                        >
+                          <MessageCircle size={13} />
+                          Open WhatsApp
+                        </a>
+                      ) : (
+                        <button
+                          onClick={() => handlePrepareWhatsApp(st.id, effectivePhone)}
+                          disabled={waBusyId === st.id || !effectivePhone.trim()}
+                          title={effectivePhone.trim() ? "" : "Type a phone number first"}
+                          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold disabled:opacity-40"
+                          style={{ background: "#EEF7DE", color: GREEN_DARK }}
+                        >
+                          <MessageCircle size={13} />
+                          {waBusyId === st.id ? "Preparing…" : "Send receipt to WhatsApp"}
+                        </button>
+                      )}
+                      {waError?.id === st.id && <span className="text-[11px] text-red-600">{waError.message}</span>}
+                    </div>
+                  );
+                })()}
               </div>
             ))}
           </div>
