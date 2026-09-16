@@ -181,6 +181,10 @@ model Stocktake {
   /// A general photo of the store (storefront/shop), required for every
   /// merchandiser visit — not the branch manager's own embedded stocktake.
   storePhotoUrl String?
+  /// The merchandiser's own KRA eTIMS invoice for their visit fee (photo or PDF),
+  /// required for every merchandiser visit — best-effort attached to their KES 300
+  /// expense record in Odoo.
+  etimsInvoiceUrl String?
 
   checksPlacement String? // "Yes" | "No"
   checksPrices    String?

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { sendStocktakeSummaryEmail } from "@/lib/email";
-import { createMerchandiserVisitExpense, attachPdfToExpense } from "@/lib/odoo";
+import { createMerchandiserVisitExpense, attachPdfToExpense, attachFileToExpense } from "@/lib/odoo";
 import { MIN_STOCK } from "@/lib/brand";
 
 export type StocktakeItemInput = {
@@ -36,6 +36,7 @@ export type StocktakeInput = {
   signatureUrl: string | null;
   notes: string;
   storePhotoUrl: string | null;
+  etimsInvoiceUrl: string | null;
   checksPlacement: string | null;
   checksPrices: string | null;
   checksMissing: string | null;
@@ -63,6 +64,7 @@ function validate(input: StocktakeInput): string | null {
   if (!input.date) return "Select the date before submitting.";
   if (!input.embedded && !input.visitTime.trim()) return "Select the visit time before submitting.";
   if (!input.embedded && !input.storePhotoUrl) return "Please take a photo of the store before submitting.";
+  if (!input.embedded && !input.etimsInvoiceUrl) return "Please upload your KRA eTIMS invoice before submitting.";
 
   if (!input.embedded) {
     if (
@@ -147,6 +149,7 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
       signatureUrl: input.signatureUrl!,
       notes: input.notes.trim(),
       storePhotoUrl: input.embedded ? null : input.storePhotoUrl,
+      etimsInvoiceUrl: input.embedded ? null : input.etimsInvoiceUrl,
       checksPlacement: input.embedded ? null : input.checksPlacement,
       checksPrices: input.embedded ? null : input.checksPrices,
       checksMissing: input.embedded ? null : input.checksMissing,
@@ -235,6 +238,15 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
   // for, so the KES 300 fee and the visit it paid for live in the same place in Odoo.
   if (expense && pdfBuffer) {
     await attachPdfToExpense(expense.id, pdfBuffer, `Stocktake ${store.name.trim()} ${input.date}.pdf`);
+  }
+  // Best-effort: also attach the merchandiser's own eTIMS invoice for their fee.
+  if (expense && !input.embedded && input.etimsInvoiceUrl) {
+    const ext = input.etimsInvoiceUrl.toLowerCase().endsWith(".pdf") ? "pdf" : "jpg";
+    await attachFileToExpense(
+      expense.id,
+      input.etimsInvoiceUrl,
+      `eTIMS invoice ${input.merchandiser.trim()} ${input.date}.${ext}`
+    );
   }
 
   return { ok: true };

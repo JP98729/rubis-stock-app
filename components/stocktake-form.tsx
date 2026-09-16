@@ -62,6 +62,7 @@ export function StocktakeForm({
   const [promotionPhoto, setPromotionPhoto] = useState<string | null>(null);
   const [checksNotes, setChecksNotes] = useState("");
   const [storePhoto, setStorePhoto] = useState<string | null>(null);
+  const [etimsInvoice, setEtimsInvoice] = useState<string | null>(null);
   const [placementPhoto, setPlacementPhoto] = useState<string | null>(null);
   const [pricesPhoto, setPricesPhoto] = useState<string | null>(null);
   const [competitors, setCompetitors] = useState<
@@ -105,6 +106,7 @@ export function StocktakeForm({
     if (!visitDate) return setError("Select the date before submitting.");
     if (!embedded && !visitTime) return setError("Select the visit time before submitting.");
     if (!embedded && !storePhoto) return setError("Please take a photo of the store before submitting.");
+    if (!embedded && !etimsInvoice) return setError("Please upload your KRA eTIMS invoice before submitting.");
     if (!embedded) {
       if (checks.placement === null || checks.prices === null || checks.missing === null || checks.promotion === null)
         return setError("Please answer all four store display questions before submitting.");
@@ -140,6 +142,7 @@ export function StocktakeForm({
       signatureUrl: signature,
       notes: notes.trim(),
       storePhotoUrl: storePhoto,
+      etimsInvoiceUrl: etimsInvoice,
       checksPlacement: checks.placement,
       checksPrices: checks.prices,
       checksMissing: checks.missing,
@@ -287,6 +290,14 @@ export function StocktakeForm({
                   <StoreIcon size={12} /> Photo of the store — required
                 </span>
                 <PlacementPhotoCapture photo={storePhoto} onChange={setStorePhoto} />
+              </label>
+            )}
+            {!embedded && (
+              <label className="flex flex-col gap-1">
+                <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1">
+                  <CreditCard size={12} /> Your KRA eTIMS invoice for this visit — required
+                </span>
+                <PlacementPhotoCapture photo={etimsInvoice} onChange={setEtimsInvoice} allowLibrary />
               </label>
             )}
           </div>

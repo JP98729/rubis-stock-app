@@ -281,6 +281,24 @@ export async function attachPdfToExpense(expenseId: number, pdfBuffer: Buffer, f
 }
 
 /**
+ * Attaches a file (e.g. the merchandiser's own KRA eTIMS invoice for their visit
+ * fee) to their visit expense in Odoo. Same fetch-from-URL pattern as
+ * attachFileToSaleOrder. Returns false whenever the URL isn't publicly fetchable
+ * (local dev) or anything else goes wrong.
+ */
+export async function attachFileToExpense(expenseId: number, fileUrl: string, filename: string): Promise<boolean> {
+  try {
+    if (!/^https?:\/\//i.test(fileUrl)) return false;
+    const res = await fetch(fileUrl);
+    if (!res.ok) return false;
+    const buffer = Buffer.from(await res.arrayBuffer());
+    return attachBufferToOdoo("hr.expense", expenseId, buffer, filename, mimetypeFor(filename));
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Attaches an order summary PDF to a Sales Order's paperclip icon in Odoo — same
  * idea as attachPdfToExpense, for the order placed directly from the reorder list.
  */
