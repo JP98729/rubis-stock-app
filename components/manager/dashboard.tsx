@@ -29,21 +29,19 @@ export function Dashboard({
   const [waBusyId, setWaBusyId] = useState<string | null>(null);
   const [waError, setWaError] = useState<{ id: string; message: string } | null>(null);
   const [phoneDrafts, setPhoneDrafts] = useState<Record<string, string>>({});
+  // Ready-to-tap wa.me links, once generated. Using a real <a href> the user taps
+  // themselves — rather than window.open()'d from JS — since mobile browsers handle
+  // window.open so inconsistently (on some phones it navigates the CURRENT page to
+  // about:blank instead of opening a new tab, blanking the whole dashboard).
+  const [waLinks, setWaLinks] = useState<Record<string, string>>({});
 
-  async function handleSendWhatsApp(id: string, phoneOverride?: string) {
+  async function handlePrepareWhatsApp(id: string, phoneOverride?: string) {
     setWaBusyId(id);
     setWaError(null);
-    // Open the tab synchronously, in direct response to the click — Safari (and
-    // other browsers) silently block window.open() called after an awaited
-    // network round-trip, since it no longer counts as a direct user gesture.
-    // Navigate that already-open tab once the wa.me link is ready.
-    const pending = window.open("about:blank", "_blank");
     const result = await sendStocktakeWhatsApp(id, phoneOverride);
     if (result.ok) {
-      if (pending) pending.location.href = result.waUrl;
-      else window.open(result.waUrl, "_blank");
+      setWaLinks((links) => ({ ...links, [id]: result.waUrl }));
     } else {
-      pending?.close();
       setWaError({ id, message: result.error });
     }
     setWaBusyId(null);
@@ -131,7 +129,7 @@ export function Dashboard({
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  {!st.merchandiserPhone && (
+                  {!st.merchandiserPhone && !waLinks[st.id] && (
                     <input
                       type="tel"
                       value={phoneDrafts[st.id] || ""}
@@ -140,16 +138,29 @@ export function Dashboard({
                       className="border border-gray-300 rounded-lg px-2 py-1 text-xs w-32"
                     />
                   )}
-                  <button
-                    onClick={() => handleSendWhatsApp(st.id, phoneDrafts[st.id])}
-                    disabled={waBusyId === st.id || !(st.merchandiserPhone || phoneDrafts[st.id]?.trim())}
-                    title={st.merchandiserPhone || phoneDrafts[st.id]?.trim() ? "" : "Type a phone number first"}
-                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold disabled:opacity-40"
-                    style={{ background: "#EEF7DE", color: GREEN_DARK }}
-                  >
-                    <MessageCircle size={13} />
-                    {waBusyId === st.id ? "Preparing…" : "Send receipt to WhatsApp"}
-                  </button>
+                  {waLinks[st.id] ? (
+                    <a
+                      href={waLinks[st.id]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold"
+                      style={{ background: GREEN_DARK, color: "#ffffff" }}
+                    >
+                      <MessageCircle size={13} />
+                      Open WhatsApp
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => handlePrepareWhatsApp(st.id, phoneDrafts[st.id])}
+                      disabled={waBusyId === st.id || !(st.merchandiserPhone || phoneDrafts[st.id]?.trim())}
+                      title={st.merchandiserPhone || phoneDrafts[st.id]?.trim() ? "" : "Type a phone number first"}
+                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold disabled:opacity-40"
+                      style={{ background: "#EEF7DE", color: GREEN_DARK }}
+                    >
+                      <MessageCircle size={13} />
+                      {waBusyId === st.id ? "Preparing…" : "Send receipt to WhatsApp"}
+                    </button>
+                  )}
                   {waError?.id === st.id && <span className="text-[11px] text-red-600">{waError.message}</span>}
                 </div>
               </div>
