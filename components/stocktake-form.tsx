@@ -297,6 +297,13 @@ export function StocktakeForm({
                 <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1">
                   <CreditCard size={12} /> Your KRA eTIMS invoice for this visit — required
                 </span>
+                <div className="text-[11px] text-gray-400 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2 leading-relaxed">
+                  No invoice yet? Make one by USSD: dial <span className="font-semibold text-gray-600">*222#</span>, select{" "}
+                  <span className="font-semibold text-gray-600">Tax Payment (KRA)</span>, choose{" "}
+                  <span className="font-semibold text-gray-600">Sales Invoice</span>, enter the customer&apos;s name or KRA
+                  PIN, add the product or service details, input the quantity and price, then confirm to generate. Screenshot
+                  it and upload below.
+                </div>
                 <PlacementPhotoCapture photo={etimsInvoice} onChange={setEtimsInvoice} allowLibrary />
               </label>
             )}
