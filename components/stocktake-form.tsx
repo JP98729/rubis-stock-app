@@ -316,7 +316,7 @@ export function StocktakeForm({
                       Choose <span className="font-semibold text-gray-600">1. A00400762C</span>
                     </li>
                     <li>
-                      Type: <span className="font-semibold text-gray-600">A007747135E</span>
+                      Type Pin nr Pure Nutritions: <span className="font-semibold text-gray-600">A007747135E</span>
                     </li>
                     <li>
                       Type: <span className="font-semibold text-gray-600">Merchandising</span>
