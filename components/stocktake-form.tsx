@@ -298,12 +298,41 @@ export function StocktakeForm({
                   <CreditCard size={12} /> Your KRA eTIMS invoice for this visit — required
                 </span>
                 <div className="text-[11px] text-gray-400 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2 leading-relaxed">
-                  No invoice yet? Make one by USSD: dial <span className="font-semibold text-gray-600">*222#</span>, select{" "}
-                  <span className="font-semibold text-gray-600">Tax Payment (KRA)</span>, choose{" "}
-                  <span className="font-semibold text-gray-600">Sales Invoice</span>, enter the customer&apos;s KRA PIN{" "}
-                  <span className="font-semibold text-gray-600">A007747135E</span>, add the service details{" "}
-                  <span className="font-semibold text-gray-600">&quot;Merchandising&quot;</span>, then confirm to generate.
-                  Screenshot it and upload below.
+                  <div className="mb-1.5">
+                    No invoice yet? Dial <span className="font-semibold text-gray-600">*222#</span> and follow these steps:
+                  </div>
+                  <ol className="list-decimal list-inside flex flex-col gap-0.5">
+                    <li>Welcome to eCitizen</li>
+                    <li>
+                      Choose <span className="font-semibold text-gray-600">5. KRA Service</span>
+                    </li>
+                    <li>
+                      Choose <span className="font-semibold text-gray-600">5. ETIMS</span>
+                    </li>
+                    <li>
+                      Choose <span className="font-semibold text-gray-600">1. Sales Invoice</span>
+                    </li>
+                    <li>
+                      Choose <span className="font-semibold text-gray-600">1. A00400762C</span>
+                    </li>
+                    <li>
+                      Type: <span className="font-semibold text-gray-600">A007747135E</span>
+                    </li>
+                    <li>
+                      Type: <span className="font-semibold text-gray-600">Merchandising</span>
+                    </li>
+                    <li>
+                      Type Quantity: <span className="font-semibold text-gray-600">1</span>
+                    </li>
+                    <li>
+                      Type: <span className="font-semibold text-gray-600">300</span>
+                    </li>
+                    <li>
+                      Type: <span className="font-semibold text-gray-600">1</span>
+                    </li>
+                    <li>Download</li>
+                  </ol>
+                  <div className="mt-1.5">Screenshot it and upload below.</div>
                   <a
                     href="tel:*222%23"
                     className="mt-2 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold"
