@@ -302,8 +302,8 @@ export function StocktakeForm({
                   <span className="font-semibold text-gray-600">Tax Payment (KRA)</span>, choose{" "}
                   <span className="font-semibold text-gray-600">Sales Invoice</span>, enter the customer&apos;s KRA PIN{" "}
                   <span className="font-semibold text-gray-600">A007747135E</span>, add the service details{" "}
-                  <span className="font-semibold text-gray-600">&quot;Merchandising&quot;</span>, input the quantity and
-                  price, then confirm to generate. Screenshot it and upload below.
+                  <span className="font-semibold text-gray-600">&quot;Merchandising&quot;</span>, then confirm to generate.
+                  Screenshot it and upload below.
                   <a
                     href="tel:*222%23"
                     className="mt-2 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold"
