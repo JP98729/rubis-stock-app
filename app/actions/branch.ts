@@ -4,8 +4,15 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { getProducts, getStoreStock } from "@/lib/queries";
-import { createDraftSalesOrder, attachFileToSaleOrder, attachPdfToSaleOrder, getSaleOrderShippingWeight } from "@/lib/odoo";
+import {
+  createDraftSalesOrder,
+  attachFileToSaleOrder,
+  attachPdfToSaleOrder,
+  getSaleOrderShippingWeight,
+  postSaleOrderMessage,
+} from "@/lib/odoo";
 import { sendManualOrderEmail, sendLpoUploadEmail, sendCourierDispatchEmail, newOrderRef } from "@/lib/email";
+import { NAIROBI_COURIER_NAME, NAIROBI_COURIER_PHONE_WA } from "@/lib/brand";
 
 export type SimpleResult = { ok: true } | { ok: false; error: string };
 export type PlaceOrderResult =
@@ -47,6 +54,27 @@ async function createCourierDispatch(
   } catch {
     return null;
   }
+}
+
+/**
+ * Best-effort: for a Nairobi order, drops a clickable "Notify [courier] via
+ * WhatsApp" link right onto the Sales Order's own chatter in Odoo — so it can be
+ * tapped straight from the order there, without needing the app open. No-ops
+ * silently when there's no linked Odoo order or the branch isn't in Nairobi.
+ */
+async function notifyNairobiCourierInOdoo(
+  odooSaleOrderId: number | null,
+  storeName: string,
+  county: string,
+  courierLink: string | null
+): Promise<void> {
+  if (!odooSaleOrderId || !courierLink || county.trim().toLowerCase() !== "nairobi") return;
+  const message = `New order from ${storeName.trim()} — please accept & collect: ${courierLink}?accept=1`;
+  const waUrl = `https://wa.me/${NAIROBI_COURIER_PHONE_WA}?text=${encodeURIComponent(message)}`;
+  await postSaleOrderMessage(
+    odooSaleOrderId,
+    `<a href="${waUrl}" target="_blank">📱 Notify ${NAIROBI_COURIER_NAME} via WhatsApp</a>`
+  );
 }
 
 /** Branch-manager self-service contact override (shown with a green * in the admin table). */
@@ -151,6 +179,7 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
     if (courierLink) {
       await sendCourierDispatchEmail(store, orderRef, shippingWeightKg, courierLink);
     }
+    await notifyNairobiCourierInOdoo(odooOrderId, store.name, store.county, courierLink);
   }
 
   revalidatePath("/branch");
@@ -230,6 +259,7 @@ export async function placeManualOrder(
     if (courierLink) {
       await sendCourierDispatchEmail(store, orderRef, shippingWeightKg, courierLink);
     }
+    await notifyNairobiCourierInOdoo(order?.id ?? null, store.name, store.county, courierLink);
   } catch (e) {
     return {
       ok: false,

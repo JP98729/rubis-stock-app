@@ -330,3 +330,31 @@ export async function setSaleOrderReference(saleOrderId: number, reference: stri
     return false;
   }
 }
+
+/**
+ * Posts a chatter note onto a Sales Order containing a clickable link — used for
+ * the "Notify [courier] via WhatsApp" link, so it can be tapped straight from
+ * Odoo's own order view instead of only from the app. `htmlBody` is rendered as
+ * HTML in the chatter, same as any other Odoo log note. Returns false (never
+ * throws) whenever Odoo sync isn't configured or fails.
+ */
+export async function postSaleOrderMessage(saleOrderId: number, htmlBody: string): Promise<boolean> {
+  try {
+    const auth = await authenticate();
+    if (!auth) return false;
+
+    await jsonRpc<number>(auth.url, "object", "execute_kw", [
+      auth.db,
+      auth.uid,
+      auth.apiKey,
+      "sale.order",
+      "message_post",
+      [[saleOrderId]],
+      { body: htmlBody, subtype_xmlid: "mail.mt_note" },
+    ]);
+
+    return true;
+  } catch {
+    return false;
+  }
+}
