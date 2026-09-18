@@ -3,7 +3,7 @@ import { CourierActions } from "@/components/courier/courier-actions";
 import { RUBIS_LOGO, PURE_LOGO, courierNameForCounty, courierFeeKES } from "@/lib/brand";
 import { timeAgo } from "@/lib/utils";
 import { PICKUP_ADDRESS } from "@/lib/email";
-import { distanceKmToPickup } from "@/lib/geo";
+import { getStoreCoords, distanceKm as computeDistanceKm, mapsDirectionsUrl } from "@/lib/geo";
 import { acceptCourierDispatchDuringRender } from "@/app/actions/courier";
 
 export const dynamic = "force-dynamic";
@@ -49,7 +49,11 @@ export default async function CourierDispatchPage({
     dispatch.status = "accepted";
   }
 
-  const distanceKm = await distanceKmToPickup(dispatch.store);
+  const storeCoords = await getStoreCoords(dispatch.store);
+  const distanceKm = storeCoords ? computeDistanceKm(storeCoords) : null;
+  const mapsUrl = mapsDirectionsUrl(
+    storeCoords ?? `${dispatch.store.name.trim()}, ${dispatch.store.county}, Kenya`
+  );
   const phone = dispatch.store.contactPhone || dispatch.store.seedPhone || "";
   // Rounds to 2 decimals and strips trailing zeros (avoids Odoo's raw floats like 47.67000000000001).
   const weightKg =
@@ -91,7 +95,16 @@ export default async function CourierDispatchPage({
         {dispatch.odooSaleOrderName && (
           <div className="text-xs text-gray-500 mt-1">Odoo order: {dispatch.odooSaleOrderName}</div>
         )}
-        <div className="text-[11px] text-gray-400 mt-2">Placed {timeAgo(dispatch.createdAt)}</div>
+        <div className="text-[11px] text-gray-400 mt-2 mb-2">Placed {timeAgo(dispatch.createdAt)}</div>
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold"
+          style={{ background: "#EEF7DE", color: "#4E8A00" }}
+        >
+          🧭 Open in Google Maps
+        </a>
       </div>
 
       {weightKg != null && (

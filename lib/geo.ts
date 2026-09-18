@@ -32,43 +32,57 @@ async function geocode(query: string): Promise<{ lat: number; lon: number } | nu
 }
 
 /**
- * Straight-line distance (km) from the pickup point to a store, rounded to 1 decimal.
- * Geocodes the store's address (or name as a fallback) once via OpenStreetMap's free
- * Nominatim service, then caches the result on the Store row — later calls for the
- * same store skip the network call entirely.
+ * Coordinates for a store, geocoded once from its address (or name as a fallback)
+ * via OpenStreetMap's free Nominatim service, then cached on the Store row — later
+ * calls for the same store skip the network call entirely.
  */
-export async function distanceKmToPickup(store: {
+export async function getStoreCoords(store: {
   id: number;
   name: string;
   county: string;
   address: string;
   lat: number | null;
   lng: number | null;
-}): Promise<number | null> {
-  let coords: { lat: number; lon: number } | null =
-    store.lat != null && store.lng != null ? { lat: store.lat, lon: store.lng } : null;
+}): Promise<{ lat: number; lon: number } | null> {
+  if (store.lat != null && store.lng != null) return { lat: store.lat, lon: store.lng };
 
-  if (!coords) {
-    const county = store.county.trim();
-    // Some seeded stores have a bogus county ("Unknown"), which pollutes the search
-    // and returns zero results — so each candidate is tried without it too.
-    const hasRealCounty = !!county && county.toLowerCase() !== "unknown";
-    const candidates = [
-      store.address.trim() && hasRealCounty ? `${store.address.trim()}, ${county}, Kenya` : null,
-      store.address.trim() ? `${store.address.trim()}, Kenya` : null,
-      hasRealCounty ? `${store.name.trim()}, ${county}, Kenya` : null,
-      `${store.name.trim()}, Kenya`,
-    ].filter((q): q is string => !!q);
+  const county = store.county.trim();
+  // Some seeded stores have a bogus county ("Unknown"), which pollutes the search
+  // and returns zero results — so each candidate is tried without it too.
+  const hasRealCounty = !!county && county.toLowerCase() !== "unknown";
+  const candidates = [
+    store.address.trim() && hasRealCounty ? `${store.address.trim()}, ${county}, Kenya` : null,
+    store.address.trim() ? `${store.address.trim()}, Kenya` : null,
+    hasRealCounty ? `${store.name.trim()}, ${county}, Kenya` : null,
+    `${store.name.trim()}, Kenya`,
+  ].filter((q): q is string => !!q);
 
-    for (const query of candidates) {
-      coords = await geocode(query);
-      if (coords) break;
-    }
-    if (coords) {
-      await prisma.store.update({ where: { id: store.id }, data: { lat: coords.lat, lng: coords.lon } }).catch(() => {});
-    }
+  let coords: { lat: number; lon: number } | null = null;
+  for (const query of candidates) {
+    coords = await geocode(query);
+    if (coords) break;
   }
+  if (coords) {
+    await prisma.store.update({ where: { id: store.id }, data: { lat: coords.lat, lng: coords.lon } }).catch(() => {});
+  }
+  return coords;
+}
 
-  if (!coords) return null;
-  return Math.round(haversineKm(PICKUP_COORDS, coords) * 10) / 10;
+/** Straight-line distance (km) from the pickup point to a store, rounded to 1 decimal. */
+export function distanceKm(storeCoords: { lat: number; lon: number }): number {
+  return Math.round(haversineKm(PICKUP_COORDS, storeCoords) * 10) / 10;
+}
+
+/**
+ * A Google Maps "get directions" link from the pickup point to the store — opens
+ * straight into turn-by-turn driving directions, no account or API key needed.
+ * Falls back to a text destination (Maps geocodes it itself) when coordinates
+ * aren't available yet.
+ */
+export function mapsDirectionsUrl(destination: { lat: number; lon: number } | string): string {
+  const dest = typeof destination === "string" ? destination : `${destination.lat},${destination.lon}`;
+  const origin = `${PICKUP_COORDS.lat},${PICKUP_COORDS.lon}`;
+  return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(
+    dest
+  )}&travelmode=driving`;
 }
