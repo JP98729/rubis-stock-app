@@ -361,7 +361,7 @@ export function BranchManagerView({
             )}
           </div>
         )}
-        {tab === "delivery" && <DeliveryCalendar today={today} />}
+        {tab === "delivery" && <DeliveryCalendar today={today} county={store.county} />}
       </div>
     </div>
   );

@@ -1,11 +1,19 @@
 import "server-only";
-import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO, COURIER_COMPANY, COURIER_PICKUP_ADDRESS } from "@/lib/brand";
+import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO, COURIER_PICKUP_ADDRESS, courierNameForCounty } from "@/lib/brand";
 import { renderStocktakeSummaryPdf, renderMovementSummaryPdf, renderOrderSummaryPdf } from "@/lib/pdf";
 
 const NOTIFY_EMAIL = "info@pure-nutritions.com";
 /** Courier service — CC'd on order notifications (Place Order / LPO upload) so they know what to deliver and where. */
 const COURIER_EMAIL = "fortain.jp@gmail.com";
-const COURIER_CC = `${COURIER_COMPANY} <${COURIER_EMAIL}>`;
+/** Nairobi county orders go to a dedicated bike courier instead of the general courier company. */
+const NAIROBI_COURIER_EMAIL = "je.jo.nutbar@gmail.com";
+
+function courierEmailForCounty(county: string): string {
+  return county.trim().toLowerCase() === "nairobi" ? NAIROBI_COURIER_EMAIL : COURIER_EMAIL;
+}
+function courierCcForCounty(county: string): string {
+  return `${courierNameForCounty(county)} <${courierEmailForCounty(county)}>`;
+}
 /** Fixed pickup point where the courier collects the box from — Pure Nutrition's own location, not the branch. */
 export const PICKUP_ADDRESS = COURIER_PICKUP_ADDRESS;
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Rubis Enjoy <onboarding@resend.dev>";
@@ -505,7 +513,7 @@ export async function sendManualOrderEmail(
     "Items ordered:",
     ...items.map((i) => `  ${i.flavour} (${i.sku}): ${i.reorder}`),
     "",
-    courierLink ? `${COURIER_COMPANY} — accept dispatch & upload signed delivery note: ${courierLink}?accept=1` : "",
+    courierLink ? `${courierNameForCounty(store.county)} — accept dispatch & upload signed delivery note: ${courierLink}?accept=1` : "",
     signatureUrl ? `Signature: ${signatureUrl}` : "",
   ]
     .filter(Boolean)
@@ -560,7 +568,7 @@ export async function sendManualOrderEmail(
       ${
         courierLink
           ? `<div style="margin-top:16px;text-align:center;">
-               <a href="${courierLink}?accept=1" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 ${COURIER_COMPANY}: Accept & Upload Delivery Note</a>
+               <a href="${courierLink}?accept=1" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 ${courierNameForCounty(store.county)}: Accept & Upload Delivery Note</a>
              </div>`
           : ""
       }
@@ -632,7 +640,7 @@ export async function sendLpoUploadEmail(
         ? ["", "Reorder items:", ...items.map((i) => `  ${i.flavour} (${i.sku}): ${i.reorder}`)].join("\n")
         : "",
       "",
-      courierLink ? `${COURIER_COMPANY} — accept dispatch & upload signed delivery note: ${courierLink}?accept=1` : "",
+      courierLink ? `${courierNameForCounty(store.county)} — accept dispatch & upload signed delivery note: ${courierLink}?accept=1` : "",
     ]
       .filter(Boolean)
       .join("\n");
@@ -690,7 +698,7 @@ export async function sendLpoUploadEmail(
       ${
         courierLink
           ? `<div style="margin-top:16px;text-align:center;">
-               <a href="${courierLink}?accept=1" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 ${COURIER_COMPANY}: Accept & Upload Delivery Note</a>
+               <a href="${courierLink}?accept=1" style="display:inline-block;font-size:14px;font-weight:700;color:#ffffff;background:${GREEN_DARK};border-radius:8px;padding:12px 20px;text-decoration:none;">🚚 ${courierNameForCounty(store.county)}: Accept & Upload Delivery Note</a>
              </div>`
           : ""
       }
@@ -805,7 +813,7 @@ export async function sendCourierDispatchEmail(
     const resend = new Resend(process.env.RESEND_API_KEY);
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
-      to: COURIER_EMAIL,
+      to: courierEmailForCounty(store.county),
       subject,
       html,
       text,
@@ -836,10 +844,10 @@ export async function sendCourierStatusEmail(
     const docLabel = event === "waybill" ? "Waybill" : "Delivery note";
     const label =
       event === "accepted"
-        ? `${COURIER_COMPANY} accepted dispatch`
+        ? `${courierNameForCounty(store.county)} accepted dispatch`
         : event === "waybill"
-        ? `${COURIER_COMPANY} uploaded the waybill`
-        : `${COURIER_COMPANY} delivered — note uploaded`;
+        ? `${courierNameForCounty(store.county)} uploaded the waybill`
+        : `${courierNameForCounty(store.county)} delivered — note uploaded`;
     const subject = `${label} — ${store.name.trim()} — ${orderRef}`;
     const text = [
       `Order reference: ${orderRef}`,
@@ -901,7 +909,7 @@ export async function sendCourierStatusEmail(
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: NOTIFY_EMAIL,
-      cc: [managerEmail, COURIER_CC].filter((e): e is string => !!e),
+      cc: [managerEmail, courierCcForCounty(store.county)].filter((e): e is string => !!e),
       subject,
       html,
       text,

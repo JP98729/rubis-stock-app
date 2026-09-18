@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { CourierActions } from "@/components/courier/courier-actions";
-import { RUBIS_LOGO, PURE_LOGO } from "@/lib/brand";
+import { RUBIS_LOGO, PURE_LOGO, courierNameForCounty } from "@/lib/brand";
 import { timeAgo } from "@/lib/utils";
 import { PICKUP_ADDRESS } from "@/lib/email";
 import { acceptCourierDispatchDuringRender } from "@/app/actions/courier";
@@ -56,7 +56,9 @@ export default async function CourierDispatchPage({
         <img src={RUBIS_LOGO} alt="Rubis" className="h-9 w-9 rounded-lg object-cover" />
         <div>
           <div className="font-bold text-sm">Rubis Enjoy — Courier</div>
-          <div className="text-[11px] text-gray-400">CMB Bridge Logistics · Order ref {dispatch.orderRef}</div>
+          <div className="text-[11px] text-gray-400">
+            {courierNameForCounty(dispatch.store.county)} · Order ref {dispatch.orderRef}
+          </div>
         </div>
       </div>
 

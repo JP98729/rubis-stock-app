@@ -31,3 +31,9 @@ export const MIN_STOCK = 6; // every branch must hold at least this many units o
 /** Courier service that collects orders from the warehouse and delivers to branches. */
 export const COURIER_COMPANY = "CMB Bridge Logistics";
 export const COURIER_PICKUP_ADDRESS = "Upper Kabete, Ndumbuini, Kwa Daggy, Nairobi";
+/** Nairobi county orders go to a dedicated bike courier instead of the general courier company. */
+export const NAIROBI_COURIER_NAME = "Vincent Kamau Maina";
+
+export function courierNameForCounty(county: string): string {
+  return county.trim().toLowerCase() === "nairobi" ? NAIROBI_COURIER_NAME : COURIER_COMPANY;
+}
