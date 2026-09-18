@@ -33,9 +33,9 @@ async function geocode(query: string): Promise<{ lat: number; lon: number } | nu
 
 /**
  * Straight-line distance (km) from the pickup point to a store, rounded to 1 decimal.
- * Geocodes the store's address (or name+county as a fallback) once via OpenStreetMap's
- * free Nominatim service, then caches the result on the Store row — later calls for
- * the same store skip the network call entirely.
+ * Geocodes the store's address (or name as a fallback) once via OpenStreetMap's free
+ * Nominatim service, then caches the result on the Store row — later calls for the
+ * same store skip the network call entirely.
  */
 export async function distanceKmToPickup(store: {
   id: number;
@@ -49,10 +49,21 @@ export async function distanceKmToPickup(store: {
     store.lat != null && store.lng != null ? { lat: store.lat, lon: store.lng } : null;
 
   if (!coords) {
-    const query = store.address.trim()
-      ? `${store.address.trim()}, ${store.county}, Kenya`
-      : `${store.name.trim()}, ${store.county}, Kenya`;
-    coords = await geocode(query);
+    const county = store.county.trim();
+    // Some seeded stores have a bogus county ("Unknown"), which pollutes the search
+    // and returns zero results — so each candidate is tried without it too.
+    const hasRealCounty = !!county && county.toLowerCase() !== "unknown";
+    const candidates = [
+      store.address.trim() && hasRealCounty ? `${store.address.trim()}, ${county}, Kenya` : null,
+      store.address.trim() ? `${store.address.trim()}, Kenya` : null,
+      hasRealCounty ? `${store.name.trim()}, ${county}, Kenya` : null,
+      `${store.name.trim()}, Kenya`,
+    ].filter((q): q is string => !!q);
+
+    for (const query of candidates) {
+      coords = await geocode(query);
+      if (coords) break;
+    }
     if (coords) {
       await prisma.store.update({ where: { id: store.id }, data: { lat: coords.lat, lng: coords.lon } }).catch(() => {});
     }
