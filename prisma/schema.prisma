@@ -39,6 +39,11 @@ model Store {
   /// Physical address, branch-manager self-service (like contactPhone/contactEmail).
   address String @default("")
 
+  /// Geocoded once (from `address`, falling back to name+county) and cached here so
+  /// the courier's distance-from-pickup line doesn't re-geocode on every page view.
+  lat Float?
+  lng Float?
+
   /// Contact info as it arrived in the original seed data.
   seedPhone String @default("")
   seedEmail String @default("")

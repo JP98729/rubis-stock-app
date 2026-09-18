@@ -3,6 +3,7 @@ import { CourierActions } from "@/components/courier/courier-actions";
 import { RUBIS_LOGO, PURE_LOGO, courierNameForCounty, courierFeeKES } from "@/lib/brand";
 import { timeAgo } from "@/lib/utils";
 import { PICKUP_ADDRESS } from "@/lib/email";
+import { distanceKmToPickup } from "@/lib/geo";
 import { acceptCourierDispatchDuringRender } from "@/app/actions/courier";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,11 @@ export default async function CourierDispatchPage({
   const { accept } = await searchParams;
   const dispatch = await prisma.courierDispatch.findUnique({
     where: { id },
-    include: { store: { select: { name: true, county: true, type: true, address: true, contactPhone: true, seedPhone: true } } },
+    include: {
+      store: {
+        select: { id: true, name: true, county: true, type: true, address: true, contactPhone: true, seedPhone: true, lat: true, lng: true },
+      },
+    },
   });
 
   if (!dispatch) {
@@ -44,6 +49,7 @@ export default async function CourierDispatchPage({
     dispatch.status = "accepted";
   }
 
+  const distanceKm = await distanceKmToPickup(dispatch.store);
   const phone = dispatch.store.contactPhone || dispatch.store.seedPhone || "";
   // Rounds to 2 decimals and strips trailing zeros (avoids Odoo's raw floats like 47.67000000000001).
   const weightKg =
@@ -79,6 +85,9 @@ export default async function CourierDispatchPage({
         </div>
         {dispatch.store.address && <div className="text-xs text-gray-500 mt-1">{dispatch.store.address}</div>}
         {phone && <div className="text-xs text-gray-500 mt-1">{phone}</div>}
+        {distanceKm != null && (
+          <div className="text-xs text-gray-500 mt-1">📍 ~{distanceKm} km from pickup</div>
+        )}
         {dispatch.odooSaleOrderName && (
           <div className="text-xs text-gray-500 mt-1">Odoo order: {dispatch.odooSaleOrderName}</div>
         )}
