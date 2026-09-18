@@ -33,6 +33,8 @@ export const COURIER_COMPANY = "CMB Bridge Logistics";
 export const COURIER_PICKUP_ADDRESS = "Upper Kabete, Ndumbuini, Kwa Daggy, Nairobi";
 /** Nairobi county orders go to a dedicated bike courier instead of the general courier company. */
 export const NAIROBI_COURIER_NAME = "Vincent Kamau Maina";
+/** wa.me format (digits only, country code first, no leading 0 or +). */
+export const NAIROBI_COURIER_PHONE_WA = "254717507475";
 
 export function courierNameForCounty(county: string): string {
   return county.trim().toLowerCase() === "nairobi" ? NAIROBI_COURIER_NAME : COURIER_COMPANY;

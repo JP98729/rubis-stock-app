@@ -8,7 +8,9 @@ import { createDraftSalesOrder, attachFileToSaleOrder, attachPdfToSaleOrder, get
 import { sendManualOrderEmail, sendLpoUploadEmail, sendCourierDispatchEmail, newOrderRef } from "@/lib/email";
 
 export type SimpleResult = { ok: true } | { ok: false; error: string };
-export type PlaceOrderResult = { ok: true; itemCount: number } | { ok: false; error: string };
+export type PlaceOrderResult =
+  | { ok: true; itemCount: number; courierLink: string | null }
+  | { ok: false; error: string };
 
 const APP_BASE_URL = process.env.APP_BASE_URL || "https://rubis-stock-app.vercel.app";
 
@@ -243,7 +245,7 @@ export async function placeManualOrder(
 
   revalidatePath("/branch");
   revalidatePath("/manager");
-  return { ok: true, itemCount: items.length };
+  return { ok: true, itemCount: items.length, courierLink };
 }
 
 export async function removeLpoDocument(id: string): Promise<SimpleResult> {
