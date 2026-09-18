@@ -158,6 +158,10 @@ model CourierDispatch {
   etimsInvoiceUrl        String?
   etimsInvoiceUploadedAt DateTime?
 
+  /// Odoo hr.expense id for the courier's delivery fee — created lazily on the
+  /// first document upload, then reused so every doc lands on the same expense.
+  courierExpenseId Int?
+
   createdAt DateTime @default(now())
 
   store Store @relation(fields: [storeId], references: [id])

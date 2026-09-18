@@ -138,6 +138,86 @@ export async function createMerchandiserVisitExpense(input: {
 }
 
 /**
+ * Fixed values copied from a real hr.expense record the user created by hand in
+ * Odoo as a template (id 198, "Courier Service") — same employee/account/payment
+ * method every time; only vendor (depends on which courier), amount, and
+ * name/date change.
+ */
+const COURIER_EXPENSE_TEMPLATE = {
+  employeeId: 1, // Joan Gracious Omondi
+  productId: 77, // [EXP_GEN] EXPENSES
+  accountId: 117, // 510600 SHIPPING COURIER
+  journalId: 14, // EQUITY BANK  0020285874495
+  paymentMethodLineId: 5, // Manual Payment (EQUITY BANK  0020285874495)
+  // Vincent Kamau Mania's own Odoo contact for Nairobi deliveries; the template's
+  // original vendor (UFANISI COURIER SERVICES) is reused for CMB Bridge Logistics,
+  // which doesn't have an Odoo contact of its own yet.
+  nairobiVendorId: 907,
+  defaultVendorId: 363,
+};
+
+/**
+ * Creates a draft expense in Odoo for a courier's delivery fee, mirroring the
+ * hand-made "Courier Service" template. Returns null (never throws) whenever
+ * Odoo sync isn't configured — a courier's document upload must never fail
+ * because of this, it's a bonus record for accounting.
+ */
+export async function createCourierExpense(input: {
+  storeName: string;
+  orderRef: string;
+  feeKES: number;
+  date: string;
+  isNairobi: boolean;
+}): Promise<{ id: number; name: string } | null> {
+  try {
+    const auth = await authenticate();
+    if (!auth) return null;
+
+    const name = `Courier delivery — ${input.storeName.trim()} — ${input.orderRef}`;
+    const vendorId = input.isNairobi ? COURIER_EXPENSE_TEMPLATE.nairobiVendorId : COURIER_EXPENSE_TEMPLATE.defaultVendorId;
+
+    const id = await jsonRpc<number>(auth.url, "object", "execute_kw", [
+      auth.db,
+      auth.uid,
+      auth.apiKey,
+      "hr.expense",
+      "create",
+      [
+        {
+          name,
+          date: input.date,
+          employee_id: COURIER_EXPENSE_TEMPLATE.employeeId,
+          product_id: COURIER_EXPENSE_TEMPLATE.productId,
+          quantity: 1,
+          price_unit: input.feeKES,
+          // Same quirk as the merchandiser expense: price_unit alone gets silently
+          // recomputed back to 0 by Odoo, total_amount_currency is what sticks.
+          total_amount_currency: input.feeKES,
+          payment_mode: "company_account",
+          journal_id: COURIER_EXPENSE_TEMPLATE.journalId,
+          payment_method_line_id: COURIER_EXPENSE_TEMPLATE.paymentMethodLineId,
+          vendor_id: vendorId,
+          account_id: COURIER_EXPENSE_TEMPLATE.accountId,
+        },
+      ],
+    ]);
+
+    const [expense] = await jsonRpc<Array<{ name: string }>>(auth.url, "object", "execute_kw", [
+      auth.db,
+      auth.uid,
+      auth.apiKey,
+      "hr.expense",
+      "read",
+      [[id], ["name"]],
+    ]);
+
+    return { id, name: expense?.name || name };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Creates a draft Sales Order in Odoo for a branch's current reorder — one line per
  * product with an actual reorder quantity. Returns null (never throws) whenever
  * Odoo sync isn't configured, the branch has no mapped Odoo customer, or there's
