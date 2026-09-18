@@ -39,3 +39,9 @@ export const NAIROBI_COURIER_PHONE_WA = "254717507475";
 export function courierNameForCounty(county: string): string {
   return county.trim().toLowerCase() === "nairobi" ? NAIROBI_COURIER_NAME : COURIER_COMPANY;
 }
+
+/** Flat KES 450 for the first 5kg, then KES 45 per additional kg. */
+export function courierFeeKES(weightKg: number): number {
+  if (weightKg <= 5) return 450;
+  return Math.round(450 + (weightKg - 5) * 45);
+}

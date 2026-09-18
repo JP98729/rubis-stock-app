@@ -1,5 +1,5 @@
 import "server-only";
-import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO, COURIER_PICKUP_ADDRESS, courierNameForCounty } from "@/lib/brand";
+import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO, COURIER_PICKUP_ADDRESS, courierNameForCounty, courierFeeKES } from "@/lib/brand";
 import { renderStocktakeSummaryPdf, renderMovementSummaryPdf, renderOrderSummaryPdf } from "@/lib/pdf";
 
 const NOTIFY_EMAIL = "info@pure-nutritions.com";
@@ -754,6 +754,7 @@ export async function sendCourierDispatchEmail(
       `Deliver to: ${store.name.trim()} (${store.county} · ${store.type})`,
       store.address ? `Delivery address: ${store.address}` : "",
       shippingWeightKg != null ? `Shipping weight: ${formatKg(shippingWeightKg)} kg` : "",
+      shippingWeightKg != null ? `Delivery fee: KES ${courierFeeKES(shippingWeightKg)}` : "",
       "",
       `Accept dispatch & upload delivery note: ${courierLink}?accept=1`,
     ]
@@ -799,6 +800,7 @@ export async function sendCourierDispatchEmail(
                <div style="font-size:28px;">📦</div>
                <div style="font-size:11px;color:${GREEN_DARK};text-transform:uppercase;letter-spacing:0.04em;font-weight:700;margin-top:4px;">Shipping weight</div>
                <div style="font-size:24px;font-weight:700;color:${GREEN_DARK};margin-top:2px;">${formatKg(shippingWeightKg)} kg</div>
+               <div style="font-size:12px;color:${GREEN_DARK};margin-top:6px;padding-top:6px;border-top:1px solid #D9EEBB;">Delivery fee: <strong>KES ${courierFeeKES(shippingWeightKg)}</strong></div>
              </div>`
           : ""
       }

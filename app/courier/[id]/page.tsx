@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { CourierActions } from "@/components/courier/courier-actions";
-import { RUBIS_LOGO, PURE_LOGO, courierNameForCounty } from "@/lib/brand";
+import { RUBIS_LOGO, PURE_LOGO, courierNameForCounty, courierFeeKES } from "@/lib/brand";
 import { timeAgo } from "@/lib/utils";
 import { PICKUP_ADDRESS } from "@/lib/email";
 import { acceptCourierDispatchDuringRender } from "@/app/actions/courier";
@@ -93,6 +93,9 @@ export default async function CourierDispatchPage({
           </div>
           <div className="text-2xl font-bold mt-0.5" style={{ color: "#4E8A00" }}>
             {weightKg} kg
+          </div>
+          <div className="text-xs mt-2 pt-2 border-t" style={{ color: "#4E8A00", borderColor: "#D9EEBB" }}>
+            Delivery fee: <span className="font-bold">KES {courierFeeKES(weightKg)}</span>
           </div>
         </div>
       )}
