@@ -1,9 +1,14 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Camera, CheckCircle2, FileText } from "lucide-react";
+import { Camera, CheckCircle2, CreditCard, FileText, Phone } from "lucide-react";
 import { GREEN, GREEN_DARK } from "@/lib/brand";
-import { acceptCourierDispatch, uploadCourierDeliveryNote, uploadCourierWaybill } from "@/app/actions/courier";
+import {
+  acceptCourierDispatch,
+  uploadCourierDeliveryNote,
+  uploadCourierWaybill,
+  uploadCourierEtimsInvoice,
+} from "@/app/actions/courier";
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -19,22 +24,30 @@ export function CourierActions({
   initialStatus,
   initialDeliveryNoteUrl,
   initialWaybillUrl,
+  initialEtimsInvoiceUrl,
+  feeKES,
 }: {
   dispatchId: string;
   initialStatus: string;
   initialDeliveryNoteUrl: string | null;
   initialWaybillUrl: string | null;
+  initialEtimsInvoiceUrl: string | null;
+  feeKES: number | null;
 }) {
   const cameraInputId = useId();
   const libraryInputId = useId();
   const waybillCameraInputId = useId();
   const waybillLibraryInputId = useId();
+  const etimsCameraInputId = useId();
+  const etimsLibraryInputId = useId();
   const [status, setStatus] = useState(initialStatus);
   const [deliveryNoteUrl, setDeliveryNoteUrl] = useState(initialDeliveryNoteUrl);
   const [waybillUrl, setWaybillUrl] = useState(initialWaybillUrl);
+  const [etimsInvoiceUrl, setEtimsInvoiceUrl] = useState(initialEtimsInvoiceUrl);
   const [acceptBusy, setAcceptBusy] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [waybillBusy, setWaybillBusy] = useState(false);
+  const [etimsBusy, setEtimsBusy] = useState(false);
   const [error, setError] = useState("");
 
   async function handleAccept() {
@@ -98,8 +111,33 @@ export function CourierActions({
     e.target.value = "";
   }
 
+  async function handleEtimsFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEtimsBusy(true);
+    setError("");
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      const uploadRes = await fetch("/api/upload-courier", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dispatchId, dataUrl }),
+      });
+      const uploadJson = (await uploadRes.json()) as { url?: string; error?: string };
+      if (!uploadRes.ok || !uploadJson.url) throw new Error(uploadJson.error || "Upload failed");
+      const result = await uploadCourierEtimsInvoice(dispatchId, uploadJson.url);
+      if (!result.ok) throw new Error(result.error);
+      setEtimsInvoiceUrl(uploadJson.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+    }
+    setEtimsBusy(false);
+    e.target.value = "";
+  }
+
   const isPdf = !!deliveryNoteUrl && deliveryNoteUrl.toLowerCase().endsWith(".pdf");
   const isWaybillPdf = !!waybillUrl && waybillUrl.toLowerCase().endsWith(".pdf");
+  const isEtimsPdf = !!etimsInvoiceUrl && etimsInvoiceUrl.toLowerCase().endsWith(".pdf");
   const accepted = status !== "pending";
 
   return (
@@ -244,6 +282,116 @@ export function CourierActions({
               />
             </label>
           </div>
+        )}
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="text-sm font-semibold mb-2 flex items-center gap-1.5">
+          <CreditCard size={14} /> 4. Your KRA eTIMS invoice for this delivery — required
+        </div>
+        {!accepted ? (
+          <div className="text-xs text-gray-400 italic">Accept the dispatch first.</div>
+        ) : etimsInvoiceUrl ? (
+          <div className="flex items-center gap-2.5">
+            {isEtimsPdf ? (
+              <a
+                href={etimsInvoiceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-16 h-16 rounded-lg border border-green-200 bg-white flex flex-col items-center justify-center gap-0.5"
+              >
+                <FileText size={22} style={{ color: GREEN_DARK }} />
+                <span className="text-[9px] font-semibold" style={{ color: GREEN_DARK }}>
+                  PDF
+                </span>
+              </a>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={etimsInvoiceUrl} alt="eTIMS invoice" className="w-16 h-16 rounded-lg object-cover border border-green-200" />
+            )}
+            <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: GREEN_DARK }}>
+              <CheckCircle2 size={16} className="shrink-0" />
+              eTIMS invoice uploaded
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="text-[11px] text-gray-400 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2 leading-relaxed mb-2.5">
+              <div className="mb-1.5">
+                No invoice yet? Dial <span className="font-semibold text-gray-600">*222#</span> and follow these steps:
+              </div>
+              <ol className="list-decimal list-inside flex flex-col gap-0.5">
+                <li>Welcome to eCitizen</li>
+                <li>
+                  Choose <span className="font-semibold text-gray-600">5. KRA Service</span>
+                </li>
+                <li>
+                  Choose <span className="font-semibold text-gray-600">5. ETIMS</span>
+                </li>
+                <li>
+                  Choose <span className="font-semibold text-gray-600">1. Sales Invoice</span>
+                </li>
+                <li>
+                  Choose <span className="font-semibold text-gray-600">1. A00400762C</span>
+                </li>
+                <li>
+                  Type Pin nr Pure Nutritions: <span className="font-semibold text-gray-600">A007747135E</span>
+                </li>
+                <li>
+                  Type: <span className="font-semibold text-gray-600">Delivery</span>
+                </li>
+                <li>
+                  Type Quantity: <span className="font-semibold text-gray-600">1</span>
+                </li>
+                <li>
+                  Type: <span className="font-semibold text-gray-600">{feeKES ?? "—"}</span>
+                </li>
+                <li>
+                  Type: <span className="font-semibold text-gray-600">1</span>
+                </li>
+                <li>Download</li>
+              </ol>
+              <div className="mt-1.5">Screenshot it and upload below.</div>
+              <a
+                href="tel:*222%23"
+                className="mt-2 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold"
+                style={{ background: GREEN, color: "#ffffff" }}
+              >
+                <Phone size={13} /> Dial *222# now
+              </a>
+            </div>
+            <div className="flex gap-2">
+              <label
+                htmlFor={etimsCameraInputId}
+                className="flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-blue-300 bg-blue-50 rounded-lg py-3 text-sm font-semibold cursor-pointer"
+                style={{ color: "#1D4ED8" }}
+              >
+                <Camera size={16} /> {etimsBusy ? "Uploading…" : "Take photo"}
+                <input
+                  id={etimsCameraInputId}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleEtimsFile}
+                />
+              </label>
+              <label
+                htmlFor={etimsLibraryInputId}
+                className="flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-blue-300 bg-blue-50 rounded-lg py-3 text-sm font-semibold cursor-pointer"
+                style={{ color: "#1D4ED8" }}
+              >
+                {etimsBusy ? "Uploading…" : "Scan / choose file"}
+                <input
+                  id={etimsLibraryInputId}
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="hidden"
+                  onChange={handleEtimsFile}
+                />
+              </label>
+            </div>
+          </>
         )}
       </div>
 

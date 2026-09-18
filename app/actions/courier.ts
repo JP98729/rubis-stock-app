@@ -127,3 +127,37 @@ export async function uploadCourierWaybill(id: string, url: string): Promise<Sim
   revalidatePath(`/courier/${id}`);
   return { ok: true };
 }
+
+/** The courier's own KRA eTIMS invoice for the delivery fee — same paperclip pattern as the waybill. */
+export async function uploadCourierEtimsInvoice(id: string, url: string): Promise<SimpleResult> {
+  const dispatch = await loadDispatch(id);
+  if (!dispatch) return { ok: false, error: "This dispatch link is invalid." };
+  if (dispatch.status === "pending") return { ok: false, error: "Accept the dispatch before uploading the eTIMS invoice." };
+  if (!url) return { ok: false, error: "Upload a photo or PDF of the eTIMS invoice first." };
+
+  await prisma.courierDispatch.update({
+    where: { id },
+    data: { etimsInvoiceUrl: url, etimsInvoiceUploadedAt: new Date() },
+  });
+
+  // Best-effort: put the eTIMS invoice on the Sales Order's paperclip icon in Odoo too.
+  if (dispatch.odooSaleOrderId) {
+    const ext = url.toLowerCase().endsWith(".pdf") ? "pdf" : "jpg";
+    await attachFileToSaleOrder(
+      dispatch.odooSaleOrderId,
+      url,
+      `Courier eTIMS invoice ${dispatch.store.name.trim()} ${dispatch.orderRef}.${ext}`
+    );
+  }
+
+  await sendCourierStatusEmail(
+    dispatch.store,
+    dispatch.orderRef,
+    "etims",
+    dispatch.store.contactEmail || dispatch.store.seedEmail || null,
+    url
+  );
+
+  revalidatePath(`/courier/${id}`);
+  return { ok: true };
+}

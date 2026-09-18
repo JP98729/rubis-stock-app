@@ -836,19 +836,21 @@ export async function sendCourierDispatchEmail(
 export async function sendCourierStatusEmail(
   store: { name: string; county: string; type: string },
   orderRef: string,
-  event: "accepted" | "delivered" | "waybill",
+  event: "accepted" | "delivered" | "waybill" | "etims",
   managerEmail: string | null,
   fileUrl?: string | null
 ): Promise<void> {
   if (!process.env.RESEND_API_KEY) return;
 
   try {
-    const docLabel = event === "waybill" ? "Waybill" : "Delivery note";
+    const docLabel = event === "waybill" ? "Waybill" : event === "etims" ? "eTIMS invoice" : "Delivery note";
     const label =
       event === "accepted"
         ? `${courierNameForCounty(store.county)} accepted dispatch`
         : event === "waybill"
         ? `${courierNameForCounty(store.county)} uploaded the waybill`
+        : event === "etims"
+        ? `${courierNameForCounty(store.county)} uploaded the eTIMS invoice`
         : `${courierNameForCounty(store.county)} delivered — note uploaded`;
     const subject = `${label} — ${store.name.trim()} — ${orderRef}`;
     const text = [
@@ -858,6 +860,8 @@ export async function sendCourierStatusEmail(
         ? "The courier has accepted this dispatch."
         : event === "waybill"
         ? "The courier has uploaded the waybill."
+        : event === "etims"
+        ? "The courier has uploaded their KRA eTIMS invoice for this delivery."
         : "The courier has delivered and uploaded the signed/stamped delivery note.",
       fileUrl ? `${docLabel}: ${fileUrl}` : "",
     ]
@@ -892,6 +896,8 @@ export async function sendCourierStatusEmail(
             ? "The courier has accepted this dispatch and will deliver it."
             : event === "waybill"
             ? "The courier has uploaded the waybill for this order."
+            : event === "etims"
+            ? "The courier has uploaded their KRA eTIMS invoice for this delivery."
             : "The courier has delivered this order and uploaded the signed/stamped delivery note."
         }
       </div>

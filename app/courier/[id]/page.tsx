@@ -105,6 +105,8 @@ export default async function CourierDispatchPage({
         initialStatus={dispatch.status}
         initialDeliveryNoteUrl={dispatch.deliveryNoteUrl}
         initialWaybillUrl={dispatch.waybillUrl}
+        initialEtimsInvoiceUrl={dispatch.etimsInvoiceUrl}
+        feeKES={weightKg != null ? courierFeeKES(weightKg) : null}
       />
     </div>
   );
