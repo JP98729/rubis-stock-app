@@ -1,14 +1,13 @@
 import "server-only";
-import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO } from "@/lib/brand";
+import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO, COURIER_COMPANY, COURIER_PICKUP_ADDRESS } from "@/lib/brand";
 import { renderStocktakeSummaryPdf, renderMovementSummaryPdf, renderOrderSummaryPdf } from "@/lib/pdf";
 
 const NOTIFY_EMAIL = "info@pure-nutritions.com";
 /** Courier service — CC'd on order notifications (Place Order / LPO upload) so they know what to deliver and where. */
-const COURIER_COMPANY = "CMB Bridge Logistics";
 const COURIER_EMAIL = "fortain.jp@gmail.com";
 const COURIER_CC = `${COURIER_COMPANY} <${COURIER_EMAIL}>`;
 /** Fixed pickup point where the courier collects the box from — Pure Nutrition's own location, not the branch. */
-export const PICKUP_ADDRESS = "Upper Kabete, Ndumbuini, Kwa Daggy, Nairobi";
+export const PICKUP_ADDRESS = COURIER_PICKUP_ADDRESS;
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Rubis Enjoy <onboarding@resend.dev>";
 const MERCHANDISER_VISIT_FEE_KES = 300;
 

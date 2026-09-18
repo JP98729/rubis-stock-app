@@ -1,6 +1,7 @@
 "use client";
 
-import { GREEN, GREEN_DARK, AMBER } from "@/lib/brand";
+import { Truck } from "lucide-react";
+import { GREEN, GREEN_DARK, AMBER, COURIER_COMPANY } from "@/lib/brand";
 import { buildMonthGrid, deliveryWeekday, WEEKDAY_NAME } from "@/lib/utils";
 
 /**
@@ -43,6 +44,15 @@ export function DeliveryCalendar({ today }: { today: string }) {
   return (
     <div className="flex flex-col gap-4">
       <DeliveryBanner today={today} />
+      <div
+        className="rounded-xl px-4 py-2.5 flex items-center gap-2.5 text-sm"
+        style={{ background: "#EEF7DE" }}
+      >
+        <Truck size={16} style={{ color: GREEN_DARK }} className="shrink-0" />
+        <span style={{ color: GREEN_DARK }}>
+          Deliveries are handled by <span className="font-semibold">{COURIER_COMPANY}</span>.
+        </span>
+      </div>
       <div className="text-xs text-gray-400 px-1">
         One countrywide delivery run per month, on the 23rd, to every active branch. Highlighted below across the next 6
         months.
