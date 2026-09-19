@@ -61,8 +61,10 @@ export function BranchManagerView({
   const [orderBusy, setOrderBusy] = useState(false);
   const [orderError, setOrderError] = useState("");
   const [orderConfirmed, setOrderConfirmed] = useState(false);
+  // Starts every box at 0, not the suggested reorder quantity — the manager types
+  // in exactly what they want for each product instead of editing a pre-filled guess.
   const [orderQty, setOrderQty] = useState<Record<string, number>>(() =>
-    Object.fromEntries(orderItems.map((r) => [r.sku, r.reorder]))
+    Object.fromEntries(orderItems.map((r) => [r.sku, 0]))
   );
   // Once a manager uses one order method, hide the other — placing an order both
   // ways would send Pure Nutrition two orders for the same reorder. Session-only:
@@ -240,7 +242,7 @@ export function BranchManagerView({
                                 type="number"
                                 min="0"
                                 inputMode="numeric"
-                                value={orderQty[r.sku] ?? r.reorder}
+                                value={orderQty[r.sku] ?? 0}
                                 onChange={(e) =>
                                   setOrderQty((prev) => ({
                                     ...prev,
