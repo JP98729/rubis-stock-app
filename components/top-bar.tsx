@@ -9,6 +9,7 @@ const ROLE_LABELS: Record<Role, string> = {
   branch: "Branch Manager",
   hq: "Rubis HQ",
   manager: "Pure Nutrition Manager",
+  courier: "Courier",
 };
 
 export function TopBar({ role }: { role: Role | null }) {

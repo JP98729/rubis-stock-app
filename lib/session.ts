@@ -4,13 +4,15 @@ import { after } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
 import { prisma } from "./prisma";
 
-export type Role = "merchandiser" | "branch" | "manager" | "hq";
+export type Role = "merchandiser" | "branch" | "manager" | "hq" | "courier";
 
 export type Session = {
   role: Role;
   storeId?: number;
   merchandiserId?: string;
   merchName?: string;
+  /** Which courier logged in — determines whose dispatches they see on /courier-hub. */
+  courierScope?: "nairobi" | "other";
 };
 
 const COOKIE_NAME = "rubis_session";
@@ -50,12 +52,14 @@ export async function getSession(): Promise<Session | null> {
   try {
     const { payload } = await jwtVerify(token, secret());
     const role = payload.role as Role | undefined;
-    if (!role || !["merchandiser", "branch", "manager", "hq"].includes(role)) return null;
+    if (!role || !["merchandiser", "branch", "manager", "hq", "courier"].includes(role)) return null;
+    const courierScope = payload.courierScope;
     return {
       role,
       storeId: typeof payload.storeId === "number" ? payload.storeId : undefined,
       merchandiserId: typeof payload.merchandiserId === "string" ? payload.merchandiserId : undefined,
       merchName: typeof payload.merchName === "string" ? payload.merchName : undefined,
+      courierScope: courierScope === "nairobi" || courierScope === "other" ? courierScope : undefined,
     };
   } catch {
     return null;

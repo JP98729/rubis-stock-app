@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardList, LayoutDashboard, MessageCircle, Store } from "lucide-react";
+import { ClipboardList, LayoutDashboard, MessageCircle, Store, Truck } from "lucide-react";
 import { GREEN, GREEN_DARK, PURE_LOGO, RUBIS_LOGO, ENJOY_LOGO } from "@/lib/brand";
 import { TopBar } from "@/components/top-bar";
 
@@ -37,6 +37,14 @@ const cards = [
     colorDark: "#111827",
     title: "Pure Nutrition Manager",
     desc: "Full dashboard — orders, production plan, alerts, and team access codes.",
+  },
+  {
+    href: "/courier-hub",
+    icon: Truck,
+    color: "#EA580C",
+    colorDark: "#9A3412",
+    title: "Courier",
+    desc: "See your deliveries — accept, upload documents, and check your fee.",
   },
 ];
 

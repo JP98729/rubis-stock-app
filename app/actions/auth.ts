@@ -9,7 +9,10 @@ import { normalizeCode, storeCodeFor, storeIdFromCode } from "@/lib/codes";
 
 export type LoginState = { error?: string };
 
-async function roleCodeMatches(type: "MERCHANDISER" | "MANAGER" | "HQ", code: string) {
+async function roleCodeMatches(
+  type: "MERCHANDISER" | "MANAGER" | "HQ" | "COURIER_NAIROBI" | "COURIER_OTHER",
+  code: string
+) {
   const row = await prisma.roleCode.findUnique({ where: { type } });
   if (!row) return false;
   return bcrypt.compare(code, row.codeHash);
@@ -79,6 +82,29 @@ export async function loginHq(_prev: LoginState, formData: FormData): Promise<Lo
   await createSession({ role: "hq" });
   revalidatePath("/hq");
   redirect("/hq");
+}
+
+/**
+ * One shared login form for both couriers — the code itself determines which
+ * one (Nairobi vs everywhere else), same as how each branch's own RBxxx code
+ * determines which branch signs in.
+ */
+export async function loginCourier(_prev: LoginState, formData: FormData): Promise<LoginState> {
+  const code = normalizeCode(String(formData.get("code") ?? ""));
+  const fail = { error: "Code not recognized. Check with Pure Nutrition for your courier access code." };
+  if (!code) return fail;
+
+  if (await roleCodeMatches("COURIER_NAIROBI", code)) {
+    await createSession({ role: "courier", courierScope: "nairobi" });
+    revalidatePath("/courier-hub");
+    redirect("/courier-hub");
+  }
+  if (await roleCodeMatches("COURIER_OTHER", code)) {
+    await createSession({ role: "courier", courierScope: "other" });
+    revalidatePath("/courier-hub");
+    redirect("/courier-hub");
+  }
+  return fail;
 }
 
 /** Used by both "Switch role" in the top bar and the branch manager's "Log out". */

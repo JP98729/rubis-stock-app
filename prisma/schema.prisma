@@ -28,6 +28,8 @@ enum RoleCodeType {
   MERCHANDISER
   MANAGER
   HQ
+  COURIER_NAIROBI
+  COURIER_OTHER
 }
 
 model Store {

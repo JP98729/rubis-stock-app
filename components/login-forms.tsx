@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { GREEN, PURE_LOGO, RUBIS_LOGO } from "@/lib/brand";
 import { WhatsAppContact } from "./ui";
-import { loginBranch, loginHq, loginManager, loginMerchandiser, type LoginState } from "@/app/actions/auth";
+import { loginBranch, loginCourier, loginHq, loginManager, loginMerchandiser, type LoginState } from "@/app/actions/auth";
 
 const initial: LoginState = {};
 
@@ -123,6 +123,44 @@ export function ManagerLogin() {
             {pending ? "Checking…" : "Unlock"}
           </button>
         </form>
+      </div>
+    </div>
+  );
+}
+
+export function CourierLogin() {
+  const [state, formAction, pending] = useActionState(loginCourier, initial);
+  return (
+    <div className="max-w-sm mx-auto px-4 pt-10">
+      <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
+        <Logos rubisOnly />
+        <div className="font-bold text-lg mb-1">Courier Access</div>
+        <div className="text-sm text-gray-500 mb-5">
+          Enter your courier access code to see your deliveries — accept, upload documents, and check your fee.
+        </div>
+        <form action={formAction} className="flex flex-col gap-3">
+          <input
+            name="code"
+            placeholder="Courier access code"
+            autoCapitalize="characters"
+            className="border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-center tracking-widest font-semibold uppercase"
+          />
+          {state.error && <div className="text-xs text-red-600">{state.error}</div>}
+          <button
+            type="submit"
+            disabled={pending}
+            className="py-2.5 rounded-xl text-white font-bold text-sm disabled:opacity-60"
+            style={{ background: GREEN }}
+          >
+            {pending ? "Checking…" : "Unlock"}
+          </button>
+        </form>
+        <div className="text-[11px] text-gray-400 mt-4">
+          Don&apos;t have a code? Message your Pure Nutrition contact.
+          <div className="mt-1.5">
+            <WhatsAppContact message="Hi, I need my courier access code for the Rubis Enjoy app." />
+          </div>
+        </div>
       </div>
     </div>
   );

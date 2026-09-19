@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Database, Gift, LayoutDashboard, MessageCircle, Search } from "lucide-react";
+import { Database, Gift, LayoutDashboard, MessageCircle, Search, Truck } from "lucide-react";
 import { GREEN, GREEN_DARK } from "@/lib/brand";
 import {
   addMerchandiser,
@@ -72,9 +72,13 @@ export function TeamAccess({
   const [hqSaved, setHqSaved] = useState(false);
   const [merchDraft, setMerchDraft] = useState("");
   const [merchSaved, setMerchSaved] = useState(false);
+  const [courierNairobiDraft, setCourierNairobiDraft] = useState("");
+  const [courierNairobiSaved, setCourierNairobiSaved] = useState(false);
+  const [courierOtherDraft, setCourierOtherDraft] = useState("");
+  const [courierOtherSaved, setCourierOtherSaved] = useState(false);
 
   async function saveRoleCode(
-    type: "MANAGER" | "HQ" | "MERCHANDISER",
+    type: "MANAGER" | "HQ" | "MERCHANDISER" | "COURIER_NAIROBI" | "COURIER_OTHER",
     value: string,
     clear: () => void,
     flag: (v: boolean) => void
@@ -274,6 +278,50 @@ export function TeamAccess({
             style={{ background: "#C0392B" }}
           >
             {hqSaved ? "Saved ✓" : "Save Code"}
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border p-4" style={{ borderColor: "#FDBA74", background: "#FFF7ED" }}>
+        <div className="font-semibold text-sm mb-1 flex items-center gap-1.5">
+          <Truck size={15} style={{ color: "#9A3412" }} /> Courier Access Codes
+        </div>
+        <div className="text-xs text-gray-500 mb-3">
+          Opens the Courier tab, where a courier sees only their own deliveries. Vincent Kamau Maina handles Nairobi
+          deliveries; CMB Bridge Logistics handles everywhere else — give each their own code below.
+        </div>
+        <div className="flex gap-2 items-center flex-wrap mb-3">
+          <input
+            value={courierNairobiDraft}
+            onChange={(e) => setCourierNairobiDraft(e.target.value)}
+            placeholder="New code — Vincent (Nairobi)"
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono tracking-widest w-56"
+          />
+          <button
+            onClick={() =>
+              saveRoleCode("COURIER_NAIROBI", courierNairobiDraft, () => setCourierNairobiDraft(""), setCourierNairobiSaved)
+            }
+            className="px-3 py-2 rounded-lg text-white text-xs font-semibold"
+            style={{ background: "#9A3412" }}
+          >
+            {courierNairobiSaved ? "Saved ✓" : "Save Code"}
+          </button>
+        </div>
+        <div className="flex gap-2 items-center flex-wrap">
+          <input
+            value={courierOtherDraft}
+            onChange={(e) => setCourierOtherDraft(e.target.value)}
+            placeholder="New code — CMB Bridge Logistics"
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono tracking-widest w-56"
+          />
+          <button
+            onClick={() =>
+              saveRoleCode("COURIER_OTHER", courierOtherDraft, () => setCourierOtherDraft(""), setCourierOtherSaved)
+            }
+            className="px-3 py-2 rounded-lg text-white text-xs font-semibold"
+            style={{ background: "#9A3412" }}
+          >
+            {courierOtherSaved ? "Saved ✓" : "Save Code"}
           </button>
         </div>
       </div>

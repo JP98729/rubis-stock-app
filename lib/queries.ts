@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "./prisma";
-import { RANGES } from "./brand";
+import { RANGES, courierFeeKES } from "./brand";
 import { storeCodeFor } from "./codes";
 import {
   computeStoreStock,
@@ -513,6 +513,62 @@ export async function getCounts() {
 
 export async function getMerchandisers() {
   return prisma.merchandiser.findMany({ orderBy: { createdAt: "asc" } });
+}
+
+export type CourierDispatchRow = {
+  id: string;
+  orderRef: string;
+  storeName: string;
+  county: string;
+  status: string;
+  weightKg: number | null;
+  feeKES: number | null;
+  placedAgo: string;
+  hasWaybill: boolean;
+  hasEtims: boolean;
+  complete: boolean;
+};
+
+/**
+ * A courier's dispatches, split into what still needs action (not yet delivered,
+ * or missing the waybill/eTIMS invoice) vs fully wrapped up. `isNairobi` picks
+ * which courier's dispatches to show — matches the county-based routing used
+ * everywhere else (courierNameForCounty et al).
+ */
+export async function getCourierDispatchesForScope(
+  isNairobi: boolean
+): Promise<{ needsAction: CourierDispatchRow[]; completed: CourierDispatchRow[] }> {
+  const dispatches = await prisma.courierDispatch.findMany({
+    include: { store: { select: { name: true, county: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 300,
+  });
+
+  const rows: CourierDispatchRow[] = dispatches
+    .filter((d) => (d.store.county.trim().toLowerCase() === "nairobi") === isNairobi)
+    .map((d) => {
+      const weightKg = d.shippingWeightKg != null ? Math.round(d.shippingWeightKg * 100) / 100 : null;
+      const hasWaybill = !!d.waybillUrl;
+      const hasEtims = !!d.etimsInvoiceUrl;
+      return {
+        id: d.id,
+        orderRef: d.orderRef,
+        storeName: d.store.name.trim(),
+        county: d.store.county,
+        status: d.status,
+        weightKg,
+        feeKES: weightKg != null ? courierFeeKES(weightKg) : null,
+        placedAgo: timeAgo(d.createdAt),
+        hasWaybill,
+        hasEtims,
+        complete: d.status === "delivered" && hasWaybill && hasEtims,
+      };
+    });
+
+  return {
+    needsAction: rows.filter((r) => !r.complete),
+    completed: rows.filter((r) => r.complete).slice(0, 20),
+  };
 }
 
 export { todayStr, currentMonthKey };
