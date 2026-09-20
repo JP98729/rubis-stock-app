@@ -122,15 +122,18 @@ function AddBranchForm({ onAdded }: { onAdded: (msg: string) => void }) {
 
 export function StoresTable({ rows, onToast }: { rows: StoreTableRow[]; onToast: (msg: string) => void }) {
   const [q, setQ] = useState("");
+  const [county, setCounty] = useState("");
+  const counties = [...new Set(rows.map((r) => r.store.county))].sort();
   const filtered = rows.filter(
     ({ store }) =>
-      store.name.toLowerCase().includes(q.toLowerCase()) || store.county.toLowerCase().includes(q.toLowerCase())
+      (store.name.toLowerCase().includes(q.toLowerCase()) || store.county.toLowerCase().includes(q.toLowerCase())) &&
+      (!county || store.county === county)
   );
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-3 print:hidden">
-        <span className="font-semibold text-sm">All Branches ({rows.length})</span>
+        <span className="font-semibold text-sm">All Branches ({filtered.length})</span>
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -141,6 +144,18 @@ export function StoresTable({ rows, onToast }: { rows: StoreTableRow[]; onToast:
               className="border border-gray-300 rounded-lg pl-8 pr-3 py-1.5 text-xs"
             />
           </div>
+          <select
+            value={county}
+            onChange={(e) => setCounty(e.target.value)}
+            className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white"
+          >
+            <option value="">All counties</option>
+            {counties.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
           <button
             onClick={() => window.print()}
             className="flex items-center gap-1.5 border border-gray-300 rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50"
