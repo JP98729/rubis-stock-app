@@ -417,6 +417,14 @@ export async function setSaleOrderReference(saleOrderId: number, reference: stri
  * Odoo's own order view instead of only from the app. `htmlBody` is rendered as
  * HTML in the chatter, same as any other Odoo log note. Returns false (never
  * throws) whenever Odoo sync isn't configured or fails.
+ *
+ * Creates the mail.message directly (not via sale.order's message_post()) — Odoo's
+ * message_post(), reached through the external execute_kw RPC path this app uses,
+ * defensively HTML-escapes the body regardless of message_type/subtype (a stored-XSS
+ * guard against untrusted external callers). Confirmed live: escaped when sent via
+ * message_post from this exact RPC path, rendered correctly when the mail.message
+ * row is created directly instead — same res_model/res_id linkage is all Odoo's
+ * chatter widget needs to display it, so a direct create() shows up identically.
  */
 export async function postSaleOrderMessage(saleOrderId: number, htmlBody: string): Promise<boolean> {
   try {
@@ -424,36 +432,6 @@ export async function postSaleOrderMessage(saleOrderId: number, htmlBody: string
     if (!auth) return false;
 
     await jsonRpc<number>(auth.url, "object", "execute_kw", [
-      auth.db,
-      auth.uid,
-      auth.apiKey,
-      "sale.order",
-      "message_post",
-      [[saleOrderId]],
-      // message_type must be "comment" (what the UI's own "Log note" button uses) —
-      // left unset, Odoo defaults to "notification", which HTML-escapes the body
-      // instead of rendering it, so the link/button shows up as raw <a href=...> text.
-      { body: htmlBody, subtype_xmlid: "mail.mt_note", message_type: "comment" },
-    ]);
-
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * TEMPORARY DEBUG VARIANT — creates the mail.message directly via create()
- * instead of calling sale.order.message_post(), to test whether that bypasses
- * message_post()'s HTML-escaping of body content sent through the classic
- * external execute_kw RPC path. Not used by any real feature yet.
- */
-export async function debugPostSaleOrderMessageViaCreate(saleOrderId: number, htmlBody: string): Promise<number | string> {
-  try {
-    const auth = await authenticate();
-    if (!auth) return "no-auth";
-
-    const id = await jsonRpc<number>(auth.url, "object", "execute_kw", [
       auth.db,
       auth.uid,
       auth.apiKey,
@@ -465,14 +443,13 @@ export async function debugPostSaleOrderMessageViaCreate(saleOrderId: number, ht
           res_id: saleOrderId,
           body: htmlBody,
           message_type: "comment",
-          subtype_id: 2, // mail.mt_note "Note"
-          author_id: 3, // Joan Gracious Omondi — same author the app's other posts use
+          subtype_id: 2, // mail.mt_note "Note" — same subtype the UI's "Log note" button uses
         },
       ],
     ]);
 
-    return id;
-  } catch (e) {
-    return e instanceof Error ? e.message : String(e);
+    return true;
+  } catch {
+    return false;
   }
 }
