@@ -561,7 +561,7 @@ export async function getCourierDispatchesForScope(
         placedAgo: timeAgo(d.createdAt),
         hasWaybill,
         hasEtims,
-        complete: d.status === "delivered" && hasWaybill && hasEtims,
+        complete: !!d.submittedAt,
       };
     });
 

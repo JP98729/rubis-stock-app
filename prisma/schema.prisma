@@ -164,6 +164,12 @@ model CourierDispatch {
   /// first document upload, then reused so every doc lands on the same expense.
   courierExpenseId Int?
 
+  /// Set once the courier taps "Submit" after uploading all three documents — that's
+  /// the moment everything actually gets attached in Odoo and Pure Nutrition is
+  /// emailed, not each individual upload (uploads themselves just save to the dispatch
+  /// so nothing is lost if the courier closes the app between documents).
+  submittedAt DateTime?
+
   createdAt DateTime @default(now())
 
   store Store @relation(fields: [storeId], references: [id])

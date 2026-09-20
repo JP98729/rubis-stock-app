@@ -84,6 +84,12 @@ export async function acceptCourierDispatchDuringRender(id: string): Promise<voi
   }
 }
 
+/**
+ * These three upload actions only save the file to the dispatch — no Odoo sync, no
+ * email, no expense. That all happens together in submitCourierDocuments() once the
+ * courier taps Submit. Saving immediately (rather than staging in the browser) still
+ * means nothing is lost if the courier closes the app between documents.
+ */
 export async function uploadCourierDeliveryNote(id: string, url: string): Promise<SimpleResult> {
   const dispatch = await loadDispatch(id);
   if (!dispatch) return { ok: false, error: "This dispatch link is invalid." };
@@ -100,25 +106,6 @@ export async function uploadCourierDeliveryNote(id: string, url: string): Promis
     },
   });
 
-  // Best-effort: put the delivery note on the Sales Order's paperclip icon in Odoo too.
-  const deliveryNoteExt = url.toLowerCase().endsWith(".pdf") ? "pdf" : "jpg";
-  const deliveryNoteFilename = `Delivery note ${dispatch.store.name.trim()} ${dispatch.orderRef}.${deliveryNoteExt}`;
-  if (dispatch.odooSaleOrderId) {
-    await attachFileToSaleOrder(dispatch.odooSaleOrderId, url, deliveryNoteFilename);
-  }
-  const deliveryNoteExpenseId = await ensureCourierExpense(dispatch);
-  if (deliveryNoteExpenseId) {
-    await attachFileToExpense(deliveryNoteExpenseId, url, deliveryNoteFilename);
-  }
-
-  await sendCourierStatusEmail(
-    dispatch.store,
-    dispatch.orderRef,
-    "delivered",
-    dispatch.store.contactEmail || dispatch.store.seedEmail || null,
-    url
-  );
-
   revalidatePath(`/courier/${id}`);
   return { ok: true };
 }
@@ -134,30 +121,11 @@ export async function uploadCourierWaybill(id: string, url: string): Promise<Sim
     data: { waybillUrl: url, waybillUploadedAt: new Date() },
   });
 
-  // Best-effort: put the waybill on the Sales Order's paperclip icon in Odoo too.
-  const waybillExt = url.toLowerCase().endsWith(".pdf") ? "pdf" : "jpg";
-  const waybillFilename = `Waybill ${dispatch.store.name.trim()} ${dispatch.orderRef}.${waybillExt}`;
-  if (dispatch.odooSaleOrderId) {
-    await attachFileToSaleOrder(dispatch.odooSaleOrderId, url, waybillFilename);
-  }
-  const waybillExpenseId = await ensureCourierExpense(dispatch);
-  if (waybillExpenseId) {
-    await attachFileToExpense(waybillExpenseId, url, waybillFilename);
-  }
-
-  await sendCourierStatusEmail(
-    dispatch.store,
-    dispatch.orderRef,
-    "waybill",
-    dispatch.store.contactEmail || dispatch.store.seedEmail || null,
-    url
-  );
-
   revalidatePath(`/courier/${id}`);
   return { ok: true };
 }
 
-/** The courier's own KRA eTIMS invoice for the delivery fee — same paperclip pattern as the waybill. */
+/** The courier's own KRA eTIMS invoice for the delivery fee — same pattern as the waybill. */
 export async function uploadCourierEtimsInvoice(id: string, url: string): Promise<SimpleResult> {
   const dispatch = await loadDispatch(id);
   if (!dispatch) return { ok: false, error: "This dispatch link is invalid." };
@@ -169,24 +137,51 @@ export async function uploadCourierEtimsInvoice(id: string, url: string): Promis
     data: { etimsInvoiceUrl: url, etimsInvoiceUploadedAt: new Date() },
   });
 
-  // Best-effort: put the eTIMS invoice on the Sales Order's paperclip icon in Odoo too.
-  const etimsExt = url.toLowerCase().endsWith(".pdf") ? "pdf" : "jpg";
-  const etimsFilename = `Courier eTIMS invoice ${dispatch.store.name.trim()} ${dispatch.orderRef}.${etimsExt}`;
-  if (dispatch.odooSaleOrderId) {
-    await attachFileToSaleOrder(dispatch.odooSaleOrderId, url, etimsFilename);
-  }
-  const etimsExpenseId = await ensureCourierExpense(dispatch);
-  if (etimsExpenseId) {
-    await attachFileToExpense(etimsExpenseId, url, etimsFilename);
+  revalidatePath(`/courier/${id}`);
+  return { ok: true };
+}
+
+/**
+ * The courier's final "send it all back" step: requires the delivery note, waybill,
+ * and eTIMS invoice to already be uploaded, then attaches all three to the Sales
+ * Order and to the courier's Odoo expense, and emails Pure Nutrition — all in one
+ * go, once, so it's unmistakable to the courier that they're actually done.
+ */
+export async function submitCourierDocuments(id: string): Promise<SimpleResult> {
+  const dispatch = await loadDispatch(id);
+  if (!dispatch) return { ok: false, error: "This dispatch link is invalid." };
+  if (dispatch.submittedAt) return { ok: true }; // already submitted — no-op, not an error
+  if (!dispatch.deliveryNoteUrl) return { ok: false, error: "Upload the signed delivery note first." };
+  if (!dispatch.waybillUrl) return { ok: false, error: "Upload the waybill first." };
+  if (!dispatch.etimsInvoiceUrl) return { ok: false, error: "Upload your KRA eTIMS invoice first." };
+
+  const docs: Array<{ label: string; url: string; filenamePrefix: string; event: "delivered" | "waybill" | "etims" }> = [
+    { label: "Delivery note", url: dispatch.deliveryNoteUrl, filenamePrefix: "Delivery note", event: "delivered" },
+    { label: "Waybill", url: dispatch.waybillUrl, filenamePrefix: "Waybill", event: "waybill" },
+    { label: "eTIMS invoice", url: dispatch.etimsInvoiceUrl, filenamePrefix: "Courier eTIMS invoice", event: "etims" },
+  ];
+
+  const expenseId = await ensureCourierExpense(dispatch);
+
+  for (const doc of docs) {
+    const ext = doc.url.toLowerCase().endsWith(".pdf") ? "pdf" : "jpg";
+    const filename = `${doc.filenamePrefix} ${dispatch.store.name.trim()} ${dispatch.orderRef}.${ext}`;
+    if (dispatch.odooSaleOrderId) {
+      await attachFileToSaleOrder(dispatch.odooSaleOrderId, doc.url, filename);
+    }
+    if (expenseId) {
+      await attachFileToExpense(expenseId, doc.url, filename);
+    }
+    await sendCourierStatusEmail(
+      dispatch.store,
+      dispatch.orderRef,
+      doc.event,
+      dispatch.store.contactEmail || dispatch.store.seedEmail || null,
+      doc.url
+    );
   }
 
-  await sendCourierStatusEmail(
-    dispatch.store,
-    dispatch.orderRef,
-    "etims",
-    dispatch.store.contactEmail || dispatch.store.seedEmail || null,
-    url
-  );
+  await prisma.courierDispatch.update({ where: { id }, data: { submittedAt: new Date() } });
 
   revalidatePath(`/courier/${id}`);
   return { ok: true };

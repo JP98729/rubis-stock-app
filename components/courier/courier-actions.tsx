@@ -1,13 +1,14 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Camera, CheckCircle2, CreditCard, FileText, Phone } from "lucide-react";
+import { Camera, CheckCircle2, CreditCard, FileText, Phone, Send } from "lucide-react";
 import { GREEN, GREEN_DARK } from "@/lib/brand";
 import {
   acceptCourierDispatch,
   uploadCourierDeliveryNote,
   uploadCourierWaybill,
   uploadCourierEtimsInvoice,
+  submitCourierDocuments,
 } from "@/app/actions/courier";
 
 function readFileAsDataUrl(file: File): Promise<string> {
@@ -25,6 +26,7 @@ export function CourierActions({
   initialDeliveryNoteUrl,
   initialWaybillUrl,
   initialEtimsInvoiceUrl,
+  initialSubmittedAt,
   feeKES,
 }: {
   dispatchId: string;
@@ -32,6 +34,7 @@ export function CourierActions({
   initialDeliveryNoteUrl: string | null;
   initialWaybillUrl: string | null;
   initialEtimsInvoiceUrl: string | null;
+  initialSubmittedAt: Date | null;
   feeKES: number | null;
 }) {
   const cameraInputId = useId();
@@ -44,10 +47,12 @@ export function CourierActions({
   const [deliveryNoteUrl, setDeliveryNoteUrl] = useState(initialDeliveryNoteUrl);
   const [waybillUrl, setWaybillUrl] = useState(initialWaybillUrl);
   const [etimsInvoiceUrl, setEtimsInvoiceUrl] = useState(initialEtimsInvoiceUrl);
+  const [submitted, setSubmitted] = useState(!!initialSubmittedAt);
   const [acceptBusy, setAcceptBusy] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [waybillBusy, setWaybillBusy] = useState(false);
   const [etimsBusy, setEtimsBusy] = useState(false);
+  const [submitBusy, setSubmitBusy] = useState(false);
   const [error, setError] = useState("");
 
   async function handleAccept() {
@@ -135,6 +140,19 @@ export function CourierActions({
     e.target.value = "";
   }
 
+  async function handleSubmit() {
+    setSubmitBusy(true);
+    setError("");
+    const res = await submitCourierDocuments(dispatchId);
+    if (res.ok) {
+      setSubmitted(true);
+    } else {
+      setError(res.error);
+    }
+    setSubmitBusy(false);
+  }
+
+  const allDocsUploaded = !!deliveryNoteUrl && !!waybillUrl && !!etimsInvoiceUrl;
   const isPdf = !!deliveryNoteUrl && deliveryNoteUrl.toLowerCase().endsWith(".pdf");
   const isWaybillPdf = !!waybillUrl && waybillUrl.toLowerCase().endsWith(".pdf");
   const isEtimsPdf = !!etimsInvoiceUrl && etimsInvoiceUrl.toLowerCase().endsWith(".pdf");
@@ -392,6 +410,27 @@ export function CourierActions({
               </label>
             </div>
           </>
+        )}
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="text-sm font-semibold mb-2">5. Submit — send everything back to Pure Nutrition</div>
+        {submitted ? (
+          <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold" style={{ background: "#EEF7DE", color: GREEN_DARK }}>
+            <CheckCircle2 size={16} className="shrink-0" />
+            Submitted — Pure Nutrition has been notified
+          </div>
+        ) : !allDocsUploaded ? (
+          <div className="text-xs text-gray-400 italic">Upload the delivery note, waybill, and eTIMS invoice above first.</div>
+        ) : (
+          <button
+            onClick={handleSubmit}
+            disabled={submitBusy}
+            className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold text-white disabled:opacity-60"
+            style={{ background: GREEN }}
+          >
+            <Send size={16} /> {submitBusy ? "Submitting…" : "Submit"}
+          </button>
         )}
       </div>
 
