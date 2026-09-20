@@ -6,8 +6,8 @@ import { Send, CheckCircle2, Package } from "lucide-react";
 import { RUBIS_LOGO, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT } from "@/lib/brand";
 import { ToastView, useToast } from "./toast";
 import { ProductThumb } from "./ui";
-import { deleteAnnouncement, sendAnnouncement } from "@/app/actions/hq";
-import { placeHqOrder } from "@/app/actions/hq";
+import { SignaturePad } from "./signature-pad";
+import { deleteAnnouncement, sendAnnouncement, placeHqOrder } from "@/app/actions/hq";
 import type { MessageDTO, StoreDTO, ProductDTO } from "@/lib/queries";
 
 export function HqView({
@@ -38,6 +38,8 @@ export function HqView({
     Object.fromEntries(products.map((p) => [p.sku, 0]))
   );
   const [orderName, setOrderName] = useState("");
+  const [orderFunction, setOrderFunction] = useState("");
+  const [orderSignature, setOrderSignature] = useState<string | null>(null);
   const [orderBusy, setOrderBusy] = useState(false);
   const [orderError, setOrderError] = useState("");
   const [orderConfirmed, setOrderConfirmed] = useState(false);
@@ -47,12 +49,21 @@ export function HqView({
       setOrderError("Please enter your name before placing the order.");
       return;
     }
+    if (!orderFunction.trim()) {
+      setOrderError("Please select your function before placing the order.");
+      return;
+    }
+    if (!orderSignature) {
+      setOrderError("Please sign before placing the order.");
+      return;
+    }
     setOrderBusy(true);
     setOrderError("");
-    const result = await placeHqOrder(orderQty, orderName.trim());
+    const result = await placeHqOrder(orderQty, orderName.trim(), orderFunction.trim(), orderSignature);
     if (result.ok) {
       setOrderConfirmed(true);
       setOrderQty(Object.fromEntries(products.map((p) => [p.sku, 0])));
+      setOrderSignature(null);
       setTimeout(() => setOrderConfirmed(false), 5000);
       showToast(`Order sent to Pure Nutrition — ${result.itemCount} product${result.itemCount === 1 ? "" : "s"}.`);
     } else {
@@ -158,11 +169,34 @@ export function HqView({
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
           </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] text-gray-500 font-medium">Your function</span>
+            <select
+              value={orderFunction}
+              onChange={(e) => setOrderFunction(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white"
+            >
+              <option value="">Select your function</option>
+              <option value="Branch manager">Branch manager</option>
+              <option value="Sales person">Sales person</option>
+              <option value="Supervisor">Supervisor</option>
+            </select>
+          </label>
+          <div>
+            <span className="text-[11px] text-gray-500 font-medium">Sign to confirm</span>
+            <SignaturePad onChange={setOrderSignature} />
+            {!orderSignature && (
+              <div className="text-[11px] text-amber-600 mt-1">Signature required before placing the order.</div>
+            )}
+          </div>
           <button
             onClick={handlePlaceHqOrder}
-            disabled={orderBusy || !orderName.trim()}
+            disabled={orderBusy || !orderName.trim() || !orderFunction.trim() || !orderSignature}
             className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold text-white disabled:opacity-60"
-            style={{ background: orderBusy || !orderName.trim() ? "#9CA3AF" : GREEN }}
+            style={{
+              background:
+                orderBusy || !orderName.trim() || !orderFunction.trim() || !orderSignature ? "#9CA3AF" : GREEN,
+            }}
           >
             <Send size={16} /> {orderBusy ? "Sending…" : "Place Order"}
           </button>

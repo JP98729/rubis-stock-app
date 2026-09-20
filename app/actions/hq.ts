@@ -15,14 +15,21 @@ const HQ_INFO = { name: "Rubis Head Quarters", county: "Nairobi", type: "HQ" };
 
 /**
  * Lets Rubis HQ place an order for the head office itself — same email/PDF
- * Pure Nutrition already gets from a branch order, minus anything branch-specific
- * (no courier dispatch, no Odoo sales order, no signature) since this isn't a
- * delivery to a branch.
+ * Pure Nutrition already gets from a branch order (name, function, and signature
+ * included), minus what's branch-specific (no courier dispatch, no Odoo sales
+ * order) since this isn't a delivery to a branch.
  */
-export async function placeHqOrder(quantities: Record<string, number>, placedByName: string): Promise<PlaceHqOrderResult> {
+export async function placeHqOrder(
+  quantities: Record<string, number>,
+  placedByName: string,
+  placedByFunction: string,
+  signatureUrl: string | null
+): Promise<PlaceHqOrderResult> {
   const session = await requireRole("hq");
   if (!session) return { ok: false, error: "Your session expired — sign in again." };
   if (!placedByName.trim()) return { ok: false, error: "Please enter your name before placing the order." };
+  if (!placedByFunction.trim()) return { ok: false, error: "Please select your function before placing the order." };
+  if (!signatureUrl) return { ok: false, error: "Please sign before placing the order." };
 
   const products = await getProducts();
   const bySku = new Map(products.map((p) => [p.sku, p]));
@@ -38,7 +45,17 @@ export async function placeHqOrder(quantities: Record<string, number>, placedByN
 
   const orderRef = newOrderRef();
   try {
-    await sendManualOrderEmail(HQ_INFO, items, null, null, placedByName.trim(), "Rubis HQ", null, orderRef, null);
+    await sendManualOrderEmail(
+      HQ_INFO,
+      items,
+      null,
+      null,
+      placedByName.trim(),
+      placedByFunction.trim(),
+      signatureUrl,
+      orderRef,
+      null
+    );
   } catch (e) {
     return {
       ok: false,
