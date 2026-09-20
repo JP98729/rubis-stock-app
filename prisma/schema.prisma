@@ -162,9 +162,14 @@ model CourierDispatch {
 
   etimsInvoiceUrl        String?
   etimsInvoiceUploadedAt DateTime?
+  /// Set once the eTIMS invoice has been attached to the Odoo expense's paperclip —
+  /// happens right away on upload, so submitCourierDocuments knows not to attach it
+  /// again at Submit time.
+  etimsExpenseAttachedAt DateTime?
 
-  /// Odoo hr.expense id for the courier's delivery fee — created lazily on the
-  /// first document upload, then reused so every doc lands on the same expense.
+  /// Odoo hr.expense id for the courier's delivery fee — created lazily, usually on
+  /// eTIMS invoice upload (as soon as the shipping weight is known), then reused so
+  /// every doc lands on the same expense.
   courierExpenseId Int?
 
   /// Set once the courier taps "Submit" after uploading all three documents — that's

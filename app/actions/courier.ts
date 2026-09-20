@@ -125,7 +125,12 @@ export async function uploadCourierWaybill(id: string, url: string): Promise<Sim
   return { ok: true };
 }
 
-/** The courier's own KRA eTIMS invoice for the delivery fee — same pattern as the waybill. */
+/**
+ * The courier's own KRA eTIMS invoice for the delivery fee — same upload pattern as
+ * the waybill, but this one also creates the Odoo expense (if it doesn't exist yet)
+ * and attaches the invoice to its paperclip right away, since this document IS the
+ * courier's expense claim — no need to wait for the other two documents or Submit.
+ */
 export async function uploadCourierEtimsInvoice(id: string, url: string): Promise<SimpleResult> {
   const dispatch = await loadDispatch(id);
   if (!dispatch) return { ok: false, error: "This dispatch link is invalid." };
@@ -136,6 +141,16 @@ export async function uploadCourierEtimsInvoice(id: string, url: string): Promis
     where: { id },
     data: { etimsInvoiceUrl: url, etimsInvoiceUploadedAt: new Date() },
   });
+
+  const expenseId = await ensureCourierExpense(dispatch);
+  if (expenseId) {
+    const ext = url.toLowerCase().endsWith(".pdf") ? "pdf" : "jpg";
+    const filename = `Courier eTIMS invoice ${dispatch.store.name.trim()} ${dispatch.orderRef}.${ext}`;
+    const attached = await attachFileToExpense(expenseId, url, filename);
+    if (attached) {
+      await prisma.courierDispatch.update({ where: { id }, data: { etimsExpenseAttachedAt: new Date() } });
+    }
+  }
 
   revalidatePath(`/courier/${id}`);
   return { ok: true };
@@ -155,10 +170,23 @@ export async function submitCourierDocuments(id: string): Promise<SimpleResult> 
   if (!dispatch.waybillUrl) return { ok: false, error: "Upload the waybill first." };
   if (!dispatch.etimsInvoiceUrl) return { ok: false, error: "Upload your KRA eTIMS invoice first." };
 
-  const docs: Array<{ label: string; url: string; filenamePrefix: string; event: "delivered" | "waybill" | "etims" }> = [
-    { label: "Delivery note", url: dispatch.deliveryNoteUrl, filenamePrefix: "Delivery note", event: "delivered" },
-    { label: "Waybill", url: dispatch.waybillUrl, filenamePrefix: "Waybill", event: "waybill" },
-    { label: "eTIMS invoice", url: dispatch.etimsInvoiceUrl, filenamePrefix: "Courier eTIMS invoice", event: "etims" },
+  const docs: Array<{
+    label: string;
+    url: string;
+    filenamePrefix: string;
+    event: "delivered" | "waybill" | "etims";
+    skipExpenseAttach: boolean;
+  }> = [
+    { label: "Delivery note", url: dispatch.deliveryNoteUrl, filenamePrefix: "Delivery note", event: "delivered", skipExpenseAttach: false },
+    { label: "Waybill", url: dispatch.waybillUrl, filenamePrefix: "Waybill", event: "waybill", skipExpenseAttach: false },
+    {
+      label: "eTIMS invoice",
+      url: dispatch.etimsInvoiceUrl,
+      filenamePrefix: "Courier eTIMS invoice",
+      event: "etims",
+      // Already attached to the expense right when the courier uploaded it — see uploadCourierEtimsInvoice.
+      skipExpenseAttach: !!dispatch.etimsExpenseAttachedAt,
+    },
   ];
 
   const expenseId = await ensureCourierExpense(dispatch);
@@ -169,7 +197,7 @@ export async function submitCourierDocuments(id: string): Promise<SimpleResult> 
     if (dispatch.odooSaleOrderId) {
       await attachFileToSaleOrder(dispatch.odooSaleOrderId, doc.url, filename);
     }
-    if (expenseId) {
+    if (expenseId && !doc.skipExpenseAttach) {
       await attachFileToExpense(expenseId, doc.url, filename);
     }
     await sendCourierStatusEmail(
