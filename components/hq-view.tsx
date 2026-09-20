@@ -2,21 +2,26 @@
 
 import { useState } from "react";
 import type { Audience } from "@prisma/client";
-import { RUBIS_LOGO } from "@/lib/brand";
+import { Send, CheckCircle2, Package } from "lucide-react";
+import { RUBIS_LOGO, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT } from "@/lib/brand";
 import { ToastView, useToast } from "./toast";
+import { ProductThumb } from "./ui";
 import { deleteAnnouncement, sendAnnouncement } from "@/app/actions/hq";
-import type { MessageDTO, StoreDTO } from "@/lib/queries";
+import { placeHqOrder } from "@/app/actions/hq";
+import type { MessageDTO, StoreDTO, ProductDTO } from "@/lib/queries";
 
 export function HqView({
   messages,
   stores,
   counties,
   audienceLabels,
+  products,
 }: {
   messages: MessageDTO[];
   stores: StoreDTO[];
   counties: string[];
   audienceLabels: Record<string, string>;
+  products: ProductDTO[];
 }) {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
@@ -27,6 +32,34 @@ export function HqView({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const { toast, showToast } = useToast();
+
+  // --- HQ's own order ---
+  const [orderQty, setOrderQty] = useState<Record<string, number>>(() =>
+    Object.fromEntries(products.map((p) => [p.sku, 0]))
+  );
+  const [orderName, setOrderName] = useState("");
+  const [orderBusy, setOrderBusy] = useState(false);
+  const [orderError, setOrderError] = useState("");
+  const [orderConfirmed, setOrderConfirmed] = useState(false);
+
+  async function handlePlaceHqOrder() {
+    if (!orderName.trim()) {
+      setOrderError("Please enter your name before placing the order.");
+      return;
+    }
+    setOrderBusy(true);
+    setOrderError("");
+    const result = await placeHqOrder(orderQty, orderName.trim());
+    if (result.ok) {
+      setOrderConfirmed(true);
+      setOrderQty(Object.fromEntries(products.map((p) => [p.sku, 0])));
+      setTimeout(() => setOrderConfirmed(false), 5000);
+      showToast(`Order sent to Pure Nutrition — ${result.itemCount} product${result.itemCount === 1 ? "" : "s"}.`);
+    } else {
+      setOrderError(result.error);
+    }
+    setOrderBusy(false);
+  }
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -64,7 +97,85 @@ export function HqView({
         <img src={RUBIS_LOGO} alt="Rubis" className="h-8 w-auto" />
         <div>
           <div className="font-bold text-sm leading-none">Rubis Head Office</div>
-          <div className="text-[11px] text-gray-400 leading-none mt-0.5">Message your branch managers</div>
+          <div className="text-[11px] text-gray-400 leading-none mt-0.5">Message your branch managers, or place an order for head office</div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-1.5 font-semibold text-sm">
+          <Package size={15} /> Order for Head Quarters
+        </div>
+        <div className="divide-y divide-gray-50">
+          {RANGES.map((range) => {
+            const rangeItems = products.filter((p) => p.range === range);
+            if (rangeItems.length === 0) return null;
+            const rc = RANGE_COLORS[range];
+            return (
+              <div key={range}>
+                <div
+                  className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wide"
+                  style={{ background: RANGE_TINT[range], color: rc }}
+                >
+                  {range}
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {rangeItems.map((p) => (
+                    <div key={p.sku} className="px-4 py-2.5 flex items-center gap-3 text-sm">
+                      <ProductThumb product={p} size={28} />
+                      <div className="flex-1">
+                        <div className="font-medium">{p.flavour}</div>
+                        <div className="text-[11px] text-gray-400">{p.sku}</div>
+                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        inputMode="numeric"
+                        value={orderQty[p.sku] ?? 0}
+                        onChange={(e) =>
+                          setOrderQty((prev) => ({
+                            ...prev,
+                            [p.sku]: Math.max(0, Math.trunc(Number(e.target.value) || 0)),
+                          }))
+                        }
+                        className="w-16 text-center font-semibold border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                        style={{ color: "#C0392B" }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="px-4 py-3 border-t border-gray-100 flex flex-col gap-2">
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] text-gray-500 font-medium">Your name</span>
+            <input
+              type="text"
+              value={orderName}
+              onChange={(e) => setOrderName(e.target.value)}
+              placeholder="Type your full name"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            />
+          </label>
+          <button
+            onClick={handlePlaceHqOrder}
+            disabled={orderBusy || !orderName.trim()}
+            className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold text-white disabled:opacity-60"
+            style={{ background: orderBusy || !orderName.trim() ? "#9CA3AF" : GREEN }}
+          >
+            <Send size={16} /> {orderBusy ? "Sending…" : "Place Order"}
+          </button>
+          {orderError && <div className="text-xs text-red-600">{orderError}</div>}
+          {orderConfirmed && (
+            <div
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold"
+              style={{ background: "#EEF7DE", color: GREEN_DARK }}
+            >
+              <CheckCircle2 size={16} className="shrink-0" />
+              Order sent to Pure Nutrition!
+            </div>
+          )}
         </div>
       </div>
 
