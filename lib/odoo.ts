@@ -430,7 +430,10 @@ export async function postSaleOrderMessage(saleOrderId: number, htmlBody: string
       "sale.order",
       "message_post",
       [[saleOrderId]],
-      { body: htmlBody, subtype_xmlid: "mail.mt_note" },
+      // message_type must be "comment" (what the UI's own "Log note" button uses) —
+      // left unset, Odoo defaults to "notification", which HTML-escapes the body
+      // instead of rendering it, so the link/button shows up as raw <a href=...> text.
+      { body: htmlBody, subtype_xmlid: "mail.mt_note", message_type: "comment" },
     ]);
 
     return true;
