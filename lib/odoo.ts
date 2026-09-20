@@ -441,3 +441,38 @@ export async function postSaleOrderMessage(saleOrderId: number, htmlBody: string
     return false;
   }
 }
+
+/**
+ * TEMPORARY DEBUG VARIANT — creates the mail.message directly via create()
+ * instead of calling sale.order.message_post(), to test whether that bypasses
+ * message_post()'s HTML-escaping of body content sent through the classic
+ * external execute_kw RPC path. Not used by any real feature yet.
+ */
+export async function debugPostSaleOrderMessageViaCreate(saleOrderId: number, htmlBody: string): Promise<number | string> {
+  try {
+    const auth = await authenticate();
+    if (!auth) return "no-auth";
+
+    const id = await jsonRpc<number>(auth.url, "object", "execute_kw", [
+      auth.db,
+      auth.uid,
+      auth.apiKey,
+      "mail.message",
+      "create",
+      [
+        {
+          model: "sale.order",
+          res_id: saleOrderId,
+          body: htmlBody,
+          message_type: "comment",
+          subtype_id: 2, // mail.mt_note "Note"
+          author_id: 3, // Joan Gracious Omondi — same author the app's other posts use
+        },
+      ],
+    ]);
+
+    return id;
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
+  }
+}
