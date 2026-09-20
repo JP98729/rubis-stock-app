@@ -14,7 +14,7 @@ const ROLE_LABELS: Record<Role, string> = {
 
 export function TopBar({ role }: { role: Role | null }) {
   return (
-    <div className="sticky top-0 z-40 border-b border-black/10" style={{ background: GREEN }}>
+    <div className="sticky top-0 z-40 border-b border-black/10 print:hidden" style={{ background: GREEN }}>
       <div className="max-w-6xl mx-auto px-4 py-2.5 flex items-center justify-between gap-2">
         <Link href="/" className="flex items-center gap-2 text-left">
           {/* eslint-disable @next/next/no-img-element */}

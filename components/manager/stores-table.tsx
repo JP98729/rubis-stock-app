@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Store as StoreIcon } from "lucide-react";
+import { Printer, Search, Store as StoreIcon } from "lucide-react";
 import { AMBER, GREEN, GREEN_DARK, RED } from "@/lib/brand";
 import { Badge } from "../ui";
 import { addBranch } from "@/app/actions/manager";
@@ -47,7 +47,7 @@ function AddBranchForm({ onAdded }: { onAdded: (msg: string) => void }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="w-full text-left px-4 py-3 border-b border-gray-100 text-sm font-semibold flex items-center gap-1.5"
+        className="w-full text-left px-4 py-3 border-b border-gray-100 text-sm font-semibold flex items-center gap-1.5 print:hidden"
         style={{ color: GREEN_DARK }}
       >
         <StoreIcon size={15} /> + Add a new branch
@@ -56,7 +56,7 @@ function AddBranchForm({ onAdded }: { onAdded: (msg: string) => void }) {
   }
 
   return (
-    <form onSubmit={handleAdd} className="px-4 py-4 border-b border-gray-100 bg-gray-50 flex flex-col gap-2">
+    <form onSubmit={handleAdd} className="px-4 py-4 border-b border-gray-100 bg-gray-50 flex flex-col gap-2 print:hidden">
       <div className="font-semibold text-sm mb-1">Add a New Branch</div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <input
@@ -129,24 +129,33 @@ export function StoresTable({ rows, onToast }: { rows: StoreTableRow[]; onToast:
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-3">
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-3 print:hidden">
         <span className="font-semibold text-sm">All Branches ({rows.length})</span>
-        <div className="relative">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search…"
-            className="border border-gray-300 rounded-lg pl-8 pr-3 py-1.5 text-xs"
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search…"
+              className="border border-gray-300 rounded-lg pl-8 pr-3 py-1.5 text-xs"
+            />
+          </div>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-1.5 border border-gray-300 rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+          >
+            <Printer size={14} /> Print
+          </button>
         </div>
       </div>
+      <div className="hidden print:block px-4 pt-4 pb-2 font-semibold text-sm">All Branches ({filtered.length})</div>
       <AddBranchForm onAdded={onToast} />
-      <div className="px-4 py-2 text-[11px] text-gray-400 border-b border-gray-100">
+      <div className="px-4 py-2 text-[11px] text-gray-400 border-b border-gray-100 print:hidden">
         Access Code column is each branch manager&apos;s login code for the Branch Manager view. Phone/Email marked *
         were added or updated by the branch manager.
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto print:overflow-visible">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-gray-400 text-left text-xs">

@@ -51,7 +51,7 @@ export function ManagerView(props: {
   return (
     <div className="max-w-6xl mx-auto px-4 py-5">
       <ToastView toast={toast} />
-      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 pb-3 mb-4 border-b border-gray-200">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 pb-3 mb-4 border-b border-gray-200 print:hidden">
         {TABS.map((t) => (
           <button
             key={t.key}
