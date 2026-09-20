@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AlertTriangle, Bell, CheckCircle2, ClipboardList, MessageCircle, Package, PenTool, Send, Trophy, Truck } from "lucide-react";
-import { AMBER, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT, RUBIS_LOGO, NAIROBI_COURIER_NAME, NAIROBI_COURIER_PHONE_WA } from "@/lib/brand";
+import { AMBER, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT, RUBIS_LOGO } from "@/lib/brand";
 import { fmtKES } from "@/lib/utils";
 import { Badge, ProductThumb } from "../ui";
 import { ToastView, useToast } from "../toast";
@@ -73,7 +73,6 @@ export function BranchManagerView({
   const [orderSignature, setOrderSignature] = useState<string | null>(null);
   const [orderName, setOrderName] = useState(store.managerName || "");
   const [orderFunction, setOrderFunction] = useState("");
-  const [orderCourierLink, setOrderCourierLink] = useState<string | null>(null);
 
   async function handlePlaceOrder() {
     if (!orderName.trim()) {
@@ -94,7 +93,6 @@ export function BranchManagerView({
     if (result.ok) {
       setOrderConfirmed(true);
       setOrderMethodUsed("order");
-      setOrderCourierLink(result.courierLink);
       setTimeout(() => setOrderConfirmed(false), 5000);
       showToast(`Order sent to Pure Nutrition — ${result.itemCount} product${result.itemCount === 1 ? "" : "s"}.`);
     } else {
@@ -338,19 +336,6 @@ export function BranchManagerView({
                     <CheckCircle2 size={16} className="shrink-0" />
                     Order sent to Pure Nutrition!
                   </div>
-                )}
-                {orderCourierLink && store.county.trim().toLowerCase() === "nairobi" && (
-                  <a
-                    href={`https://wa.me/${NAIROBI_COURIER_PHONE_WA}?text=${encodeURIComponent(
-                      `New order from ${store.name.trim()} — please accept & collect: ${orderCourierLink}?accept=1`
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold text-white"
-                    style={{ background: GREEN_DARK }}
-                  >
-                    <MessageCircle size={16} /> Notify {NAIROBI_COURIER_NAME} via WhatsApp
-                  </a>
                 )}
                 {orderMethodUsed !== "order" && (
                   <div className="text-center text-[11px] text-gray-400">— or upload your signed LPO below —</div>
