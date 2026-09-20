@@ -495,7 +495,9 @@ export async function sendManualOrderEmail(
   placedByFunction: string,
   signatureUrl: string | null,
   orderRef: string,
-  courierLink: string | null
+  courierLink: string | null,
+  deliveryAddress: string | null = null,
+  note: string | null = null
 ): Promise<Buffer | null> {
   if (!process.env.RESEND_API_KEY) {
     throw new Error("Email isn't set up on the server — ask Pure Nutrition to check RESEND_API_KEY.");
@@ -509,11 +511,13 @@ export async function sendManualOrderEmail(
     `Branch: ${store.name.trim()} (${store.county} · ${store.type})`,
     `Placed by: ${placedByName} (${placedByFunction})`,
     `Placed: ${timestamp}`,
+    deliveryAddress ? `Delivery address: ${deliveryAddress}` : "",
     odooOrderName ? `Odoo Sales Order: ${odooOrderName}` : "",
     "",
     "Items ordered:",
     ...items.map((i) => `  ${i.flavour} (${i.sku}): ${i.reorder}`),
     "",
+    note ? `Note: ${note}` : "",
     courierLink ? `${courierNameForCounty(store.county)} — accept dispatch & upload signed delivery note: ${courierLink}?accept=1` : "",
     signatureUrl ? `Signature: ${signatureUrl}` : "",
   ]
@@ -555,6 +559,11 @@ export async function sendManualOrderEmail(
       </div>
       <div style="font-size:13px;color:${INK};margin-bottom:14px;"><span style="color:${MUTED};">Placed by:</span> <strong>${esc(placedByName)}</strong> <span style="color:${MUTED};">(${esc(placedByFunction)})</span></div>
       ${
+        deliveryAddress
+          ? `<div style="font-size:13px;color:${INK};margin-bottom:14px;"><span style="color:${MUTED};">Delivery address:</span> <strong>${esc(deliveryAddress)}</strong></div>`
+          : ""
+      }
+      ${
         odooOrderName
           ? `<div style="font-size:13px;color:${INK};margin-bottom:14px;"><span style="color:${MUTED};">Odoo Sales Order:</span> <strong>${esc(odooOrderName)}</strong></div>`
           : ""
@@ -566,6 +575,11 @@ export async function sendManualOrderEmail(
         </tr>
         ${rows}
       </table>
+      ${
+        note
+          ? `<div style="font-size:13px;color:${INK};background:${BG};border-radius:8px;padding:10px 14px;margin-top:14px;"><span style="color:${MUTED};">Note:</span> ${esc(note)}</div>`
+          : ""
+      }
       ${
         courierLink
           ? `<div style="margin-top:16px;text-align:center;">
@@ -588,7 +602,17 @@ export async function sendManualOrderEmail(
 
   let pdfBuffer: Buffer | null = null;
   try {
-    pdfBuffer = await renderOrderSummaryPdf(store, items, odooOrderName, orderRef, placedByName, placedByFunction, signatureUrl);
+    pdfBuffer = await renderOrderSummaryPdf(
+      store,
+      items,
+      odooOrderName,
+      orderRef,
+      placedByName,
+      placedByFunction,
+      signatureUrl,
+      deliveryAddress,
+      note
+    );
   } catch {
     // The PDF is a bonus attachment — never let a rendering failure block the email.
   }

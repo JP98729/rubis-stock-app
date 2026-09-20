@@ -40,6 +40,8 @@ export function HqView({
   const [orderName, setOrderName] = useState("");
   const [orderFunction, setOrderFunction] = useState("");
   const [orderSignature, setOrderSignature] = useState<string | null>(null);
+  const [orderAddress, setOrderAddress] = useState("");
+  const [orderNote, setOrderNote] = useState("");
   const [orderBusy, setOrderBusy] = useState(false);
   const [orderError, setOrderError] = useState("");
   const [orderConfirmed, setOrderConfirmed] = useState(false);
@@ -53,17 +55,30 @@ export function HqView({
       setOrderError("Please select your function before placing the order.");
       return;
     }
+    if (!orderAddress.trim()) {
+      setOrderError("Please enter a delivery address before placing the order.");
+      return;
+    }
     if (!orderSignature) {
       setOrderError("Please sign before placing the order.");
       return;
     }
     setOrderBusy(true);
     setOrderError("");
-    const result = await placeHqOrder(orderQty, orderName.trim(), orderFunction.trim(), orderSignature);
+    const result = await placeHqOrder(
+      orderQty,
+      orderName.trim(),
+      orderFunction.trim(),
+      orderSignature,
+      orderAddress.trim(),
+      orderNote.trim()
+    );
     if (result.ok) {
       setOrderConfirmed(true);
       setOrderQty(Object.fromEntries(products.map((p) => [p.sku, 0])));
       setOrderSignature(null);
+      setOrderAddress("");
+      setOrderNote("");
       setTimeout(() => setOrderConfirmed(false), 5000);
       showToast(`Order sent to Pure Nutrition — ${result.itemCount} product${result.itemCount === 1 ? "" : "s"}.`);
     } else {
@@ -182,6 +197,26 @@ export function HqView({
               <option value="Supervisor">Supervisor</option>
             </select>
           </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] text-gray-500 font-medium">Delivery address</span>
+            <input
+              type="text"
+              value={orderAddress}
+              onChange={(e) => setOrderAddress(e.target.value)}
+              placeholder="Where should this order be delivered?"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] text-gray-500 font-medium">Note (optional)</span>
+            <textarea
+              value={orderNote}
+              onChange={(e) => setOrderNote(e.target.value)}
+              placeholder="Anything else Pure Nutrition should know?"
+              rows={2}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none"
+            />
+          </label>
           <div>
             <span className="text-[11px] text-gray-500 font-medium">Sign to confirm</span>
             <SignaturePad onChange={setOrderSignature} />
@@ -191,11 +226,13 @@ export function HqView({
           </div>
           <button
             onClick={handlePlaceHqOrder}
-            disabled={orderBusy || !orderName.trim() || !orderFunction.trim() || !orderSignature}
+            disabled={orderBusy || !orderName.trim() || !orderFunction.trim() || !orderAddress.trim() || !orderSignature}
             className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold text-white disabled:opacity-60"
             style={{
               background:
-                orderBusy || !orderName.trim() || !orderFunction.trim() || !orderSignature ? "#9CA3AF" : GREEN,
+                orderBusy || !orderName.trim() || !orderFunction.trim() || !orderAddress.trim() || !orderSignature
+                  ? "#9CA3AF"
+                  : GREEN,
             }}
           >
             <Send size={16} /> {orderBusy ? "Sending…" : "Place Order"}

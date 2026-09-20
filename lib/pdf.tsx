@@ -355,7 +355,9 @@ export async function renderOrderSummaryPdf(
   orderRef: string,
   placedByName: string,
   placedByFunction: string,
-  signatureUrl: string | null
+  signatureUrl: string | null,
+  deliveryAddress: string | null = null,
+  note: string | null = null
 ): Promise<Buffer> {
   const doc = (
     <Document>
@@ -372,6 +374,7 @@ export async function renderOrderSummaryPdf(
         <DetailRow label="Order reference" value={orderRef} />
         <DetailRow label="Placed by" value={placedByName} />
         <DetailRow label="Function" value={placedByFunction} />
+        {deliveryAddress ? <DetailRow label="Delivery address" value={deliveryAddress} /> : null}
         {odooOrderName ? <DetailRow label="Odoo Sales Order" value={odooOrderName} /> : null}
 
         <View style={{ marginTop: 10 }}>
@@ -391,6 +394,13 @@ export async function renderOrderSummaryPdf(
             </View>
           ))}
         </View>
+
+        {note ? (
+          <View style={{ marginTop: 10 }}>
+            <Text style={[styles.summaryLabel, { marginBottom: 4 }]}>NOTE</Text>
+            <Text style={styles.tableCell}>{note}</Text>
+          </View>
+        ) : null}
 
         {signatureUrl ? (
           <View style={{ marginTop: 10 }}>

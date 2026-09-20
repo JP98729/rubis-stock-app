@@ -23,13 +23,16 @@ export async function placeHqOrder(
   quantities: Record<string, number>,
   placedByName: string,
   placedByFunction: string,
-  signatureUrl: string | null
+  signatureUrl: string | null,
+  deliveryAddress: string,
+  note: string
 ): Promise<PlaceHqOrderResult> {
   const session = await requireRole("hq");
   if (!session) return { ok: false, error: "Your session expired — sign in again." };
   if (!placedByName.trim()) return { ok: false, error: "Please enter your name before placing the order." };
   if (!placedByFunction.trim()) return { ok: false, error: "Please select your function before placing the order." };
   if (!signatureUrl) return { ok: false, error: "Please sign before placing the order." };
+  if (!deliveryAddress.trim()) return { ok: false, error: "Please enter a delivery address before placing the order." };
 
   const products = await getProducts();
   const bySku = new Map(products.map((p) => [p.sku, p]));
@@ -54,7 +57,9 @@ export async function placeHqOrder(
       placedByFunction.trim(),
       signatureUrl,
       orderRef,
-      null
+      null,
+      deliveryAddress.trim(),
+      note.trim() || null
     );
   } catch (e) {
     return {
