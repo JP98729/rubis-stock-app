@@ -71,10 +71,12 @@ async function notifyNairobiCourierInOdoo(
   if (!odooSaleOrderId || !courierLink || county.trim().toLowerCase() !== "nairobi") return;
   const message = `New order from ${storeName.trim()} — please accept & collect: ${courierLink}?accept=1`;
   const waUrl = `https://wa.me/${NAIROBI_COURIER_PHONE_WA}?text=${encodeURIComponent(message)}`;
-  await postSaleOrderMessage(
-    odooSaleOrderId,
-    `<a href="${waUrl}" target="_blank">📱 Notify ${NAIROBI_COURIER_NAME} via WhatsApp</a>`
-  );
+  const buttonHtml =
+    `<a href="${waUrl}" target="_blank" ` +
+    `style="display:inline-block;padding:10px 18px;background-color:#25D366;color:#ffffff;` +
+    `font-weight:bold;font-size:14px;text-decoration:none;border-radius:6px;">` +
+    `📱 Notify ${NAIROBI_COURIER_NAME} via WhatsApp</a>`;
+  await postSaleOrderMessage(odooSaleOrderId, buttonHtml);
 }
 
 /** Branch-manager self-service contact override (shown with a green * in the admin table). */
