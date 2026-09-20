@@ -492,6 +492,7 @@ export async function sendManualOrderEmail(
   odooOrderName: string | null,
   managerEmail: string | null,
   placedByName: string,
+  placedByFunction: string,
   signatureUrl: string | null,
   orderRef: string,
   courierLink: string | null
@@ -506,7 +507,7 @@ export async function sendManualOrderEmail(
   const text = [
     `Order reference: ${orderRef}`,
     `Branch: ${store.name.trim()} (${store.county} · ${store.type})`,
-    `Placed by: ${placedByName}`,
+    `Placed by: ${placedByName} (${placedByFunction})`,
     `Placed: ${timestamp}`,
     odooOrderName ? `Odoo Sales Order: ${odooOrderName}` : "",
     "",
@@ -552,7 +553,7 @@ export async function sendManualOrderEmail(
         <span style="color:${MUTED};">Order ref <strong style="color:${INK};font-family:monospace;">${esc(orderRef)}</strong></span>
         <span style="color:${MUTED};">${esc(timestamp)}</span>
       </div>
-      <div style="font-size:13px;color:${INK};margin-bottom:14px;"><span style="color:${MUTED};">Placed by:</span> <strong>${esc(placedByName)}</strong></div>
+      <div style="font-size:13px;color:${INK};margin-bottom:14px;"><span style="color:${MUTED};">Placed by:</span> <strong>${esc(placedByName)}</strong> <span style="color:${MUTED};">(${esc(placedByFunction)})</span></div>
       ${
         odooOrderName
           ? `<div style="font-size:13px;color:${INK};margin-bottom:14px;"><span style="color:${MUTED};">Odoo Sales Order:</span> <strong>${esc(odooOrderName)}</strong></div>`
@@ -587,7 +588,7 @@ export async function sendManualOrderEmail(
 
   let pdfBuffer: Buffer | null = null;
   try {
-    pdfBuffer = await renderOrderSummaryPdf(store, items, odooOrderName, orderRef, placedByName, signatureUrl);
+    pdfBuffer = await renderOrderSummaryPdf(store, items, odooOrderName, orderRef, placedByName, placedByFunction, signatureUrl);
   } catch {
     // The PDF is a bonus attachment — never let a rendering failure block the email.
   }

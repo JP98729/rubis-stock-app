@@ -72,11 +72,16 @@ export function BranchManagerView({
   const [orderMethodUsed, setOrderMethodUsed] = useState<"order" | "lpo" | null>(null);
   const [orderSignature, setOrderSignature] = useState<string | null>(null);
   const [orderName, setOrderName] = useState(store.managerName || "");
+  const [orderFunction, setOrderFunction] = useState("");
   const [orderCourierLink, setOrderCourierLink] = useState<string | null>(null);
 
   async function handlePlaceOrder() {
     if (!orderName.trim()) {
       setOrderError("Please enter your name before placing the order.");
+      return;
+    }
+    if (!orderFunction.trim()) {
+      setOrderError("Please select your function before placing the order.");
       return;
     }
     if (!orderSignature) {
@@ -85,7 +90,7 @@ export function BranchManagerView({
     }
     setOrderBusy(true);
     setOrderError("");
-    const result = await placeManualOrder(orderQty, orderName.trim(), orderSignature);
+    const result = await placeManualOrder(orderQty, orderName.trim(), orderFunction.trim(), orderSignature);
     if (result.ok) {
       setOrderConfirmed(true);
       setOrderMethodUsed("order");
@@ -282,6 +287,17 @@ export function BranchManagerView({
                     placeholder="Type your full name"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 mb-3"
                   />
+                  <label className="text-[11px] text-gray-500 font-semibold">Your function</label>
+                  <select
+                    value={orderFunction}
+                    onChange={(e) => setOrderFunction(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 mb-3 bg-white"
+                  >
+                    <option value="">Select your function</option>
+                    <option value="Branch manager">Branch manager</option>
+                    <option value="Sales person">Sales person</option>
+                    <option value="Supervisor">Supervisor</option>
+                  </select>
                   <SignaturePad onChange={setOrderSignature} />
                   {!orderSignature && (
                     <div className="text-[11px] text-amber-600 mt-1">Signature required before placing the order.</div>
@@ -289,11 +305,19 @@ export function BranchManagerView({
                 </div>
                 <button
                   onClick={handlePlaceOrder}
-                  disabled={orderBusy || orderMethodUsed === "order" || !orderSignature || !orderName.trim()}
+                  disabled={
+                    orderBusy ||
+                    orderMethodUsed === "order" ||
+                    !orderSignature ||
+                    !orderName.trim() ||
+                    !orderFunction.trim()
+                  }
                   className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold text-white"
                   style={{
                     background:
-                      orderBusy || orderMethodUsed === "order" || !orderSignature || !orderName.trim() ? "#9CA3AF" : GREEN,
+                      orderBusy || orderMethodUsed === "order" || !orderSignature || !orderName.trim() || !orderFunction.trim()
+                        ? "#9CA3AF"
+                        : GREEN,
                   }}
                 >
                   <Send size={16} /> {orderBusy ? "Sending…" : "Place Order"}
