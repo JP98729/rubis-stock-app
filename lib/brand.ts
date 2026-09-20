@@ -28,6 +28,57 @@ export const PURE_PHONE_WA = "254112455363"; // wa.me format, no leading + or sp
 export const RANGES = ["Classic Range", "Indulge Range", "Gourmet Range"];
 export const MIN_STOCK = 6; // every branch must hold at least this many units of every SKU, regardless of target
 
+/** All 47 official Kenya counties, alphabetical — used for the branch's county picker. */
+export const KENYA_COUNTIES = [
+  "Baringo",
+  "Bomet",
+  "Bungoma",
+  "Busia",
+  "Elgeyo-Marakwet",
+  "Embu",
+  "Garissa",
+  "Homa Bay",
+  "Isiolo",
+  "Kajiado",
+  "Kakamega",
+  "Kericho",
+  "Kiambu",
+  "Kilifi",
+  "Kirinyaga",
+  "Kisii",
+  "Kisumu",
+  "Kitui",
+  "Kwale",
+  "Laikipia",
+  "Lamu",
+  "Machakos",
+  "Makueni",
+  "Mandera",
+  "Marsabit",
+  "Meru",
+  "Migori",
+  "Mombasa",
+  "Murang'a",
+  "Nairobi",
+  "Nakuru",
+  "Nandi",
+  "Narok",
+  "Nyamira",
+  "Nyandarua",
+  "Nyeri",
+  "Samburu",
+  "Siaya",
+  "Taita-Taveta",
+  "Tana River",
+  "Tharaka-Nithi",
+  "Trans Nzoia",
+  "Turkana",
+  "Uasin Gishu",
+  "Vihiga",
+  "Wajir",
+  "West Pokot",
+];
+
 /** Courier service that collects orders from the warehouse and delivers to branches. */
 export const COURIER_COMPANY = "CMB Bridge Logistics";
 export const COURIER_PICKUP_ADDRESS = "Upper Kabete, Ndumbuini, Kwa Daggy, Nairobi";

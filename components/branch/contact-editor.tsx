@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Camera, Mail, MapPin, Phone } from "lucide-react";
-import { GREEN, GREEN_DARK } from "@/lib/brand";
+import { GREEN, GREEN_DARK, KENYA_COUNTIES } from "@/lib/brand";
 import { compressAndUpload } from "../photo";
 import { saveBranchContact, saveManagerName, saveManagerPhoto } from "@/app/actions/branch";
 
@@ -10,24 +10,33 @@ export function BranchContactEditor({
   phone,
   email,
   address,
+  county,
+  zipCode,
   onSaved,
 }: {
   phone: string;
   email: string;
   address: string;
+  county: string;
+  zipCode: string;
   onSaved: (msg: string) => void;
 }) {
   const [effectivePhone, setEffectivePhone] = useState(phone);
   const [effectiveEmail, setEffectiveEmail] = useState(email);
   const [effectiveAddress, setEffectiveAddress] = useState(address);
-  const [editing, setEditing] = useState(!email); // auto-open if no email on file
+  const [effectiveCounty, setEffectiveCounty] = useState(county);
+  const [effectiveZipCode, setEffectiveZipCode] = useState(zipCode);
+  // auto-open if no email or zip code on file yet — same "please complete this" pattern
+  const [editing, setEditing] = useState(!email || !zipCode);
   const [phoneDraft, setPhoneDraft] = useState(phone);
   const [emailDraft, setEmailDraft] = useState(email);
   const [addressDraft, setAddressDraft] = useState(address);
+  const [countyDraft, setCountyDraft] = useState(county);
+  const [zipCodeDraft, setZipCodeDraft] = useState(zipCode);
   const [saved, setSaved] = useState(false);
 
   async function handleSave() {
-    const res = await saveBranchContact(phoneDraft, emailDraft, addressDraft);
+    const res = await saveBranchContact(phoneDraft, emailDraft, addressDraft, countyDraft, zipCodeDraft);
     if (!res.ok) {
       onSaved(res.error);
       return;
@@ -35,6 +44,8 @@ export function BranchContactEditor({
     setEffectivePhone(phoneDraft.trim());
     setEffectiveEmail(emailDraft.trim());
     setEffectiveAddress(addressDraft.trim());
+    setEffectiveCounty(countyDraft);
+    setEffectiveZipCode(zipCodeDraft.trim());
     setSaved(true);
     setEditing(false);
     onSaved("Contact details updated");
@@ -51,7 +62,10 @@ export function BranchContactEditor({
           <Mail size={11} className="text-gray-400" /> {effectiveEmail}
         </div>
         <div className="text-xs text-gray-500 flex items-center gap-1.5">
-          <MapPin size={11} className="text-gray-400" /> {effectiveAddress || "No address on file"}
+          <MapPin size={11} className="text-gray-400" />
+          {effectiveAddress || "No address on file"}
+          {effectiveCounty && `, ${effectiveCounty}`}
+          {effectiveZipCode && ` ${effectiveZipCode}`}
         </div>
         <button
           onClick={() => setEditing(true)}
@@ -68,13 +82,18 @@ export function BranchContactEditor({
     <div
       className="mt-2 p-3 rounded-lg"
       style={{
-        background: effectiveEmail ? "#F9FAFB" : "#FEF6F5",
-        border: effectiveEmail ? "1px solid #E5E7EB" : "1px solid #F5C4BE",
+        background: effectiveEmail && effectiveZipCode ? "#F9FAFB" : "#FEF6F5",
+        border: effectiveEmail && effectiveZipCode ? "1px solid #E5E7EB" : "1px solid #F5C4BE",
       }}
     >
       {!effectiveEmail && (
         <div className="text-xs font-semibold mb-2" style={{ color: "#C0392B" }}>
           No email on file for this branch — please add one below.
+        </div>
+      )}
+      {!effectiveZipCode && (
+        <div className="text-xs font-semibold mb-2" style={{ color: "#C0392B" }}>
+          Please choose your county and enter your zip code below.
         </div>
       )}
       <label className="flex flex-col gap-1 mb-2">
@@ -105,16 +124,51 @@ export function BranchContactEditor({
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
         />
       </label>
+      <label className="flex flex-col gap-1 mb-2">
+        <span className="text-[11px] text-gray-500 font-medium">County</span>
+        <select
+          value={countyDraft}
+          onChange={(e) => setCountyDraft(e.target.value)}
+          className={`border rounded-lg px-3 py-2 text-sm bg-white ${
+            countyDraft ? "border-gray-300" : "border-red-300 bg-red-50"
+          }`}
+        >
+          <option value="">Select your county</option>
+          {KENYA_COUNTIES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="flex flex-col gap-1 mb-2">
+        <span className="text-[11px] text-gray-500 font-medium">Zip code</span>
+        <input
+          value={zipCodeDraft}
+          onChange={(e) => setZipCodeDraft(e.target.value)}
+          placeholder="e.g. 00100"
+          className={`border rounded-lg px-3 py-2 text-sm ${
+            zipCodeDraft.trim() ? "border-gray-300" : "border-red-300 bg-red-50"
+          }`}
+        />
+      </label>
       <div className="flex gap-2">
-        <button onClick={handleSave} className="px-3 py-1.5 rounded-lg text-white text-xs font-semibold" style={{ background: GREEN }}>
+        <button
+          onClick={handleSave}
+          disabled={!countyDraft || !zipCodeDraft.trim()}
+          className="px-3 py-1.5 rounded-lg text-white text-xs font-semibold disabled:opacity-60"
+          style={{ background: !countyDraft || !zipCodeDraft.trim() ? "#9CA3AF" : GREEN }}
+        >
           {saved ? "Saved ✓" : "Save"}
         </button>
-        {effectiveEmail && (
+        {effectiveEmail && effectiveZipCode && (
           <button
             onClick={() => {
               setPhoneDraft(effectivePhone);
               setEmailDraft(effectiveEmail);
               setAddressDraft(effectiveAddress);
+              setCountyDraft(effectiveCounty);
+              setZipCodeDraft(effectiveZipCode);
               setEditing(false);
             }}
             className="px-3 py-1.5 rounded-lg border border-gray-300 text-xs font-semibold text-gray-600"

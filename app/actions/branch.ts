@@ -12,7 +12,7 @@ import {
   postSaleOrderMessage,
 } from "@/lib/odoo";
 import { sendManualOrderEmail, sendLpoUploadEmail, sendCourierDispatchEmail, newOrderRef } from "@/lib/email";
-import { NAIROBI_COURIER_NAME, NAIROBI_COURIER_PHONE_WA } from "@/lib/brand";
+import { NAIROBI_COURIER_NAME, NAIROBI_COURIER_PHONE_WA, KENYA_COUNTIES } from "@/lib/brand";
 
 export type SimpleResult = { ok: true } | { ok: false; error: string };
 export type PlaceOrderResult =
@@ -78,12 +78,26 @@ async function notifyNairobiCourierInOdoo(
 }
 
 /** Branch-manager self-service contact override (shown with a green * in the admin table). */
-export async function saveBranchContact(phone: string, email: string, address: string): Promise<SimpleResult> {
+export async function saveBranchContact(
+  phone: string,
+  email: string,
+  address: string,
+  county: string,
+  zipCode: string
+): Promise<SimpleResult> {
   const session = await requireRole("branch");
   if (!session?.storeId) return { ok: false, error: "Your session expired — log in again." };
+  if (!KENYA_COUNTIES.includes(county)) return { ok: false, error: "Please choose a county from the list." };
+  if (!zipCode.trim()) return { ok: false, error: "Please enter your zip code." };
   await prisma.store.update({
     where: { id: session.storeId },
-    data: { contactPhone: phone.trim() || null, contactEmail: email.trim() || null, address: address.trim() },
+    data: {
+      contactPhone: phone.trim() || null,
+      contactEmail: email.trim() || null,
+      address: address.trim(),
+      county,
+      zipCode: zipCode.trim(),
+    },
   });
   revalidatePath("/branch");
   revalidatePath("/manager");

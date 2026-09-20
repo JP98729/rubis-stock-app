@@ -40,6 +40,9 @@ model Store {
   county  String
   /// Physical address, branch-manager self-service (like contactPhone/contactEmail).
   address String @default("")
+  /// Postal/zip code, branch-manager self-service, free text (Kenya postal codes
+  /// aren't a fixed enumerable list the way counties are).
+  zipCode String?
 
   /// Geocoded once (from `address`, falling back to name+county) and cached here so
   /// the courier's distance-from-pickup line doesn't re-geocode on every page view.
