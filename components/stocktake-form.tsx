@@ -176,16 +176,12 @@ export function StocktakeForm({
       return;
     }
     onSaved("Stocktake saved");
-    if (embedded) {
-      onBack();
-    } else {
-      setSubmitted(true);
-    }
+    setSubmitted(true);
   }
 
   if (submitted) {
     return (
-      <div className="px-4 pt-4">
+      <div className={embedded ? "" : "px-4 pt-4"}>
         <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center gap-3 mt-6">
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center"
@@ -202,14 +198,16 @@ export function StocktakeForm({
             </div>
           </div>
           <div className="text-sm text-gray-700 leading-relaxed">
-            Thank you for your service! Your payment will be made within 24 hours.
+            {embedded
+              ? "Thank you for your service!"
+              : "Thank you for your service! Your payment will be made within 24 hours."}
           </div>
           <button
             onClick={onDone || onBack}
             className="w-full mt-2 rounded-lg py-2.5 text-sm font-bold text-white"
             style={{ background: GREEN }}
           >
-            Back to main menu
+            Back to main {embedded ? "page" : "menu"}
           </button>
         </div>
       </div>
