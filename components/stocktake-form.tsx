@@ -30,6 +30,7 @@ export function StocktakeForm({
   managerName,
   managerPhone,
   onBack,
+  onDone,
   onSaved,
 }: {
   store: { id: number; name: string; county: string; type: string };
@@ -43,6 +44,8 @@ export function StocktakeForm({
   managerName?: string | null;
   managerPhone?: string | null;
   onBack: () => void;
+  /** Called from the post-submit confirmation screen — defaults to onBack if not given. */
+  onDone?: () => void;
   onSaved: (msg: string) => void;
 }) {
   const [merchandiser, setMerchandiser] = useState(defaultName || "");
@@ -202,11 +205,11 @@ export function StocktakeForm({
             Thank you for your service! Your payment will be made within 24 hours.
           </div>
           <button
-            onClick={onBack}
+            onClick={onDone || onBack}
             className="w-full mt-2 rounded-lg py-2.5 text-sm font-bold text-white"
             style={{ background: GREEN }}
           >
-            Back to branches
+            Back to main menu
           </button>
         </div>
       </div>

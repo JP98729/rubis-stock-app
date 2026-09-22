@@ -211,6 +211,10 @@ export function MerchandiserView({
           managerName={selected.managerName}
           managerPhone={selected.phone}
           onBack={() => setConfirmed(false)}
+          onDone={() => {
+            setConfirmed(false);
+            setSelected(null);
+          }}
           onSaved={showToast}
         />
       ) : (
