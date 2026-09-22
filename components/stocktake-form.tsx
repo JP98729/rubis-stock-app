@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, ChevronDown, CreditCard, MapPin, PenTool, Phone, Store as StoreIcon } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronDown, CreditCard, MapPin, PenTool, Phone, Store as StoreIcon } from "lucide-react";
 import { AMBER, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT } from "@/lib/brand";
 import { Badge, NumField, YesNoQuestion } from "./ui";
 import { PlacementPhotoCapture, ProductPhotoPicker } from "./photo";
@@ -91,6 +91,7 @@ export function StocktakeForm({
   );
   const [openRange, setOpenRange] = useState<string | null>(RANGES[0]);
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
 
   function upd<K extends keyof ItemState>(sku: string, field: K, val: ItemState[K]) {
@@ -172,7 +173,44 @@ export function StocktakeForm({
       return;
     }
     onSaved("Stocktake saved");
-    onBack();
+    if (embedded) {
+      onBack();
+    } else {
+      setSubmitted(true);
+    }
+  }
+
+  if (submitted) {
+    return (
+      <div className="px-4 pt-4">
+        <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center gap-3 mt-6">
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center"
+            style={{ background: "#EEF7DE" }}
+          >
+            <CheckCircle2 size={36} style={{ color: GREEN_DARK }} />
+          </div>
+          <div>
+            <div className="font-bold text-lg" style={{ color: GREEN_DARK }}>
+              Submitted!
+            </div>
+            <div className="text-sm text-gray-500 mt-1">
+              Your stocktake for {store.name.trim()} has been sent to Pure Nutrition.
+            </div>
+          </div>
+          <div className="text-sm text-gray-700 leading-relaxed">
+            Thank you for your service! Your payment will be made within 24 hours.
+          </div>
+          <button
+            onClick={onBack}
+            className="w-full mt-2 rounded-lg py-2.5 text-sm font-bold text-white"
+            style={{ background: GREEN }}
+          >
+            Back to branches
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
