@@ -73,6 +73,7 @@ export function BranchManagerView({
   const [orderSignature, setOrderSignature] = useState<string | null>(null);
   const [orderName, setOrderName] = useState(store.managerName || "");
   const [orderFunction, setOrderFunction] = useState("");
+  const [orderEmail, setOrderEmail] = useState("");
 
   async function handlePlaceOrder() {
     if (!orderName.trim()) {
@@ -83,13 +84,17 @@ export function BranchManagerView({
       setOrderError("Please select your function before placing the order.");
       return;
     }
+    if (!store.email && (!orderEmail.trim() || !orderEmail.includes("@"))) {
+      setOrderError("Please enter your email before placing the order.");
+      return;
+    }
     if (!orderSignature) {
       setOrderError("Please sign before placing the order.");
       return;
     }
     setOrderBusy(true);
     setOrderError("");
-    const result = await placeManualOrder(orderQty, orderName.trim(), orderFunction.trim(), orderSignature);
+    const result = await placeManualOrder(orderQty, orderName.trim(), orderFunction.trim(), orderSignature, orderEmail.trim());
     if (result.ok) {
       setOrderConfirmed(true);
       setOrderMethodUsed("order");
@@ -303,6 +308,21 @@ export function BranchManagerView({
                     <option value="Sales person">Sales person</option>
                     <option value="Supervisor">Supervisor</option>
                   </select>
+                  {!store.email && (
+                    <>
+                      <label className="text-[11px] text-gray-500 font-semibold">Your email</label>
+                      <input
+                        type="email"
+                        value={orderEmail}
+                        onChange={(e) => setOrderEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 mb-3"
+                      />
+                      <div className="text-[11px] text-gray-400 -mt-2 mb-3">
+                        So we can send you a copy of every order you place.
+                      </div>
+                    </>
+                  )}
                   <SignaturePad onChange={setOrderSignature} />
                   {!orderSignature && (
                     <div className="text-[11px] text-amber-600 mt-1">Signature required before placing the order.</div>
@@ -315,12 +335,18 @@ export function BranchManagerView({
                     orderMethodUsed === "order" ||
                     !orderSignature ||
                     !orderName.trim() ||
-                    !orderFunction.trim()
+                    !orderFunction.trim() ||
+                    (!store.email && (!orderEmail.trim() || !orderEmail.includes("@")))
                   }
                   className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold text-white"
                   style={{
                     background:
-                      orderBusy || orderMethodUsed === "order" || !orderSignature || !orderName.trim() || !orderFunction.trim()
+                      orderBusy ||
+                      orderMethodUsed === "order" ||
+                      !orderSignature ||
+                      !orderName.trim() ||
+                      !orderFunction.trim() ||
+                      (!store.email && (!orderEmail.trim() || !orderEmail.includes("@")))
                         ? "#9CA3AF"
                         : GREEN,
                   }}

@@ -217,7 +217,9 @@ export async function placeManualOrder(
   quantities: Record<string, number>,
   placedByName: string,
   placedByFunction: string,
-  signatureUrl: string | null
+  signatureUrl: string | null,
+  /** Only used (and required) when the branch has no email on file yet — see below. */
+  managerEmailInput: string = ""
 ): Promise<PlaceOrderResult> {
   const session = await requireRole("branch");
   if (!session?.storeId) return { ok: false, error: "Your session expired — log in again." };
@@ -231,6 +233,19 @@ export async function placeManualOrder(
     select: { name: true, county: true, type: true, address: true, odooPartnerId: true, contactEmail: true, seedEmail: true },
   });
   if (!store) return { ok: false, error: "Your branch no longer exists." };
+
+  // The branch's own copy of the order email goes to whatever's on file already.
+  // If nothing's on file, the manager typed one in on the order form instead —
+  // require and save it now, so this and every future order reaches them.
+  let managerEmail = store.contactEmail || store.seedEmail || null;
+  if (!managerEmail) {
+    const typed = managerEmailInput.trim();
+    if (!typed || !typed.includes("@")) {
+      return { ok: false, error: "Please enter your email before placing the order." };
+    }
+    managerEmail = typed;
+    await prisma.store.update({ where: { id: storeId }, data: { contactEmail: typed } });
+  }
 
   const products = await getProducts();
   const bySku = new Map(products.map((p) => [p.sku, p]));
@@ -268,7 +283,7 @@ export async function placeManualOrder(
       store,
       items,
       order?.name ?? null,
-      store.contactEmail || store.seedEmail || null,
+      managerEmail,
       placedByName.trim(),
       placedByFunction.trim(),
       signatureUrl,
