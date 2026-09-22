@@ -107,6 +107,11 @@ model Merchandiser {
 
   /// Bumped on every authenticated page load, so the manager can see which merchandisers are active.
   lastActiveAt DateTime?
+
+  /// Learned from their first stocktake submission and reused after that, so a
+  /// merchandiser logged in with their own individual code doesn't have to
+  /// retype their KRA PIN on every visit. Blank until their first submission.
+  kraPin String @default("")
 }
 
 model RoleCode {

@@ -24,6 +24,7 @@ export function StocktakeForm({
   today,
   embedded,
   defaultName,
+  defaultKraPin,
   managerPhotoUrl,
   managerName,
   managerPhone,
@@ -35,6 +36,7 @@ export function StocktakeForm({
   today: string;
   embedded?: boolean;
   defaultName?: string;
+  defaultKraPin?: string;
   managerPhotoUrl?: string | null;
   managerName?: string | null;
   managerPhone?: string | null;
@@ -44,7 +46,7 @@ export function StocktakeForm({
   const [merchandiser, setMerchandiser] = useState(defaultName || "");
   const [idNumber, setIdNumber] = useState("");
   const [merchandiserPhone, setMerchandiserPhone] = useState("");
-  const [kraPin, setKraPin] = useState("");
+  const [kraPin, setKraPin] = useState(defaultKraPin || "");
   const [visitDate, setVisitDate] = useState(today);
   const [visitTime, setVisitTime] = useState(() => {
     const now = new Date();

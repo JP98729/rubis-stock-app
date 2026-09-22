@@ -2,6 +2,7 @@ import { TopBar } from "@/components/top-bar";
 import { MerchandiserLogin } from "@/components/login-forms";
 import { MerchandiserView, type StorePickerRow } from "@/components/merchandiser-view";
 import { requireRole } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
 import {
   ensureMonthEndReminder,
   getAllStoreStock,
@@ -26,6 +27,15 @@ export default async function MerchandiserPage() {
   }
 
   await ensureMonthEndReminder();
+
+  const merchandiserKraPin = session.merchandiserId
+    ? (
+        await prisma.merchandiser.findUnique({
+          where: { id: session.merchandiserId },
+          select: { kraPin: true },
+        })
+      )?.kraPin || ""
+    : "";
 
   const [products, stores] = await Promise.all([getProducts(), getStores()]);
   const stock = await getAllStoreStock(products);
@@ -52,6 +62,7 @@ export default async function MerchandiserPage() {
         products={products}
         today={todayStr()}
         merchName={session.merchName ?? ""}
+        defaultKraPin={merchandiserKraPin}
         leaderboard={leaderboard}
         monthKey={monthKey}
         monthLabelText={monthLabel(monthKey)}
