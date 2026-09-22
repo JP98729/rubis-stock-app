@@ -22,6 +22,7 @@ export function MerchandiserView({
   today,
   merchName,
   defaultKraPin,
+  defaultPhone,
   leaderboard,
   monthKey,
   monthLabelText,
@@ -32,6 +33,7 @@ export function MerchandiserView({
   today: string;
   merchName: string;
   defaultKraPin?: string;
+  defaultPhone?: string;
   leaderboard: SpotlightRow[];
   monthKey: string;
   monthLabelText: string;
@@ -204,6 +206,7 @@ export function MerchandiserView({
           today={today}
           defaultName={merchName}
           defaultKraPin={defaultKraPin}
+          defaultPhone={defaultPhone}
           managerPhotoUrl={selected.managerPhotoUrl}
           managerName={selected.managerName}
           managerPhone={selected.phone}

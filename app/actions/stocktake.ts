@@ -196,12 +196,15 @@ export async function submitStocktake(input: StocktakeInput): Promise<SubmitResu
   revalidatePath("/manager");
   revalidatePath("/merchandiser");
 
-  // Remember this merchandiser's KRA PIN against their own login (not the shared
-  // backup code) so it auto-fills next visit instead of being retyped every time.
-  if (session.role === "merchandiser" && session.merchandiserId && !input.embedded && input.kraPin.trim()) {
-    await prisma.merchandiser
-      .update({ where: { id: session.merchandiserId }, data: { kraPin: input.kraPin.trim() } })
-      .catch(() => {});
+  // Remember this merchandiser's KRA PIN and phone against their own login (not the
+  // shared backup code) so both auto-fill next visit instead of being retyped every time.
+  if (session.role === "merchandiser" && session.merchandiserId && !input.embedded) {
+    const profileUpdate: { kraPin?: string; phone?: string } = {};
+    if (input.kraPin.trim()) profileUpdate.kraPin = input.kraPin.trim();
+    if (input.merchandiserPhone.trim()) profileUpdate.phone = input.merchandiserPhone.trim();
+    if (Object.keys(profileUpdate).length > 0) {
+      await prisma.merchandiser.update({ where: { id: session.merchandiserId }, data: profileUpdate }).catch(() => {});
+    }
   }
 
   let expense: { id: number; name: string } | null = null;

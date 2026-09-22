@@ -112,6 +112,8 @@ model Merchandiser {
   /// merchandiser logged in with their own individual code doesn't have to
   /// retype their KRA PIN on every visit. Blank until their first submission.
   kraPin String @default("")
+  /// Same learn-once pattern as kraPin, for their phone number.
+  phone  String @default("")
 }
 
 model RoleCode {

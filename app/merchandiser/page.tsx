@@ -28,14 +28,14 @@ export default async function MerchandiserPage() {
 
   await ensureMonthEndReminder();
 
-  const merchandiserKraPin = session.merchandiserId
-    ? (
-        await prisma.merchandiser.findUnique({
-          where: { id: session.merchandiserId },
-          select: { kraPin: true },
-        })
-      )?.kraPin || ""
-    : "";
+  const merchandiserProfile = session.merchandiserId
+    ? await prisma.merchandiser.findUnique({
+        where: { id: session.merchandiserId },
+        select: { kraPin: true, phone: true },
+      })
+    : null;
+  const merchandiserKraPin = merchandiserProfile?.kraPin || "";
+  const merchandiserPhone = merchandiserProfile?.phone || "";
 
   const [products, stores] = await Promise.all([getProducts(), getStores()]);
   const stock = await getAllStoreStock(products);
@@ -63,6 +63,7 @@ export default async function MerchandiserPage() {
         today={todayStr()}
         merchName={session.merchName ?? ""}
         defaultKraPin={merchandiserKraPin}
+        defaultPhone={merchandiserPhone}
         leaderboard={leaderboard}
         monthKey={monthKey}
         monthLabelText={monthLabel(monthKey)}
