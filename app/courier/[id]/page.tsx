@@ -129,6 +129,7 @@ export default async function CourierDispatchPage({
         initialWaybillUrl={dispatch.waybillUrl}
         initialEtimsInvoiceUrl={dispatch.etimsInvoiceUrl}
         initialSubmittedAt={dispatch.submittedAt}
+        initialCourierIdNumber={dispatch.courierIdNumber}
         feeKES={weightKg != null ? courierFeeKES(weightKg) : null}
       />
     </div>

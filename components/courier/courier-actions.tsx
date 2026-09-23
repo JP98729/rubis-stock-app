@@ -27,6 +27,7 @@ export function CourierActions({
   initialWaybillUrl,
   initialEtimsInvoiceUrl,
   initialSubmittedAt,
+  initialCourierIdNumber,
   feeKES,
 }: {
   dispatchId: string;
@@ -35,6 +36,7 @@ export function CourierActions({
   initialWaybillUrl: string | null;
   initialEtimsInvoiceUrl: string | null;
   initialSubmittedAt: Date | null;
+  initialCourierIdNumber: string | null;
   feeKES: number | null;
 }) {
   const cameraInputId = useId();
@@ -48,6 +50,8 @@ export function CourierActions({
   const [waybillUrl, setWaybillUrl] = useState(initialWaybillUrl);
   const [etimsInvoiceUrl, setEtimsInvoiceUrl] = useState(initialEtimsInvoiceUrl);
   const [submitted, setSubmitted] = useState(!!initialSubmittedAt);
+  const [courierIdNumber, setCourierIdNumber] = useState(initialCourierIdNumber);
+  const [idNumberInput, setIdNumberInput] = useState("");
   const [acceptBusy, setAcceptBusy] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [waybillBusy, setWaybillBusy] = useState(false);
@@ -56,11 +60,16 @@ export function CourierActions({
   const [error, setError] = useState("");
 
   async function handleAccept() {
+    if (!idNumberInput.trim()) {
+      setError("Please enter your ID number before accepting.");
+      return;
+    }
     setAcceptBusy(true);
     setError("");
-    const res = await acceptCourierDispatch(dispatchId);
+    const res = await acceptCourierDispatch(dispatchId, idNumberInput.trim());
     if (res.ok) {
       setStatus((s) => (s === "pending" ? "accepted" : s));
+      setCourierIdNumber(idNumberInput.trim());
     } else {
       setError(res.error);
     }
@@ -156,25 +165,37 @@ export function CourierActions({
   const isPdf = !!deliveryNoteUrl && deliveryNoteUrl.toLowerCase().endsWith(".pdf");
   const isWaybillPdf = !!waybillUrl && waybillUrl.toLowerCase().endsWith(".pdf");
   const isEtimsPdf = !!etimsInvoiceUrl && etimsInvoiceUrl.toLowerCase().endsWith(".pdf");
-  const accepted = status !== "pending";
+  const accepted = status !== "pending" && !!courierIdNumber;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="text-sm font-semibold mb-2">1. Accept this dispatch</div>
-        {status === "pending" ? (
-          <button
-            onClick={handleAccept}
-            disabled={acceptBusy}
-            className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold text-white"
-            style={{ background: acceptBusy ? "#9CA3AF" : GREEN }}
-          >
-            {acceptBusy ? "Accepting…" : "Accept Dispatch"}
-          </button>
+        {!courierIdNumber ? (
+          <div className="flex flex-col gap-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] text-gray-500 font-medium">Your ID number</span>
+              <input
+                type="text"
+                value={idNumberInput}
+                onChange={(e) => setIdNumberInput(e.target.value)}
+                placeholder="Type your national ID number"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              />
+            </label>
+            <button
+              onClick={handleAccept}
+              disabled={acceptBusy}
+              className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold text-white"
+              style={{ background: acceptBusy ? "#9CA3AF" : GREEN }}
+            >
+              {acceptBusy ? "Accepting…" : "Confirm ID & Accept Dispatch"}
+            </button>
+          </div>
         ) : (
           <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold" style={{ background: "#EEF7DE", color: GREEN_DARK }}>
             <CheckCircle2 size={16} className="shrink-0" />
-            Accepted
+            Accepted — ID {courierIdNumber}
           </div>
         )}
       </div>

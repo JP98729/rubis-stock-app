@@ -160,6 +160,10 @@ model CourierDispatch {
 
   status     String    @default("pending") // "pending" | "accepted" | "delivered"
   acceptedAt DateTime?
+  /// The courier's ID number, confirmed on the dispatch page itself — required even
+  /// when the dispatch was already auto-accepted via the email's one-tap link, so
+  /// every acceptance is tied to a named person, not just a click.
+  courierIdNumber String?
 
   deliveryNoteUrl String?
   deliveredAt     DateTime?

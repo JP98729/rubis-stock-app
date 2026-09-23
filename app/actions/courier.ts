@@ -59,13 +59,20 @@ async function ensureCourierExpense(
   return expense.id;
 }
 
-export async function acceptCourierDispatch(id: string): Promise<SimpleResult> {
+/**
+ * Requires the courier's ID number even when the dispatch was already auto-accepted
+ * via the email's one-tap link (status "accepted" but courierIdNumber still null) —
+ * so every acceptance ends up tied to a named person, not just a click.
+ */
+export async function acceptCourierDispatch(id: string, idNumber: string): Promise<SimpleResult> {
   const dispatch = await loadDispatch(id);
   if (!dispatch) return { ok: false, error: "This dispatch link is invalid." };
+  if (!idNumber.trim()) return { ok: false, error: "Please enter your ID number before accepting." };
 
   if (dispatch.status === "pending") {
     await markAccepted(dispatch);
   }
+  await prisma.courierDispatch.update({ where: { id }, data: { courierIdNumber: idNumber.trim() } });
 
   revalidatePath(`/courier/${id}`);
   return { ok: true };
