@@ -1,8 +1,8 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 
-/** Upper Kabete, Ndumbuini, Kwa Daggy, Nairobi — the courier's fixed pickup point. */
-export const PICKUP_COORDS = { lat: -1.2581618, lon: 36.7249076 };
+/** Kwa Daggy, Ndumbuini, Upper Kabete — the courier's fixed pickup point (pin confirmed on Google Maps). */
+export const PICKUP_COORDS = { lat: -1.2488419, lon: 36.7228642 };
 
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
 const USER_AGENT = "RubisEnjoyStockApp/1.0 (jprsfortain@gmail.com)";
