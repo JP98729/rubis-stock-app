@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Audience } from "@prisma/client";
 import { Send, CheckCircle2, Package } from "lucide-react";
-import { RUBIS_LOGO, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT } from "@/lib/brand";
+import { RUBIS_LOGO, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT, rangeLabel } from "@/lib/brand";
 import { ToastView, useToast } from "./toast";
 import { ProductThumb } from "./ui";
 import { SignaturePad } from "./signature-pad";
@@ -142,7 +142,7 @@ export function HqView({
                   className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wide"
                   style={{ background: RANGE_TINT[range], color: rc }}
                 >
-                  {range}
+                  {rangeLabel(range)}
                 </div>
                 <div className="divide-y divide-gray-50">
                   {rangeItems.map((p) => (

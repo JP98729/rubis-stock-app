@@ -26,6 +26,16 @@ export const PURE_PHONE_DISPLAY = "+254 112 455 363";
 export const PURE_PHONE_WA = "254112455363"; // wa.me format, no leading + or spaces
 
 export const RANGES = ["Classic Range", "Indulge Range", "Gourmet Range"];
+/** Short descriptor shown next to each range's name wherever it's used as a section header. */
+export const RANGE_SUBTITLE: Record<string, string> = {
+  "Classic Range": "Fire Roasted",
+  "Indulge Range": "Chocolate Coated",
+  "Gourmet Range": "Caramelised",
+};
+export function rangeLabel(range: string): string {
+  const subtitle = RANGE_SUBTITLE[range];
+  return subtitle ? `${range} (${subtitle})` : range;
+}
 export const MIN_STOCK = 6; // every branch must hold at least this many units of every SKU, regardless of target
 
 /** All 47 official Kenya counties, alphabetical — used for the branch's county picker. */

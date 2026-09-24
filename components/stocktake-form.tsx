@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowLeft, CheckCircle2, ChevronDown, CreditCard, MapPin, PenTool, Phone, Store as StoreIcon } from "lucide-react";
-import { AMBER, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT } from "@/lib/brand";
+import { AMBER, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT, rangeLabel } from "@/lib/brand";
 import { Badge, NumField, YesNoQuestion } from "./ui";
 import { PlacementPhotoCapture, ProductPhotoPicker } from "./photo";
 import { SignaturePad } from "./signature-pad";
@@ -407,7 +407,7 @@ export function StocktakeForm({
               style={{ background: RANGE_TINT[range] }}
             >
               <span className="font-semibold text-sm" style={{ color: rc }}>
-                {range}
+                {rangeLabel(range)}
               </span>
               <ChevronDown size={16} style={{ color: rc }} className={`transition ${isOpen ? "rotate-180" : ""}`} />
             </button>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AMBER, MIN_STOCK, RANGES, RANGE_COLORS, RANGE_TINT } from "@/lib/brand";
+import { AMBER, MIN_STOCK, RANGES, RANGE_COLORS, RANGE_TINT, rangeLabel } from "@/lib/brand";
 import { fmtKES } from "@/lib/utils";
 import { Badge, ProductThumb } from "../ui";
 import { setTarget } from "@/app/actions/manager";
@@ -42,7 +42,7 @@ export function ProductsTable({ products, onToast }: { products: ProductDTO[]; o
             className="px-4 py-3 border-b border-gray-100 font-semibold text-sm"
             style={{ background: RANGE_TINT[range], color: RANGE_COLORS[range] }}
           >
-            {range}
+            {rangeLabel(range)}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

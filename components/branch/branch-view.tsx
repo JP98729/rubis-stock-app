@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AlertTriangle, Bell, CheckCircle2, ClipboardList, MessageCircle, Package, PenTool, Send, Trophy, Truck } from "lucide-react";
-import { AMBER, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT, RUBIS_LOGO } from "@/lib/brand";
+import { AMBER, GREEN, GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT, RUBIS_LOGO, rangeLabel } from "@/lib/brand";
 import { fmtKES } from "@/lib/utils";
 import { Badge, ProductThumb } from "../ui";
 import { ToastView, useToast } from "../toast";
@@ -244,7 +244,7 @@ export function BranchManagerView({
                           className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wide"
                           style={{ background: RANGE_TINT[range], color: rc }}
                         >
-                          {range}
+                          {rangeLabel(range)}
                         </div>
                         <div className="divide-y divide-gray-50">
                           {rangeItems.map((r) => (

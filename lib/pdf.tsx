@@ -1,7 +1,7 @@
 import "server-only";
 import React from "react";
 import { Document, Page, View, Text, Image, Link, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
-import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO } from "@/lib/brand";
+import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO, rangeLabel } from "@/lib/brand";
 
 const GREEN = "#6DBE00";
 const GREEN_DARK = "#4E8A00";
@@ -176,7 +176,7 @@ export async function renderStocktakeSummaryPdf(
           if (rangeItems.length === 0) return null;
           return (
             <View key={range}>
-              <Text style={[styles.rangeHeader, { color: RANGE_COLORS[range] || MUTED }]}>{range}</Text>
+              <Text style={[styles.rangeHeader, { color: RANGE_COLORS[range] || MUTED }]}>{rangeLabel(range)}</Text>
               {rangeItems.map((it, i) => {
                 const onHand = it.shelfQty + it.backStock;
                 const low = onHand < minStock;

@@ -13,7 +13,7 @@ import {
   Truck,
 } from "lucide-react";
 import type { MovementType } from "@prisma/client";
-import { GREEN, GREEN_DARK, RANGES } from "@/lib/brand";
+import { GREEN, GREEN_DARK, RANGES, rangeLabel } from "@/lib/brand";
 import { ProductThumb } from "./ui";
 import { PlacementPhotoCapture } from "./photo";
 import { SignaturePad } from "./signature-pad";
@@ -192,7 +192,7 @@ export function MovementForm({
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
             >
               {RANGES.map((r) => (
-                <optgroup key={r} label={r}>
+                <optgroup key={r} label={rangeLabel(r)}>
                   {availableProducts
                     .filter((p) => p.range === r)
                     .map((p) => (

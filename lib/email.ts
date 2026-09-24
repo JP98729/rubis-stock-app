@@ -1,5 +1,5 @@
 import "server-only";
-import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO, COURIER_PICKUP_ADDRESS, courierNameForCounty, courierFeeKES } from "@/lib/brand";
+import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO, COURIER_PICKUP_ADDRESS, courierNameForCounty, courierFeeKES, rangeLabel } from "@/lib/brand";
 import { renderStocktakeSummaryPdf, renderMovementSummaryPdf, renderOrderSummaryPdf } from "@/lib/pdf";
 
 const NOTIFY_EMAIL = "info@pure-nutritions.com";
@@ -98,7 +98,7 @@ export async function sendStocktakeSummaryEmail(
   const itemLines = RANGES.flatMap((range) => {
     const rangeItems = entry.items.filter((it) => it.range === range);
     if (rangeItems.length === 0) return [];
-    return [`  ${range}:`, ...rangeItems.map(itemLine)];
+    return [`  ${rangeLabel(range)}:`, ...rangeItems.map(itemLine)];
   });
   const competitorLines = entry.competitors.map(
     (c, i) => `  ${i + 1}. ${c.brand} (${c.gram}) — ${c.description} — KES ${c.price}`
@@ -149,7 +149,7 @@ export async function sendStocktakeSummaryEmail(
     const color = RANGE_COLORS[range] || MUTED;
     return `
         <tr>
-          <td colspan="5" style="padding:10px 10px 6px;font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.03em;">${esc(range)}</td>
+          <td colspan="5" style="padding:10px 10px 6px;font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.03em;">${esc(rangeLabel(range))}</td>
         </tr>
         ${rangeItems.map(stockRow).join("")}`;
   }).join("");

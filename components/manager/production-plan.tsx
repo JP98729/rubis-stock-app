@@ -1,6 +1,6 @@
 "use client";
 
-import { GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT } from "@/lib/brand";
+import { GREEN_DARK, RANGES, RANGE_COLORS, RANGE_TINT, rangeLabel } from "@/lib/brand";
 import { fmtKES } from "@/lib/utils";
 import { KpiCard } from "../ui";
 import type { ProductionRow } from "./types";
@@ -29,7 +29,7 @@ export function ProductionPlan({ rows }: { rows: ProductionRow[] }) {
               className="px-4 py-3 border-b border-gray-100 font-semibold text-sm"
               style={{ background: RANGE_TINT[range], color: rc }}
             >
-              {range}
+              {rangeLabel(range)}
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
