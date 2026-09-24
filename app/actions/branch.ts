@@ -144,7 +144,7 @@ export async function addLpoDocument(url: string, filename: string): Promise<Sim
 
   const products = await getProducts();
   const stock = await getStoreStock(storeId, products);
-  const items = stock.rows.filter((r) => r.reorder > 0);
+  const items = stock.rows.filter((r) => r.reorder > 0 && r.range !== "Classic Range");
 
   // Best-effort: mirror the branch's current reorder as a draft Sales Order in Odoo.
   // No-ops silently if Odoo sync isn't configured or this branch has no mapped customer.
@@ -252,7 +252,10 @@ export async function placeManualOrder(
 
   const items = Object.entries(quantities)
     .map(([sku, qty]) => ({ sku, qty: Math.trunc(Number(qty) || 0), product: bySku.get(sku) }))
-    .filter((i): i is typeof i & { product: NonNullable<typeof i.product> } => i.qty > 0 && !!i.product && !i.product.unavailable)
+    .filter(
+      (i): i is typeof i & { product: NonNullable<typeof i.product> } =>
+        i.qty > 0 && !!i.product && !i.product.unavailable && i.product.range !== "Classic Range"
+    )
     .map((i) => ({ sku: i.sku, flavour: i.product.flavour, reorder: i.qty }));
 
   if (items.length === 0) {
