@@ -256,20 +256,26 @@ export function BranchManagerView({
                                   {r.sku} · on hand {r.current}
                                 </div>
                               </div>
-                              <input
-                                type="number"
-                                min="0"
-                                inputMode="numeric"
-                                value={orderQty[r.sku] ?? 0}
-                                onChange={(e) =>
-                                  setOrderQty((prev) => ({
-                                    ...prev,
-                                    [r.sku]: Math.max(0, Math.trunc(Number(e.target.value) || 0)),
-                                  }))
-                                }
-                                className="w-16 text-center font-semibold border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
-                                style={{ color: AMBER }}
-                              />
+                              {range === "Classic Range" ? (
+                                <span className="text-[11px] font-semibold text-red-500 text-right w-20">
+                                  Not available to order
+                                </span>
+                              ) : (
+                                <input
+                                  type="number"
+                                  min="0"
+                                  inputMode="numeric"
+                                  value={orderQty[r.sku] ?? 0}
+                                  onChange={(e) =>
+                                    setOrderQty((prev) => ({
+                                      ...prev,
+                                      [r.sku]: Math.max(0, Math.trunc(Number(e.target.value) || 0)),
+                                    }))
+                                  }
+                                  className="w-16 text-center font-semibold border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                                  style={{ color: AMBER }}
+                                />
+                              )}
                             </div>
                           ))}
                         </div>

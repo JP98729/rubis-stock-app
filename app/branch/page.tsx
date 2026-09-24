@@ -55,7 +55,7 @@ export default async function BranchPage() {
         store={store}
         products={products}
         today={today}
-        orderItems={stock.rows.filter((r) => r.reorder > 0 && r.range !== "Classic Range")}
+        orderItems={stock.rows.filter((r) => r.reorder > 0)}
         hasStocktake={stock.hasStocktake}
         needsMonthEndCount={needsMonthEndCount}
         approvalStatus={store.approvalStatus}
