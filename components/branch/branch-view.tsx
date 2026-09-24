@@ -218,7 +218,7 @@ export function BranchManagerView({
               reward={reward}
               highlightStoreId={store.id}
             />
-            <div className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+            <div className="text-sm font-bold text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
               Classic Range is not available anymore — we&apos;re working on new design bags.
             </div>
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
