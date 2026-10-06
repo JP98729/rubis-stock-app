@@ -70,3 +70,37 @@ body {
   .role-card__icon { width: 46px; height: 46px; border-radius: 14px; }
   .role-card__num { display: none; }
 }
+
+/* ---------- Sign-in pages ---------- */
+.lg-page { min-height: calc(100vh - 56px); padding: 28px 16px 40px; background: radial-gradient(90% 60% at 50% 0%, color-mix(in srgb, var(--lc) 16%, #fff) 0%, #f4f6ec 70%); position: relative; }
+.lg-page::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(color-mix(in srgb, var(--lc) 18%, transparent) 1.2px, transparent 1.4px); background-size: 22px 22px; pointer-events: none; mask-image: linear-gradient(to bottom, #000, transparent 55%); -webkit-mask-image: linear-gradient(to bottom, #000, transparent 55%); }
+.lg-card { position: relative; max-width: 420px; margin: 0 auto; border-radius: 28px; overflow: hidden; background: #fff; box-shadow: 0 24px 50px rgba(25,40,12,.2), 0 0 0 1px rgba(0,0,0,.04); animation: home-rise .6s ease both; }
+.lg-head { position: relative; padding: 22px 20px 54px; text-align: center; color: #fff; background: radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--lc) 80%, #fff) 0%, var(--lc) 40%, var(--lcd) 100%); }
+.lg-head::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.12) 1.2px, transparent 1.4px); background-size: 20px 20px; }
+.lg-head::after { content: ""; position: absolute; right: -60px; top: -60px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.3), rgba(255,255,255,0) 70%); }
+.lg-logos { position: relative; z-index: 1; display: flex; justify-content: center; gap: 8px; margin-bottom: 18px; }
+.lg-logo { width: 52px; height: 52px; border-radius: 14px; background: #fff; overflow: hidden; box-shadow: 0 6px 16px rgba(0,0,0,.3), 0 0 0 2px rgba(255,255,255,.4); }
+.lg-logo img { width: 100%; height: 100%; object-fit: contain; padding: 6px; display: block; }
+.lg-badge { position: absolute; left: 50%; bottom: -34px; width: 72px; height: 72px; margin-left: -36px; z-index: 3; }
+.lg-badge__icon { position: relative; z-index: 1; width: 72px; height: 72px; border-radius: 22px; display: flex; align-items: center; justify-content: center; background: linear-gradient(150deg, var(--lc), var(--lcd)); border: 4px solid #fff; box-shadow: 0 12px 24px color-mix(in srgb, var(--lc) 50%, transparent); }
+.lg-badge__ring { position: absolute; inset: -4px; border-radius: 26px; border: 2px solid var(--lc); opacity: 0; animation: lg-ring 2.4s ease-out infinite; }
+.lg-role { position: relative; z-index: 1; display: inline-block; padding: 4px 14px; border-radius: 999px; background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.4); font-size: .7rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.lg-body { padding: 58px 22px 22px; text-align: center; }
+.lg-title { margin: 0 0 6px; font-size: 1.35rem; font-weight: 800; color: var(--lcd); }
+.lg-desc { margin: 0 0 14px; font-size: .88rem; line-height: 1.5; color: #5b6350; }
+.lg-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 18px; }
+.lg-chips span { padding: 4px 11px; border-radius: 999px; font-size: .7rem; font-weight: 700; color: var(--lcd); background: color-mix(in srgb, var(--lc) 12%, #fff); border: 1px solid color-mix(in srgb, var(--lc) 30%, #fff); }
+.lg-form { display: flex; flex-direction: column; gap: 12px; }
+.lg-field { display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 16px; border: 2px solid #e4e6da; background: #f8f9f3; color: var(--lc); transition: border-color .2s ease, box-shadow .2s ease, background .2s ease; }
+.lg-field:focus-within { border-color: var(--lc); background: #fff; box-shadow: 0 0 0 4px color-mix(in srgb, var(--lc) 18%, transparent); }
+.lg-field input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; padding: 15px 0; text-align: center; font-size: 1.05rem; font-weight: 800; letter-spacing: .18em; color: #1f2417; }
+.lg-field input::placeholder { color: #a3a99a; font-weight: 600; letter-spacing: .08em; text-transform: none; font-size: .9rem; }
+.lg-error { padding: 8px 12px; border-radius: 12px; background: #fdecea; color: #b3261e; font-size: .8rem; font-weight: 600; }
+.lg-btn { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 15px 18px; border: 0; border-radius: 16px; font-size: 1rem; font-weight: 800; color: #fff; cursor: pointer; background: linear-gradient(150deg, var(--lc), var(--lcd)); box-shadow: 0 12px 24px color-mix(in srgb, var(--lc) 45%, transparent); transition: transform .15s ease, opacity .15s ease; }
+.lg-btn:hover { transform: translateY(-2px); }
+.lg-btn:active { transform: scale(.98); }
+.lg-btn:disabled { opacity: .6; cursor: default; }
+.lg-btn::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; background: linear-gradient(100deg, rgba(255,255,255,0), rgba(255,255,255,.45), rgba(255,255,255,0)); transform: skewX(-20deg); animation: home-shine 4.5s ease-in-out infinite; }
+.lg-foot { margin-top: 18px; padding: 12px 14px; border-radius: 14px; background: #f4f6ec; border: 1px dashed #c9d7a6; font-size: .72rem; line-height: 1.45; color: #5b6350; }
+@keyframes lg-ring { 0% { opacity: .8; transform: scale(.92); } 100% { opacity: 0; transform: scale(1.35); } }
+@media (prefers-reduced-motion: reduce) { .lg-card { animation: none; } .lg-badge__ring, .lg-btn::after { animation: none; display: none; } }
