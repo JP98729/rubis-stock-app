@@ -241,7 +241,7 @@ export function HqView({
           {orderConfirmed && (
             <div
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold"
-              style={{ background: "#EEF7DE", color: GREEN_DARK }}
+              style={{ background: "#F3F6E8", color: GREEN_DARK }}
             >
               <CheckCircle2 size={16} className="shrink-0" />
               Order sent to Pure Nutrition!

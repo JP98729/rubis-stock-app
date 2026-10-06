@@ -185,7 +185,7 @@ export function StocktakeForm({
         <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center gap-3 mt-6">
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center"
-            style={{ background: "#EEF7DE" }}
+            style={{ background: "#F3F6E8" }}
           >
             <CheckCircle2 size={36} style={{ color: GREEN_DARK }} />
           </div>
@@ -227,7 +227,7 @@ export function StocktakeForm({
           {store.county} · {store.type}
         </div>
         {(managerPhotoUrl || managerName || managerPhone) && (
-          <div className="flex items-center gap-3 mt-3 p-2.5 rounded-lg" style={{ background: "#EEF7DE" }}>
+          <div className="flex items-center gap-3 mt-3 p-2.5 rounded-lg" style={{ background: "#F3F6E8" }}>
             {managerPhotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img

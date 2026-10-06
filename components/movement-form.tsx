@@ -131,7 +131,7 @@ export function MovementForm({
           </a>
         )}
         {!embedded && (store.managerPhotoUrl || store.managerName) && (
-          <div className="flex items-center gap-3 mt-3 p-2.5 rounded-lg" style={{ background: "#EEF7DE" }}>
+          <div className="flex items-center gap-3 mt-3 p-2.5 rounded-lg" style={{ background: "#F3F6E8" }}>
             {store.managerPhotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img

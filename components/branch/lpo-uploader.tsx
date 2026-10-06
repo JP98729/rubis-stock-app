@@ -88,7 +88,7 @@ export function LpoUploader({
               {d.odooSaleOrderName && (
                 <span
                   className="text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0"
-                  style={{ background: "#EEF7DE", color: GREEN_DARK }}
+                  style={{ background: "#F3F6E8", color: GREEN_DARK }}
                 >
                   {d.odooSaleOrderName}
                 </span>
@@ -120,7 +120,7 @@ export function LpoUploader({
       {confirmed && (
         <div
           className="mt-2.5 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold"
-          style={{ background: "#EEF7DE", color: GREEN_DARK }}
+          style={{ background: "#F3F6E8", color: GREEN_DARK }}
         >
           <CheckCircle2 size={16} className="shrink-0" />
           Thanks for uploading — done successfully!

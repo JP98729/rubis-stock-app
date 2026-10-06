@@ -26,7 +26,7 @@ export function DeliveryBanner({ today }: { today: string }) {
   const label =
     diff === 0 ? "Delivery day is today!" : diff === 1 ? "Delivery tomorrow" : `${diff} days to next delivery`;
   return (
-    <div className="rounded-xl px-4 py-2.5 flex items-center justify-between text-sm" style={{ background: "#EEF7DE" }}>
+    <div className="rounded-xl px-4 py-2.5 flex items-center justify-between text-sm" style={{ background: "#F3F6E8" }}>
       <span className="font-semibold" style={{ color: GREEN_DARK }}>
         {label}
       </span>
@@ -47,7 +47,7 @@ export function DeliveryCalendar({ today, county }: { today: string; county?: st
       {county && (
         <div
           className="rounded-xl px-4 py-2.5 flex items-center gap-2.5 text-sm"
-          style={{ background: "#EEF7DE" }}
+          style={{ background: "#F3F6E8" }}
         >
           <Truck size={16} style={{ color: GREEN_DARK }} className="shrink-0" />
           <span style={{ color: GREEN_DARK }}>

@@ -4,7 +4,7 @@ import { GREEN, GREEN_DARK, AMBER, NAIROBI_COURIER_NAME, COURIER_COMPANY } from 
 import type { CourierDispatchRow } from "@/lib/queries";
 
 function statusLabel(row: CourierDispatchRow): { text: string; color: string; bg: string } {
-  if (row.complete) return { text: "Submitted", color: GREEN_DARK, bg: "#EEF7DE" };
+  if (row.complete) return { text: "Submitted", color: GREEN_DARK, bg: "#F3F6E8" };
   if (row.status === "pending") return { text: "Needs accept", color: AMBER, bg: "#FFF7E6" };
   if (row.status === "delivered" && row.hasWaybill && row.hasEtims) {
     return { text: "Ready to submit", color: "#1D4ED8", bg: "#EFF6FF" };

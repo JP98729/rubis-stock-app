@@ -19,8 +19,8 @@ export const PICKUP_ADDRESS = COURIER_PICKUP_ADDRESS;
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Rubis Enjoy <onboarding@resend.dev>";
 const MERCHANDISER_VISIT_FEE_KES = 300;
 
-const GREEN = "#6DBE00";
-const GREEN_DARK = "#4E8A00";
+const GREEN = "#5E7D1F";
+const GREEN_DARK = "#4A6318";
 const RED = "#C0392B";
 const INK = "#1F2937";
 const MUTED = "#6B7280";
@@ -224,7 +224,7 @@ export async function sendStocktakeSummaryEmail(
                   : ""
               }
             </div>`
-          : `<div style="background:#EEF7DE;border:1px solid #D9EEBB;border-radius:8px;padding:10px 14px;margin-bottom:16px;color:${GREEN_DARK};font-size:13px;font-weight:600;">✓ No stock or display issues flagged</div>`
+          : `<div style="background:#F3F6E8;border:1px solid #DFE6C8;border-radius:8px;padding:10px 14px;margin-bottom:16px;color:${GREEN_DARK};font-size:13px;font-weight:600;">✓ No stock or display issues flagged</div>`
       }
 
       ${entry.notes ? `<div style="font-size:13px;color:${INK};margin-bottom:16px;"><span style="color:${MUTED};">Notes:</span> ${esc(entry.notes)}</div>` : ""}
@@ -339,8 +339,8 @@ export async function sendMovementSummaryEmail(
 
   const typeLabel = MOVEMENT_TYPE_LABELS[entry.type] || entry.type;
   const typeColor = entry.type === "EXPIRED_DAMAGED" ? RED : GREEN_DARK;
-  const typeTint = entry.type === "EXPIRED_DAMAGED" ? "#FEF6F5" : "#EEF7DE";
-  const typeTintBorder = entry.type === "EXPIRED_DAMAGED" ? "#F5C4BE" : "#D9EEBB";
+  const typeTint = entry.type === "EXPIRED_DAMAGED" ? "#FEF6F5" : "#F3F6E8";
+  const typeTintBorder = entry.type === "EXPIRED_DAMAGED" ? "#F5C4BE" : "#DFE6C8";
   const isDelivery = entry.type === "DELIVERY";
   const subject = `${typeLabel} logged — ${store.name.trim()} — ${entry.date}`;
 
@@ -703,7 +703,7 @@ export async function sendLpoUploadEmail(
         <span style="color:${MUTED};">Order ref <strong style="color:${INK};font-family:monospace;">${esc(orderRef)}</strong></span>
         <span style="color:${MUTED};">${esc(timestamp)}</span>
       </div>
-      <a href="${fileUrl}" style="display:inline-block;font-size:13px;font-weight:600;color:${GREEN_DARK};background:#EEF7DE;border-radius:8px;padding:10px 14px;text-decoration:none;margin-bottom:16px;">📄 View uploaded LPO (${esc(filename)})</a>
+      <a href="${fileUrl}" style="display:inline-block;font-size:13px;font-weight:600;color:${GREEN_DARK};background:#F3F6E8;border-radius:8px;padding:10px 14px;text-decoration:none;margin-bottom:16px;">📄 View uploaded LPO (${esc(filename)})</a>
       ${
         odooOrderName
           ? `<div style="font-size:13px;color:${INK};margin-bottom:14px;"><span style="color:${MUTED};">Odoo Sales Order:</span> <strong>${esc(odooOrderName)}</strong></div>`
@@ -821,11 +821,11 @@ export async function sendCourierDispatchEmail(
       </div>
       ${
         shippingWeightKg != null
-          ? `<div style="background:#EEF7DE;border-radius:8px;padding:16px;margin-bottom:16px;text-align:center;">
+          ? `<div style="background:#F3F6E8;border-radius:8px;padding:16px;margin-bottom:16px;text-align:center;">
                <div style="font-size:28px;">📦</div>
                <div style="font-size:11px;color:${GREEN_DARK};text-transform:uppercase;letter-spacing:0.04em;font-weight:700;margin-top:4px;">Shipping weight</div>
                <div style="font-size:24px;font-weight:700;color:${GREEN_DARK};margin-top:2px;">${formatKg(shippingWeightKg)} kg</div>
-               <div style="font-size:12px;color:${GREEN_DARK};margin-top:6px;padding-top:6px;border-top:1px solid #D9EEBB;">Delivery fee: <strong>KES ${courierFeeKES(shippingWeightKg)}</strong></div>
+               <div style="font-size:12px;color:${GREEN_DARK};margin-top:6px;padding-top:6px;border-top:1px solid #DFE6C8;">Delivery fee: <strong>KES ${courierFeeKES(shippingWeightKg)}</strong></div>
              </div>`
           : ""
       }
@@ -929,7 +929,7 @@ export async function sendCourierStatusEmail(
       ${
         fileUrl
           ? fileUrl.toLowerCase().endsWith(".pdf")
-            ? `<a href="${fileUrl}" style="display:inline-block;font-size:13px;font-weight:600;color:${GREEN_DARK};background:#EEF7DE;border-radius:8px;padding:10px 14px;text-decoration:none;">📄 View ${docLabel.toLowerCase()} (PDF)</a>`
+            ? `<a href="${fileUrl}" style="display:inline-block;font-size:13px;font-weight:600;color:${GREEN_DARK};background:#F3F6E8;border-radius:8px;padding:10px 14px;text-decoration:none;">📄 View ${docLabel.toLowerCase()} (PDF)</a>`
             : `<img src="${fileUrl}" alt="${docLabel}" style="max-width:100%;border-radius:8px;border:1px solid ${BORDER};" />`
           : ""
       }

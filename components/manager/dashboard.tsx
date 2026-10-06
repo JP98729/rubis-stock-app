@@ -160,7 +160,7 @@ export function Dashboard({
                           disabled={waBusyId === st.id || !effectivePhone.trim()}
                           title={effectivePhone.trim() ? "" : "Type a phone number first"}
                           className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold disabled:opacity-40"
-                          style={{ background: "#EEF7DE", color: GREEN_DARK }}
+                          style={{ background: "#F3F6E8", color: GREEN_DARK }}
                         >
                           <MessageCircle size={13} />
                           {waBusyId === st.id ? "Preparing…" : "Send receipt to WhatsApp"}

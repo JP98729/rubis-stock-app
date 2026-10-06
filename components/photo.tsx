@@ -137,9 +137,9 @@ export function PlacementPhotoCapture({
   const isGood = tone === "good";
   const isNeutral = tone === "neutral";
   const color = isGood ? GREEN_DARK : isNeutral ? "#1D4ED8" : "#C0392B";
-  const borderClass = isGood ? "border-green-300" : isNeutral ? "border-blue-300" : "border-red-300";
-  const bgClass = isGood ? "bg-green-50" : isNeutral ? "bg-blue-50" : "bg-red-50";
-  const imgBorderClass = isGood ? "border-green-200" : isNeutral ? "border-blue-200" : "border-red-200";
+  const borderClass = isGood ? "border-[#C9D7A6]" : isNeutral ? "border-blue-300" : "border-red-300";
+  const bgClass = isGood ? "bg-[#F3F6E8]" : isNeutral ? "bg-blue-50" : "bg-red-50";
+  const imgBorderClass = isGood ? "border-[#DFE6C8]" : isNeutral ? "border-blue-200" : "border-red-200";
 
   const isPdf = !!photo && photo.toLowerCase().endsWith(".pdf");
 

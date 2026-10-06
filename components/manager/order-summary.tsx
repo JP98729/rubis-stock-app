@@ -114,7 +114,7 @@ export function OrderSummary({ orders }: { orders: StoreOrder[] }) {
                                 {d.odooSaleOrderName && (
                                   <span
                                     className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
-                                    style={{ background: "#EEF7DE", color: GREEN_DARK }}
+                                    style={{ background: "#F3F6E8", color: GREEN_DARK }}
                                   >
                                     {d.odooSaleOrderName}
                                   </span>

@@ -193,7 +193,7 @@ export function CourierActions({
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold" style={{ background: "#EEF7DE", color: GREEN_DARK }}>
+          <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold" style={{ background: "#F3F6E8", color: GREEN_DARK }}>
             <CheckCircle2 size={16} className="shrink-0" />
             Accepted — ID {courierIdNumber}
           </div>
@@ -211,7 +211,7 @@ export function CourierActions({
                 href={deliveryNoteUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-16 h-16 rounded-lg border border-green-200 bg-white flex flex-col items-center justify-center gap-0.5"
+                className="w-16 h-16 rounded-lg border border-[#DFE6C8] bg-white flex flex-col items-center justify-center gap-0.5"
               >
                 <FileText size={22} style={{ color: GREEN_DARK }} />
                 <span className="text-[9px] font-semibold" style={{ color: GREEN_DARK }}>
@@ -220,7 +220,7 @@ export function CourierActions({
               </a>
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={deliveryNoteUrl} alt="Delivery note" className="w-16 h-16 rounded-lg object-cover border border-green-200" />
+              <img src={deliveryNoteUrl} alt="Delivery note" className="w-16 h-16 rounded-lg object-cover border border-[#DFE6C8]" />
             )}
             <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: GREEN_DARK }}>
               <CheckCircle2 size={16} className="shrink-0" />
@@ -273,7 +273,7 @@ export function CourierActions({
                 href={waybillUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-16 h-16 rounded-lg border border-green-200 bg-white flex flex-col items-center justify-center gap-0.5"
+                className="w-16 h-16 rounded-lg border border-[#DFE6C8] bg-white flex flex-col items-center justify-center gap-0.5"
               >
                 <FileText size={22} style={{ color: GREEN_DARK }} />
                 <span className="text-[9px] font-semibold" style={{ color: GREEN_DARK }}>
@@ -282,7 +282,7 @@ export function CourierActions({
               </a>
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={waybillUrl} alt="Waybill" className="w-16 h-16 rounded-lg object-cover border border-green-200" />
+              <img src={waybillUrl} alt="Waybill" className="w-16 h-16 rounded-lg object-cover border border-[#DFE6C8]" />
             )}
             <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: GREEN_DARK }}>
               <CheckCircle2 size={16} className="shrink-0" />
@@ -337,7 +337,7 @@ export function CourierActions({
                 href={etimsInvoiceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-16 h-16 rounded-lg border border-green-200 bg-white flex flex-col items-center justify-center gap-0.5"
+                className="w-16 h-16 rounded-lg border border-[#DFE6C8] bg-white flex flex-col items-center justify-center gap-0.5"
               >
                 <FileText size={22} style={{ color: GREEN_DARK }} />
                 <span className="text-[9px] font-semibold" style={{ color: GREEN_DARK }}>
@@ -346,7 +346,7 @@ export function CourierActions({
               </a>
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={etimsInvoiceUrl} alt="eTIMS invoice" className="w-16 h-16 rounded-lg object-cover border border-green-200" />
+              <img src={etimsInvoiceUrl} alt="eTIMS invoice" className="w-16 h-16 rounded-lg object-cover border border-[#DFE6C8]" />
             )}
             <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: GREEN_DARK }}>
               <CheckCircle2 size={16} className="shrink-0" />
@@ -437,7 +437,7 @@ export function CourierActions({
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="text-sm font-semibold mb-2">5. Submit — send everything back to Pure Nutrition</div>
         {submitted ? (
-          <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold" style={{ background: "#EEF7DE", color: GREEN_DARK }}>
+          <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold" style={{ background: "#F3F6E8", color: GREEN_DARK }}>
             <CheckCircle2 size={16} className="shrink-0" />
             Submitted — Pure Nutrition has been notified
           </div>

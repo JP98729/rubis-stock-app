@@ -1,8 +1,8 @@
 // Brand constants copied byte-for-byte from the original prototype
 // (rubis-stock-reorder-app_19.jsx lines 10-30). Do not regenerate the logo data URLs.
 
-export const GREEN = "#6DBE00";
-export const GREEN_DARK = "#4E8A00";
+export const GREEN = "#5E7D1F";
+export const GREEN_DARK = "#4A6318";
 export const AMBER = "#C77700";
 export const RED = "#C0392B";
 

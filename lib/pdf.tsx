@@ -3,8 +3,8 @@ import React from "react";
 import { Document, Page, View, Text, Image, Link, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
 import { RANGES, RANGE_COLORS, PURE_LOGO, ENJOY_LOGO, rangeLabel } from "@/lib/brand";
 
-const GREEN = "#6DBE00";
-const GREEN_DARK = "#4E8A00";
+const GREEN = "#5E7D1F";
+const GREEN_DARK = "#4A6318";
 const RED = "#C0392B";
 const INK = "#1F2937";
 const MUTED = "#6B7280";
@@ -143,7 +143,7 @@ export async function renderStocktakeSummaryPdf(
         <View
           style={[
             styles.banner,
-            { backgroundColor: lowStockCount > 0 || flagged ? "#FEF6F5" : "#EEF7DE", marginTop: 4 },
+            { backgroundColor: lowStockCount > 0 || flagged ? "#FEF6F5" : "#F3F6E8", marginTop: 4 },
           ]}
         >
           {lowStockCount > 0 && (
@@ -275,7 +275,7 @@ export async function renderMovementSummaryPdf(
 ): Promise<Buffer> {
   const typeLabel = MOVEMENT_TYPE_LABELS[entry.type] || entry.type;
   const typeColor = entry.type === "EXPIRED_DAMAGED" ? RED : GREEN_DARK;
-  const typeTint = entry.type === "EXPIRED_DAMAGED" ? "#FEF6F5" : "#EEF7DE";
+  const typeTint = entry.type === "EXPIRED_DAMAGED" ? "#FEF6F5" : "#F3F6E8";
   const isDelivery = entry.type === "DELIVERY";
 
   const doc = (

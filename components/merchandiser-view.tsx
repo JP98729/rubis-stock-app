@@ -55,7 +55,7 @@ export function MerchandiserView({
       <ToastView toast={toast} />
       {merchName && (
         <div className="px-4 pt-4">
-          <div className="text-xs rounded-lg px-3 py-2" style={{ background: "#EEF7DE", color: GREEN_DARK }}>
+          <div className="text-xs rounded-lg px-3 py-2" style={{ background: "#F3F6E8", color: GREEN_DARK }}>
             Signed in as <span className="font-semibold">{merchName}</span>
           </div>
         </div>
@@ -162,7 +162,7 @@ export function MerchandiserView({
               {selected.county} · {selected.type}
             </div>
             {(selected.managerPhotoUrl || selected.managerName || selected.phone) && (
-              <div className="flex items-center gap-3 mt-3 p-2.5 rounded-lg" style={{ background: "#EEF7DE" }}>
+              <div className="flex items-center gap-3 mt-3 p-2.5 rounded-lg" style={{ background: "#F3F6E8" }}>
                 {selected.managerPhotoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img

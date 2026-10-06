@@ -101,22 +101,22 @@ export default async function CourierDispatchPage({
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold"
-          style={{ background: "#EEF7DE", color: "#4E8A00" }}
+          style={{ background: "#F3F6E8", color: "#4A6318" }}
         >
           🧭 Open in Google Maps
         </a>
       </div>
 
       {weightKg != null && (
-        <div className="rounded-xl p-4 mb-4 text-center" style={{ background: "#EEF7DE" }}>
+        <div className="rounded-xl p-4 mb-4 text-center" style={{ background: "#F3F6E8" }}>
           <div className="text-3xl">📦</div>
-          <div className="text-[11px] font-bold uppercase tracking-wide mt-1" style={{ color: "#4E8A00" }}>
+          <div className="text-[11px] font-bold uppercase tracking-wide mt-1" style={{ color: "#4A6318" }}>
             Shipping weight
           </div>
-          <div className="text-2xl font-bold mt-0.5" style={{ color: "#4E8A00" }}>
+          <div className="text-2xl font-bold mt-0.5" style={{ color: "#4A6318" }}>
             {weightKg} kg
           </div>
-          <div className="text-xs mt-2 pt-2 border-t" style={{ color: "#4E8A00", borderColor: "#D9EEBB" }}>
+          <div className="text-xs mt-2 pt-2 border-t" style={{ color: "#4A6318", borderColor: "#DFE6C8" }}>
             Delivery fee: <span className="font-bold">KES {courierFeeKES(weightKg)}</span>
           </div>
         </div>

@@ -365,7 +365,7 @@ export function TeamAccess({
         {justAdded && (
           <div
             className="text-xs rounded-lg px-3 py-2 mb-3 flex items-center justify-between"
-            style={{ background: "#EEF7DE" }}
+            style={{ background: "#F3F6E8" }}
           >
             <span>
               Code for <span className="font-semibold">{justAdded.name}</span>:
