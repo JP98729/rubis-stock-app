@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { ClipboardList, LayoutDashboard, MessageCircle, Store, Truck } from "lucide-react";
+import { ArrowUpRight, ClipboardList, Lock, LayoutDashboard, MessageCircle, Store, Truck } from "lucide-react";
 import { GREEN, GREEN_DARK, PURE_LOGO, RUBIS_LOGO, ENJOY_LOGO } from "@/lib/brand";
-import { TopBar } from "@/components/top-bar";
 
 export const dynamic = "force-dynamic";
 
@@ -50,45 +49,62 @@ const cards = [
 
 export default function HomePage() {
   return (
-    <>
-      <TopBar role={null} />
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-center gap-3 mb-2">
-          {/* eslint-disable @next/next/no-img-element */}
-          <img src={PURE_LOGO} alt="Pure Nutrition" className="h-12 w-auto" />
-          <img src={RUBIS_LOGO} alt="Rubis" className="h-12 w-auto" />
-          <img src={ENJOY_LOGO} alt="Rubis Enjoy" className="h-12 w-12 rounded-xl object-cover" />
-          {/* eslint-enable @next/next/no-img-element */}
-        </div>
-        <div className="text-center mb-8">
-          <div className="font-bold text-xl">Rubis Enjoy — Stock &amp; Reorder</div>
-          <div className="text-sm text-gray-400 mt-1">
-            Supplied by Pure Nutrition. Choose how you&apos;re using the app today.
+    <main className="home">
+      <section className="home-hero">
+        <div className="home-hero__inner">
+          <div className="home-logos">
+            {/* eslint-disable @next/next/no-img-element */}
+            <span className="home-logo"><img src={PURE_LOGO} alt="Pure Nutrition" /></span>
+            <i aria-hidden>×</i>
+            <span className="home-logo"><img src={RUBIS_LOGO} alt="Rubis" /></span>
+            <i aria-hidden>×</i>
+            <span className="home-logo home-logo--enjoy"><img src={ENJOY_LOGO} alt="Rubis Enjoy" /></span>
+            {/* eslint-enable @next/next/no-img-element */}
+          </div>
+          <div className="home-eyebrow">Rubis Enjoy · Supplied by Pure Nutrition</div>
+          <h1 className="home-title">
+            Stock &amp; Reorder
+            <span>Count it. Reorder it. Deliver it.</span>
+          </h1>
+          <p className="home-lead">
+            One shared place for every branch to count stock, see exactly what to reorder and log every delivery.
+          </p>
+          <div className="home-chips">
+            <span>Delivery run on the 23rd of every month</span>
+            <span>Works on your phone</span>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {cards.map((c) => (
+      </section>
+
+      <section className="home-roles">
+        <div className="home-roles__head">Choose how you&apos;re using the app today</div>
+        <div className="home-roles__grid">
+          {cards.map((c, i) => (
             <Link
               key={c.href}
               href={c.href}
-              className="text-left bg-white border border-gray-200 rounded-2xl p-5 flex flex-col gap-3 hover:shadow-md active:scale-[0.98] transition"
+              className="role-card"
+              style={{ ["--rc" as string]: c.color, ["--rcd" as string]: c.colorDark, animationDelay: `${0.12 * i}s` }}
             >
-              <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: c.color }}>
-                <c.icon size={22} className="text-white" />
-              </div>
-              <div>
-                <div className="font-bold text-base" style={{ color: c.colorDark }}>
-                  {c.title}
-                </div>
-                <div className="text-sm text-gray-500 mt-1">{c.desc}</div>
-              </div>
+              <span className="role-card__num">0{i + 1}</span>
+              <span className="role-card__icon">
+                <c.icon size={24} className="text-white" />
+              </span>
+              <span className="role-card__body">
+                <span className="role-card__title">{c.title}</span>
+                <span className="role-card__desc">{c.desc}</span>
+              </span>
+              <span className="role-card__go">
+                <ArrowUpRight size={18} />
+              </span>
             </Link>
           ))}
         </div>
-        <div className="text-center text-xs text-gray-400 mt-8">
+        <div className="home-lock">
+          <Lock size={14} />
           Each role needs its own access code to sign in — ask your Pure Nutrition contact if you don&apos;t have yours.
         </div>
-      </div>
-    </>
+      </section>
+    </main>
   );
 }

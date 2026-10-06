@@ -19,3 +19,54 @@ html,
 body {
   background: #f9fafb;
 }
+
+/* ---------- Home (role chooser) ---------- */
+.home { min-height: 100vh; background: #f4f6ec; }
+.home-hero { position: relative; overflow: hidden; color: #fff; padding: 44px 20px 96px; background: radial-gradient(110% 120% at 0% 0%, #5e8f2a 0%, #2f5a1c 42%, #12290b 100%); }
+.home-hero::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,0.08) 1.2px, transparent 1.4px); background-size: 22px 22px; pointer-events: none; }
+.home-hero::after { content: ""; position: absolute; right: -90px; top: -90px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(155,212,74,0.45), rgba(155,212,74,0) 70%); pointer-events: none; }
+.home-hero__inner { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; text-align: center; }
+.home-logos { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 22px; }
+.home-logos i { font-style: normal; font-size: 1.3rem; font-weight: 300; opacity: 0; animation: home-fade .5s ease forwards; text-shadow: 0 2px 8px rgba(0,0,0,.5); }
+.home-logos i:nth-of-type(1) { animation-delay: .25s; } .home-logos i:nth-of-type(2) { animation-delay: .5s; }
+.home-logo { position: relative; width: 72px; height: 72px; border-radius: 18px; overflow: hidden; background: #fff; box-shadow: 0 10px 26px rgba(0,0,0,.38), 0 0 0 3px rgba(255,255,255,.35); opacity: 0; animation: home-pop .7s cubic-bezier(.2,.9,.3,1.3) forwards, home-float 5s ease-in-out 1.2s infinite; }
+.home-logo:nth-of-type(1) { animation-delay: .1s, 1.2s; } .home-logo:nth-of-type(2) { animation-delay: .35s, 2.2s; } .home-logo:nth-of-type(3) { animation-delay: .6s, 3.2s; }
+.home-logo img { width: 100%; height: 100%; object-fit: contain; padding: 7px; display: block; }
+.home-logo--enjoy img { padding: 0; object-fit: cover; }
+.home-logo::after { content: ""; position: absolute; top: -20%; bottom: -20%; left: -70%; width: 45%; background: linear-gradient(100deg, rgba(255,255,255,0), rgba(255,255,255,.75), rgba(255,255,255,0)); transform: skewX(-20deg); animation: home-shine 4.5s ease-in-out infinite; }
+.home-eyebrow { display: inline-block; padding: 5px 14px; border-radius: 999px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.3); font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #cfe9a3; }
+.home-title { margin: 16px 0 12px; font-size: clamp(2.2rem, 7vw, 3.4rem); font-weight: 800; line-height: 1.08; letter-spacing: -.01em; }
+.home-title span { display: block; font-size: .5em; font-weight: 700; margin-top: 8px; background: linear-gradient(100deg, #fff3bd, #e6bf58 55%, #fff0a8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.home-lead { margin: 0 auto 18px; max-width: 520px; font-size: .98rem; line-height: 1.55; color: rgba(255,255,255,.88); }
+.home-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.home-chips span { padding: 6px 13px; border-radius: 999px; background: rgba(0,0,0,.25); font-size: .78rem; color: #e9f5cf; }
+.home-roles { position: relative; z-index: 2; max-width: 860px; margin: -56px auto 0; padding: 0 16px 40px; }
+.home-roles__head { text-align: center; margin-bottom: 14px; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.35); }
+.home-roles__grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 640px) { .home-roles__grid { grid-template-columns: 1fr 1fr; gap: 14px; } .home-roles__grid .role-card:first-child { grid-column: 1 / -1; } }
+.role-card { position: relative; display: flex; align-items: center; gap: 14px; padding: 16px 16px 16px 18px; border-radius: 20px; background: #fff; border: 1px solid #e4e6da; overflow: hidden; box-shadow: 0 10px 26px rgba(30,45,15,.12); opacity: 0; animation: home-rise .6s ease forwards; transition: transform .2s ease, box-shadow .2s ease; }
+.role-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: linear-gradient(180deg, var(--rc), var(--rcd)); }
+.role-card::after { content: ""; position: absolute; right: -30px; top: -30px; width: 110px; height: 110px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--rc) 22%, transparent), transparent 70%); pointer-events: none; }
+.role-card:hover { transform: translateY(-4px); box-shadow: 0 18px 34px rgba(30,45,15,.2); }
+.role-card:active { transform: scale(.985); }
+.role-card__num { position: absolute; right: 54px; top: 10px; font-size: .68rem; font-weight: 800; letter-spacing: .1em; color: color-mix(in srgb, var(--rc) 55%, #fff); }
+.role-card__icon { flex: 0 0 auto; width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: linear-gradient(150deg, var(--rc), var(--rcd)); box-shadow: 0 8px 16px color-mix(in srgb, var(--rc) 45%, transparent); }
+.role-card__body { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.role-card__title { font-size: 1.02rem; font-weight: 800; color: var(--rcd); }
+.role-card__desc { font-size: .84rem; line-height: 1.4; color: #5b6350; }
+.role-card__go { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--rcd); background: color-mix(in srgb, var(--rc) 14%, #fff); transition: background .2s ease, color .2s ease, transform .2s ease; }
+.role-card:hover .role-card__go { background: var(--rc); color: #fff; transform: rotate(45deg); }
+.home-lock { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 20px auto 0; max-width: 560px; padding: 10px 16px; border-radius: 14px; background: #fff; border: 1px dashed #c9d7a6; font-size: .76rem; line-height: 1.4; color: #5b6350; text-align: center; }
+@keyframes home-pop { 0% { opacity: 0; transform: translateY(18px) scale(.6) rotate(-6deg); } 100% { opacity: 1; transform: none; } }
+@keyframes home-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes home-shine { 0%, 55% { left: -70%; } 100% { left: 140%; } }
+@keyframes home-fade { to { opacity: .9; } }
+@keyframes home-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .home-logo, .role-card { animation: none; opacity: 1; } .home-logos i { animation: none; opacity: .9; } .home-logo::after { display: none; } }
+@media (max-width: 480px) {
+  .home-hero { padding: 30px 16px 84px; }
+  .home-logo { width: 60px; height: 60px; border-radius: 15px; }
+  .role-card { padding: 13px 12px 13px 16px; gap: 12px; border-radius: 16px; }
+  .role-card__icon { width: 46px; height: 46px; border-radius: 14px; }
+  .role-card__num { display: none; }
+}
